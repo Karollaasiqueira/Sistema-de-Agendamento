@@ -1,0 +1,166 @@
+# AgendaPro - .gitignore
+
+# ========== Arquivos do Sistema Operacional ==========
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ========== IDEs e Editores ==========
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+.history/
+
+# JetBrains IDEs (WebStorm, etc)
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Atom
+.atom/
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+Session.vim
+Sessionx.vim
+.netrwhist
+tags
+[._]*.un~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ========== Dependências ==========
+# Node modules (caso adicione build tools no futuro)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ========== Build e Deploy ==========
+dist/
+build/
+.cache/
+*.min.js
+*.min.css
+
+# ========== Temporários e Logs ==========
+*.log
+*.tmp
+*.temp
+logs/
+*.pid
+*.seed
+*.pid.lock
+lib-cov
+coverage/
+.nyc_output/
+.grunt
+bower_components
+
+# ========== Arquivos de Ambiente ==========
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.envrc
+
+# ========== Backups ==========
+*.bak
+*.backup
+*.old
+*~.nib
+*.swp
+*.swo
+
+# ========== Arquivos Pessoais ==========
+# Não versionar arquivos com dados sensíveis
+config.local.js
+secrets.json
+credentials.json
+
+# ========== Documentos Temporários ==========
+~$*.docx
+~$*.xlsx
+~$*.pptx
+*.tmp
+
+# ========== Screenshots e Assets Temporários ==========
+# (mantenha apenas os oficiais na pasta docs/)
+screenshots_temp/
+assets_temp/
+temp_images/
+
+# ========== Testes ==========
+.test/
+coverage/
+*.test.js.snap
+
+# ========== Outros ==========
+.sass-cache/
+*.css.map
+*.js.map
+.browserslistrc
+package-lock.json
+yarn.lock
