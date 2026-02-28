@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgendaPro — Demo Interativa</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,700;12..96,800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #06080f;
+  --surf: #0d1117;
+  --surf2: #131920;
+  --surf3: #1a2230;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --teal: #00e5bc;
+  --teal-dim: rgba(0,229,188,0.12);
+  --teal-glow: rgba(0,229,188,0.35);
+  --blue: #3b82f6;
+  --blue-dim: rgba(59,130,246,0.12);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.12);
+  --red: #ef4444;
+  --red-dim: rgba(239,68,68,0.12);
+  --green: #22c55e;
+  --green-dim: rgba(34,197,94,0.12);
+  --purple: #a855f7;
+  --purple-dim: rgba(168,85,247,0.12);
+  --text: #e2e8f0;
+  --muted: #64748b;
+  --muted2: #94a3b8;
+  --white: #fff;
+  --font: 'Bricolage Grotesque', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  cursor: default;
+}
+
+/* ─── NOISE OVERLAY ─── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ─── NAV ─── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 48px;
+  background: rgba(6,8,15,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.logo {
+  font-size: 1.2rem; font-weight: 800; color: var(--white);
+  display: flex; align-items: center; gap: 8px;
+}
+.logo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 12px var(--teal); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(0.85)} }
+.nav-links { display: flex; gap: 32px; }
+.nav-links a { color: var(--muted2); font-size: .88rem; font-weight: 500; text-decoration: none; transition: color .2s; }
+.nav-links a:hover { color: var(--teal); }
+.nav-cta {
+  background: var(--teal); color: #000; font-family: var(--font); font-weight: 700;
+  font-size: .82rem; padding: 9px 22px; border-radius: 8px; border: none; cursor: pointer;
+  letter-spacing: .02em; transition: all .2s;
+}
+.nav-cta:hover { box-shadow: 0 0 24px var(--teal-glow); transform: translateY(-1px); }
+
+/* ─── HERO ─── */
+.hero {
+  position: relative; z-index: 1;
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 140px 48px 80px; text-align: center;
+  overflow: hidden;
+}
+.hero-glow {
+  position: absolute; width: 700px; height: 700px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,229,188,0.07) 0%, transparent 70%);
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+.hero-glow2 {
+  position: absolute; width: 500px; height: 500px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(59,130,246,0.05) 0%, transparent 70%);
+  top: 30%; left: 20%;
+  pointer-events: none;
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--teal-dim); border: 1px solid rgba(0,229,188,0.25);
+  color: var(--teal); border-radius: 100px; padding: 6px 18px;
+  font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  margin-bottom: 32px;
+  animation: fadeUp .8s ease both;
+}
+.hero h1 {
+  font-size: clamp(2.8rem, 7vw, 5.5rem); font-weight: 800; line-height: 1.05;
+  color: var(--white); margin-bottom: 24px; letter-spacing: -.02em;
+  animation: fadeUp .8s .1s ease both;
+}
+.hero h1 .accent { color: var(--teal); position: relative; }
+.hero h1 .accent::after {
+  content: '';
+  position: absolute; bottom: -4px; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--teal), transparent);
+  border-radius: 2px;
+}
+.hero-sub {
+  font-size: 1.1rem; color: var(--muted2); max-width: 560px; margin: 0 auto 48px;
+  line-height: 1.7; font-weight: 400;
+  animation: fadeUp .8s .2s ease both;
+}
+.hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; animation: fadeUp .8s .3s ease both; }
+.btn-primary {
+  background: var(--teal); color: #000; font-family: var(--font); font-weight: 700;
+  font-size: .95rem; padding: 14px 32px; border-radius: 10px; border: none; cursor: pointer;
+  transition: all .2s; display: flex; align-items: center; gap: 8px;
+}
+.btn-primary:hover { box-shadow: 0 0 32px var(--teal-glow); transform: translateY(-2px); }
+.btn-secondary {
+  background: transparent; color: var(--text); font-family: var(--font); font-weight: 600;
+  font-size: .95rem; padding: 14px 32px; border-radius: 10px;
+  border: 1px solid var(--border2); cursor: pointer; transition: all .2s;
+}
+.btn-secondary:hover { border-color: var(--teal); color: var(--teal); }
+.hero-stats { display: flex; gap: 48px; justify-content: center; margin-top: 64px; flex-wrap: wrap; animation: fadeUp .8s .4s ease both; }
+.stat { text-align: center; }
+.stat-num { font-size: 2rem; font-weight: 800; color: var(--white); line-height: 1; }
+.stat-num span { color: var(--teal); }
+.stat-label { font-size: .78rem; color: var(--muted); font-weight: 500; margin-top: 4px; text-transform: uppercase; letter-spacing: .08em; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+
+/* ─── SECTIONS ─── */
+section { position: relative; z-index: 1; max-width: 1160px; margin: 0 auto; padding: 100px 48px; }
+.sec-label { font-size: .7rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--teal); margin-bottom: 12px; }
+.sec-title { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; color: var(--white); margin-bottom: 16px; letter-spacing: -.02em; line-height: 1.15; }
+.sec-sub { font-size: 1rem; color: var(--muted2); max-width: 520px; line-height: 1.7; margin-bottom: 56px; }
+.divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border2), transparent); margin: 0 48px; }
+
+/* ─── WHATSAPP DEMO ─── */
+.demo-container {
+  display: grid; grid-template-columns: 1fr 480px; gap: 60px; align-items: start;
+}
+.demo-left { position: sticky; top: 100px; }
+.demo-phone {
+  width: 320px; margin: 0 auto;
+  background: #1a1f2e; border-radius: 40px; padding: 12px;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.08);
+  border: 2px solid rgba(255,255,255,0.06);
+}
+.phone-inner {
+  background: #0d1117; border-radius: 30px; overflow: hidden; height: 580px;
+  display: flex; flex-direction: column;
+}
+.phone-header {
+  background: #128C7E; padding: 12px 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+.phone-avatar { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+.phone-info { flex: 1; }
+.phone-name { font-size: .88rem; font-weight: 700; color: #fff; }
+.phone-status { font-size: .7rem; color: rgba(255,255,255,0.7); }
+.chat-area { flex: 1; overflow-y: auto; padding: 16px 12px; display: flex; flex-direction: column; gap: 8px; background: #0b141a; scroll-behavior: smooth; }
+.chat-area::-webkit-scrollbar { width: 4px; }
+.chat-area::-webkit-scrollbar-track { background: transparent; }
+.chat-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+.bubble {
+  max-width: 82%; padding: 9px 13px; border-radius: 8px; font-size: .82rem; line-height: 1.5; position: relative;
+  animation: bubbleIn .3s ease both;
+}
+@keyframes bubbleIn { from{opacity:0;transform:scale(0.92) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
+.bubble.bot {
+  background: #1f2c34; color: #e9edef; align-self: flex-start;
+  border-radius: 0 8px 8px 8px;
+}
+.bubble.bot::before { content: ''; position: absolute; left: -8px; top: 0; border: 8px solid transparent; border-right-color: #1f2c34; border-top: 0; }
+.bubble.user {
+  background: #005c4b; color: #e9edef; align-self: flex-end;
+  border-radius: 8px 8px 0 8px;
+}
+.bubble.user::after { content: ''; position: absolute; right: -8px; bottom: 0; border: 8px solid transparent; border-left-color: #005c4b; border-bottom: 0; }
+.bubble-time { font-size: .62rem; color: rgba(233,237,239,0.45); margin-top: 3px; text-align: right; display: flex; align-items: center; justify-content: flex-end; gap: 3px; }
+.check { color: #53bdeb; font-size: .7rem; }
+.menu-opts { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+.menu-opt { background: rgba(0,229,188,0.1); border: 1px solid rgba(0,229,188,0.2); color: #00e5bc; border-radius: 6px; padding: 5px 10px; font-size: .75rem; font-weight: 600; cursor: pointer; transition: all .15s; }
+.menu-opt:hover { background: rgba(0,229,188,0.2); transform: translateX(2px); }
+.typing-indicator { display: flex; align-items: center; gap: 4px; padding: 10px 13px; background: #1f2c34; border-radius: 0 8px 8px 8px; width: fit-content; }
+.typing-dot { width: 6px; height: 6px; border-radius: 50%; background: #8696a0; animation: typingBounce 1.2s infinite; }
+.typing-dot:nth-child(2) { animation-delay: .2s; }
+.typing-dot:nth-child(3) { animation-delay: .4s; }
+@keyframes typingBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+.chat-input-bar { background: #1f2c34; padding: 10px 12px; display: flex; gap: 8px; align-items: center; }
+.chat-input { flex: 1; background: #2a3942; border: none; border-radius: 20px; padding: 8px 14px; font-size: .8rem; color: #e9edef; font-family: var(--font); outline: none; }
+.chat-input::placeholder { color: #8696a0; }
+.chat-send { background: #00a884; border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all .15s; }
+.chat-send:hover { background: #00c9a0; }
+
+/* Controles de demo */
+.demo-controls { margin-top: 16px; display: flex; justify-content: center; gap: 8px; }
+.demo-btn {
+  background: var(--surf2); border: 1px solid var(--border2); color: var(--muted2);
+  font-family: var(--font); font-size: .75rem; font-weight: 600; padding: 7px 14px;
+  border-radius: 8px; cursor: pointer; transition: all .2s;
+}
+.demo-btn:hover { border-color: var(--teal); color: var(--teal); }
+.demo-btn.active { background: var(--teal-dim); border-color: var(--teal); color: var(--teal); }
+
+.demo-right { display: flex; flex-direction: column; gap: 20px; padding-top: 8px; }
+
+/* Flow cards */
+.flow-card {
+  background: var(--surf); border: 1px solid var(--border); border-radius: 16px;
+  padding: 24px; cursor: pointer; transition: all .25s; position: relative; overflow: hidden;
+}
+.flow-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--teal); opacity: 0; transition: opacity .25s;
+}
+.flow-card:hover, .flow-card.active { border-color: rgba(0,229,188,0.25); transform: translateX(4px); }
+.flow-card:hover::before, .flow-card.active::before { opacity: 1; }
+.flow-card.active { background: linear-gradient(135deg, rgba(0,229,188,0.05), var(--surf)); }
+.flow-card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.flow-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+.flow-card-title { font-size: .95rem; font-weight: 700; color: var(--white); }
+.flow-card-sub { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+.flow-card-body { font-size: .82rem; color: var(--muted2); line-height: 1.6; }
+.flow-tag { display: inline-block; margin-top: 10px; font-size: .68rem; font-weight: 700; letter-spacing: .06em; padding: 3px 10px; border-radius: 5px; }
+
+/* ─── FEATURES GRID ─── */
+.features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.feat-card {
+  background: var(--surf); border: 1px solid var(--border); border-radius: 18px;
+  padding: 28px; transition: all .25s; position: relative; overflow: hidden;
+}
+.feat-card::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(0,229,188,0.06), transparent 60%);
+  opacity: 0; transition: opacity .25s;
+}
+.feat-card:hover { border-color: rgba(0,229,188,0.2); transform: translateY(-3px); }
+.feat-card:hover::after { opacity: 1; }
+.feat-icon { font-size: 1.8rem; margin-bottom: 16px; }
+.feat-title { font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+.feat-desc { font-size: .83rem; color: var(--muted2); line-height: 1.6; }
+.feat-pill { margin-top: 14px; display: inline-flex; align-items: center; gap: 5px; font-size: .68rem; font-weight: 700; letter-spacing: .06em; padding: 3px 10px; border-radius: 5px; text-transform: uppercase; }
+
+/* ─── DASHBOARD PREVIEW ─── */
+.dashboard-preview {
+  background: var(--surf); border: 1px solid var(--border); border-radius: 20px;
+  overflow: hidden; box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+}
+.dash-topbar {
+  background: var(--surf2); padding: 14px 24px; display: flex; align-items: center;
+  gap: 8px; border-bottom: 1px solid var(--border);
+}
+.dash-dot { width: 12px; height: 12px; border-radius: 50%; }
+.dash-title { font-size: .82rem; font-weight: 600; color: var(--muted); margin-left: 8px; flex: 1; text-align: center; }
+.dash-body { padding: 24px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+.kpi-card {
+  background: var(--surf3); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px; transition: all .2s;
+}
+.kpi-card:hover { border-color: rgba(0,229,188,0.2); }
+.kpi-label { font-size: .7rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
+.kpi-value { font-size: 1.6rem; font-weight: 800; color: var(--white); }
+.kpi-delta { font-size: .72rem; font-weight: 600; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+.delta-up { color: var(--green); }
+.delta-down { color: var(--red); }
+.dash-chart-row { grid-column: 1/-1; display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+.chart-card { background: var(--surf3); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.chart-card-title { font-size: .8rem; font-weight: 700; color: var(--white); margin-bottom: 16px; }
+.bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 80px; }
+.bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+.bar { border-radius: 4px 4px 0 0; width: 100%; transition: all .3s; cursor: pointer; }
+.bar:hover { opacity: 0.85; filter: brightness(1.2); }
+.bar-label { font-size: .6rem; color: var(--muted); font-weight: 600; }
+.mini-pie { position: relative; width: 80px; height: 80px; margin: 0 auto 8px; }
+.pie-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: .85rem; font-weight: 800; color: var(--white); }
+.legend { display: flex; flex-direction: column; gap: 6px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: .72rem; color: var(--muted2); }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.agenda-list { display: flex; flex-direction: column; gap: 8px; }
+.agenda-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surf2); border-radius: 8px; border: 1px solid var(--border); }
+.agenda-time { font-family: var(--mono); font-size: .75rem; color: var(--teal); font-weight: 500; width: 40px; flex-shrink: 0; }
+.agenda-info { flex: 1; }
+.agenda-name { font-size: .8rem; font-weight: 600; color: var(--white); }
+.agenda-service { font-size: .7rem; color: var(--muted); }
+.agenda-status { font-size: .65rem; font-weight: 700; padding: 2px 8px; border-radius: 5px; }
+.s-confirm { background: var(--green-dim); color: var(--green); }
+.s-pending { background: var(--amber-dim); color: var(--amber); }
+.s-vip { background: var(--purple-dim); color: var(--purple); }
+
+/* ─── PRICING ─── */
+.pricing-grid { display: grid; grid-template-columns: 1fr 1.1fr 1fr; gap: 20px; align-items: center; }
+.price-card {
+  background: var(--surf); border: 1px solid var(--border); border-radius: 20px;
+  padding: 32px; position: relative; transition: all .25s;
+}
+.price-card.featured {
+  background: linear-gradient(135deg, rgba(0,229,188,0.08), rgba(59,130,246,0.05));
+  border-color: rgba(0,229,188,0.3);
+  box-shadow: 0 0 60px rgba(0,229,188,0.08);
+}
+.price-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--teal); color: #000; font-size: .7rem; font-weight: 800; padding: 4px 16px; border-radius: 100px; letter-spacing: .08em; white-space: nowrap; }
+.price-plan { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: 8px; }
+.price-value { font-size: 2.4rem; font-weight: 800; color: var(--white); line-height: 1; }
+.price-value span { font-size: .9rem; color: var(--muted); font-weight: 400; }
+.price-desc { font-size: .82rem; color: var(--muted2); margin: 12px 0 24px; line-height: 1.6; }
+.price-features { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+.pf { display: flex; align-items: flex-start; gap: 10px; font-size: .83rem; color: var(--muted2); }
+.pf-check { color: var(--teal); flex-shrink: 0; font-size: 1rem; }
+.pf-x { color: var(--muted); flex-shrink: 0; font-size: 1rem; }
+.price-btn {
+  width: 100%; padding: 13px; border-radius: 10px; font-family: var(--font);
+  font-size: .88rem; font-weight: 700; cursor: pointer; transition: all .2s;
+}
+.price-btn.outline { background: transparent; border: 1px solid var(--border2); color: var(--text); }
+.price-btn.outline:hover { border-color: var(--teal); color: var(--teal); }
+.price-btn.filled { background: var(--teal); border: none; color: #000; }
+.price-btn.filled:hover { box-shadow: 0 0 24px var(--teal-glow); transform: translateY(-1px); }
+
+/* ─── TESTIMONIALS ─── */
+.testimonials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.testi-card {
+  background: var(--surf); border: 1px solid var(--border); border-radius: 18px;
+  padding: 28px; position: relative; transition: all .25s;
+}
+.testi-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+.testi-quote { font-size: 2rem; color: var(--teal); opacity: .4; line-height: 1; margin-bottom: 12px; font-family: Georgia, serif; }
+.testi-text { font-size: .88rem; color: var(--muted2); line-height: 1.7; margin-bottom: 20px; font-style: italic; }
+.testi-author { display: flex; align-items: center; gap: 12px; }
+.testi-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+.testi-name { font-size: .85rem; font-weight: 700; color: var(--white); }
+.testi-role { font-size: .73rem; color: var(--muted); }
+.stars { color: var(--amber); font-size: .8rem; margin-bottom: 12px; }
+
+/* ─── CTA FINAL ─── */
+.cta-section {
+  background: linear-gradient(135deg, rgba(0,229,188,0.06), rgba(59,130,246,0.04));
+  border: 1px solid rgba(0,229,188,0.15); border-radius: 28px;
+  padding: 80px 48px; text-align: center; position: relative; overflow: hidden;
+}
+.cta-section::before {
+  content: '';
+  position: absolute; width: 600px; height: 600px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,229,188,0.08), transparent 70%);
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+.cta-title { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; color: var(--white); margin-bottom: 16px; letter-spacing: -.02em; position: relative; }
+.cta-sub { font-size: 1rem; color: var(--muted2); max-width: 480px; margin: 0 auto 40px; line-height: 1.7; position: relative; }
+.cta-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; position: relative; }
+
+/* ─── FOOTER ─── */
+footer {
+  border-top: 1px solid var(--border); padding: 40px 48px;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+  max-width: 1160px; margin: 0 auto;
+}
+.footer-logo { font-size: 1rem; font-weight: 800; color: var(--white); display: flex; align-items: center; gap: 8px; }
+.footer-links { display: flex; gap: 24px; }
+.footer-links a { font-size: .8rem; color: var(--muted); text-decoration: none; transition: color .2s; }
+.footer-links a:hover { color: var(--teal); }
+.footer-copy { font-size: .78rem; color: var(--muted); }
+
+/* ─── MODAL ─── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  backdrop-filter: blur(8px);
+  opacity: 0; pointer-events: none; transition: opacity .3s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--surf); border: 1px solid var(--border2); border-radius: 24px;
+  padding: 48px; max-width: 500px; width: 100%;
+  transform: translateY(24px) scale(0.97); transition: all .3s;
+}
+.modal-overlay.open .modal { transform: translateY(0) scale(1); }
+.modal-title { font-size: 1.5rem; font-weight: 800; color: var(--white); margin-bottom: 8px; }
+.modal-sub { font-size: .88rem; color: var(--muted2); margin-bottom: 28px; line-height: 1.6; }
+.form-group { margin-bottom: 18px; }
+.form-label { font-size: .78rem; font-weight: 700; color: var(--muted2); margin-bottom: 7px; display: block; text-transform: uppercase; letter-spacing: .06em; }
+.form-input {
+  width: 100%; background: var(--surf2); border: 1px solid var(--border2); border-radius: 10px;
+  padding: 12px 16px; font-family: var(--font); font-size: .9rem; color: var(--white);
+  outline: none; transition: border-color .2s;
+}
+.form-input:focus { border-color: var(--teal); }
+.form-input::placeholder { color: var(--muted); }
+.modal-actions { display: flex; gap: 12px; margin-top: 28px; }
+.modal-close {
+  position: absolute; top: 20px; right: 20px;
+  background: var(--surf2); border: 1px solid var(--border); border-radius: 8px;
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--muted); font-size: 1.1rem; transition: all .2s;
+}
+.modal-close:hover { color: var(--white); border-color: var(--border2); }
+.modal { position: relative; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  nav { padding: 14px 24px; }
+  .nav-links { display: none; }
+  .hero, section { padding: 80px 24px; }
+  .demo-container { grid-template-columns: 1fr; }
+  .demo-left { position: static; }
+  .demo-phone { width: 280px; }
+  .features-grid { grid-template-columns: 1fr 1fr; }
+  .pricing-grid { grid-template-columns: 1fr; }
+  .testimonials-grid { grid-template-columns: 1fr; }
+  .dash-body { grid-template-columns: 1fr 1fr; }
+  .dash-chart-row { grid-template-columns: 1fr; }
+  footer { flex-direction: column; text-align: center; }
+}
+@media (max-width: 600px) {
+  .features-grid { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 2.2rem; }
+}
+
+/* Scroll reveal */
+.reveal { opacity: 0; transform: translateY(32px); transition: opacity .7s ease, transform .7s ease; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    AgendaPro
+  </div>
+  <div class="nav-links">
+    <a href="#como-funciona">Como funciona</a>
+    <a href="#funcionalidades">Funcionalidades</a>
+    <a href="#dashboard">Painel</a>
+    <a href="#planos">Planos</a>
+  </div>
+  <button class="nav-cta" onclick="openModal()">Começar grátis →</button>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+  <div>
+    <div class="hero-eyebrow">✦ Plataforma de agendamento inteligente</div>
+    <h1>Seus clientes agendam<br>pelo <span class="accent">WhatsApp</span>.<br>Você foca no trabalho.</h1>
+    <p class="hero-sub">Bot 24h no WhatsApp, Google Agenda sincronizado, pagamento de sinal automático e painel completo. Tudo no seu celular.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="openModal()">
+        <span>🚀</span> Teste grátis por 14 dias
+      </button>
+      <button class="btn-secondary" onclick="scrollToDemo()">Ver demo ao vivo ↓</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-num">3<span>k+</span></div>
+        <div class="stat-label">Profissionais</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">98<span>%</span></div>
+        <div class="stat-label">Satisfação</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">40<span>%</span></div>
+        <div class="stat-label">Menos no-show</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">24<span>h</span></div>
+        <div class="stat-label">Bot ativo</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- DEMO WHATSAPP -->
+<section id="como-funciona">
+  <div class="sec-label">Demo interativa</div>
+  <div class="sec-title">Veja o bot em ação</div>
+  <p class="sec-sub">Clique nos cenários ao lado e assista o bot atender seu cliente em tempo real. Assim funciona para o seu negócio.</p>
+
+  <div class="demo-container">
+    <div class="demo-left">
+      <div class="demo-phone">
+        <div class="phone-inner">
+          <div class="phone-header">
+            <div class="phone-avatar">✂️</div>
+            <div class="phone-info">
+              <div class="phone-name">Barbearia Silva</div>
+              <div class="phone-status">● online agora</div>
+            </div>
+            <span style="color:rgba(255,255,255,0.6);font-size:.85rem">📞 ⋮</span>
+          </div>
+          <div class="chat-area" id="chatArea"></div>
+          <div class="chat-input-bar">
+            <input class="chat-input" placeholder="Mensagem" id="userInput" onkeydown="handleKey(event)">
+            <button class="chat-send" onclick="sendMessage()">
+              <svg width="16" height="16" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="demo-controls">
+        <button class="demo-btn active" onclick="loadScenario('agendamento', this)">Agendar</button>
+        <button class="demo-btn" onclick="loadScenario('cancelamento', this)">Cancelar</button>
+        <button class="demo-btn" onclick="loadScenario('atraso', this)">Atraso</button>
+        <button class="demo-btn" onclick="loadScenario('espera', this)">Lista de espera</button>
+      </div>
+    </div>
+
+    <div class="demo-right">
+      <div class="flow-card active" id="fc-1" onclick="goStep(1)">
+        <div class="flow-card-header">
+          <div class="flow-icon" style="background:var(--teal-dim)">💬</div>
+          <div>
+            <div class="flow-card-title">1. Cliente inicia conversa</div>
+            <div class="flow-card-sub">Palavras: oi, olá, agendar, menu</div>
+          </div>
+        </div>
+        <div class="flow-card-body">Bot responde instantaneamente, verifica consentimento LGPD no primeiro contato e exibe o menu de serviços com preços e durações.</div>
+        <span class="flow-tag" style="background:var(--teal-dim);color:var(--teal)">RF-30 · RN-11</span>
+      </div>
+
+      <div class="flow-card" id="fc-2" onclick="goStep(2)">
+        <div class="flow-card-header">
+          <div class="flow-icon" style="background:var(--blue-dim)">📅</div>
+          <div>
+            <div class="flow-card-title">2. Escolha de serviço e horário</div>
+            <div class="flow-card-sub">Até 3 serviços combinados</div>
+          </div>
+        </div>
+        <div class="flow-card-body">Bot exibe horários disponíveis em lista numerada, sincronizando com o Google Agenda em tempo real. Até 3 serviços por agendamento (RN-05).</div>
+        <span class="flow-tag" style="background:var(--blue-dim);color:var(--blue)">RF-31 · RF-32 · RN-05</span>
+      </div>
+
+      <div class="flow-card" id="fc-3" onclick="goStep(3)">
+        <div class="flow-card-header">
+          <div class="flow-icon" style="background:var(--amber-dim)">💳</div>
+          <div>
+            <div class="flow-card-title">3. Pagamento do sinal</div>
+            <div class="flow-card-sub">Pix automático · Máx 50% do valor</div>
+          </div>
+        </div>
+        <div class="flow-card-body">Bot envia link Pix. Sinal nunca ultrapassa 50% do valor total (RN-10). Agendamento confirmado automaticamente após pagamento.</div>
+        <span class="flow-tag" style="background:var(--amber-dim);color:var(--amber)">RF-68 · RN-10 · RF-73</span>
+      </div>
+
+      <div class="flow-card" id="fc-4" onclick="goStep(4)">
+        <div class="flow-card-header">
+          <div class="flow-icon" style="background:var(--green-dim)">✅</div>
+          <div>
+            <div class="flow-card-title">4. Confirmação e lembretes</div>
+            <div class="flow-card-sub">24h antes + 2h antes</div>
+          </div>
+        </div>
+        <div class="flow-card-body">Confirmação com resumo completo. Lembretes automáticos 24h e 2h antes com localização. Cliente pode confirmar presença pelo WhatsApp.</div>
+        <span class="flow-tag" style="background:var(--green-dim);color:var(--green)">RF-33 · RF-47 · RF-48</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FEATURES -->
+<section id="funcionalidades">
+  <div class="sec-label">Funcionalidades</div>
+  <div class="sec-title">Tudo que seu negócio precisa</div>
+  <p class="sec-sub">Do agendamento ao financeiro, do bot ao painel — uma plataforma completa para profissionais e pequenas empresas.</p>
+
+  <div class="features-grid reveal">
+    <div class="feat-card">
+      <div class="feat-icon">🤖</div>
+      <div class="feat-title">Bot 24h no WhatsApp</div>
+      <div class="feat-desc">Atende clientes a qualquer hora, mesmo enquanto você dorme. Handoff automático para atendimento humano quando necessário.</div>
+      <div class="feat-pill" style="background:var(--teal-dim);color:var(--teal)">RF-30 a RF-50</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📅</div>
+      <div class="feat-title">Google Agenda Sincronizado</div>
+      <div class="feat-desc">Sincronização bidirecional em tempo real. Cancelamentos refletem em até 30 segundos. Bloqueio automático de compromissos externos.</div>
+      <div class="feat-pill" style="background:var(--blue-dim);color:var(--blue)">RF-25 a RF-29</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">💳</div>
+      <div class="feat-title">Pagamento de Sinal Automático</div>
+      <div class="feat-desc">Sinal via Pix com limite de 50% do valor. Reembolso automático em cancelamentos dentro do prazo. Chargeback tratado pela plataforma.</div>
+      <div class="feat-pill" style="background:var(--amber-dim);color:var(--amber)">RF-68 a RF-77b</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🔔</div>
+      <div class="feat-title">Lembretes Inteligentes</div>
+      <div class="feat-desc">Lembretes automáticos 24h e 2h antes por WhatsApp. Push no app para o profissional. Confirmação de presença direto no chat.</div>
+      <div class="feat-pill" style="background:var(--purple-dim);color:var(--purple)">RF-47 a RF-56</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">⏳</div>
+      <div class="feat-title">Lista de Espera FIFO</div>
+      <div class="feat-desc">Quando todos os horários estão ocupados, o cliente entra na fila. Notificação automática ao abrir vaga. 30 minutos para confirmar.</div>
+      <div class="feat-pill" style="background:var(--teal-dim);color:var(--teal)">RF-64 a RF-67</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🔄</div>
+      <div class="feat-title">Reagendamento Fácil</div>
+      <div class="feat-desc">Cliente reagenda pelo WhatsApp em segundos. Máximo 2 reagendamentos por serviço. Google Agenda atualizado automaticamente.</div>
+      <div class="feat-pill" style="background:var(--blue-dim);color:var(--blue)">RF-76 a RF-80</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">⭐</div>
+      <div class="feat-title">Avaliações e Fidelização</div>
+      <div class="feat-desc">Solicitação automática de avaliação 2h após o atendimento. Programa de fidelidade configurável. Cupons para reativar clientes inativos.</div>
+      <div class="feat-pill" style="background:var(--amber-dim);color:var(--amber)">RF-78b a RF-82b</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🔒</div>
+      <div class="feat-title">Segurança e LGPD</div>
+      <div class="feat-desc">Dados criptografados com AES-256. Autenticação 2FA disponível. Consentimento LGPD no primeiro contato. Log de acessos dos últimos 90 dias.</div>
+      <div class="feat-pill" style="background:var(--red-dim);color:var(--red)">RNF-01 · RF-83 a RF-87</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📊</div>
+      <div class="feat-title">Dashboard Completo</div>
+      <div class="feat-desc">Receita prevista vs realizada, taxa de cancelamento e no-show, horários de pico, ranking de serviços. Exportação em PDF e Excel.</div>
+      <div class="feat-pill" style="background:var(--green-dim);color:var(--green)">RF-57 a RF-63</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- DASHBOARD PREVIEW -->
+<section id="dashboard">
+  <div class="sec-label">Painel administrativo</div>
+  <div class="sec-title">Visão completa do seu negócio</div>
+  <p class="sec-sub">Acompanhe tudo em tempo real: agenda, receita, clientes e performance. No celular ou no computador.</p>
+
+  <div class="dashboard-preview reveal">
+    <div class="dash-topbar">
+      <div class="dash-dot" style="background:#ff5f57"></div>
+      <div class="dash-dot" style="background:#febc2e"></div>
+      <div class="dash-dot" style="background:#28c840"></div>
+      <div class="dash-title">AgendaPro · Painel — Barbearia Silva</div>
+    </div>
+    <div class="dash-body">
+      <div class="kpi-card">
+        <div class="kpi-label">Atendimentos hoje</div>
+        <div class="kpi-value">12</div>
+        <div class="kpi-delta delta-up">↑ +3 vs ontem</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Receita prevista</div>
+        <div class="kpi-value">R$<span style="font-size:1.3rem">1.840</span></div>
+        <div class="kpi-delta delta-up">↑ +18% vs semana passada</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Taxa no-show</div>
+        <div class="kpi-value">4<span style="font-size:1rem;color:var(--muted)">%</span></div>
+        <div class="kpi-delta delta-up">↓ -6% com lembretes</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Avaliação média</div>
+        <div class="kpi-value">4<span style="font-size:1rem;color:var(--muted)">.8 ⭐</span></div>
+        <div class="kpi-delta" style="color:var(--muted2)">Base: 247 avaliações</div>
+      </div>
+
+      <div class="dash-chart-row">
+        <div class="chart-card">
+          <div class="chart-card-title">Agendamentos por dia — semana atual</div>
+          <div class="bar-chart">
+            <div class="bar-col"><div class="bar" style="height:40%;background:var(--teal);opacity:.6"></div><div class="bar-label">Seg</div></div>
+            <div class="bar-col"><div class="bar" style="height:65%;background:var(--teal);opacity:.7"></div><div class="bar-label">Ter</div></div>
+            <div class="bar-col"><div class="bar" style="height:85%;background:var(--teal);opacity:.8"></div><div class="bar-label">Qua</div></div>
+            <div class="bar-col"><div class="bar" style="height:100%;background:var(--teal)"></div><div class="bar-label">Qui</div></div>
+            <div class="bar-col"><div class="bar" style="height:90%;background:var(--blue)"></div><div class="bar-label">Sex</div></div>
+            <div class="bar-col"><div class="bar" style="height:70%;background:var(--blue);opacity:.8"></div><div class="bar-label">Sáb</div></div>
+            <div class="bar-col"><div class="bar" style="height:20%;background:var(--muted);opacity:.4"></div><div class="bar-label">Dom</div></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-title">Serviços mais pedidos</div>
+          <svg viewBox="0 0 80 80" width="80" height="80" style="display:block;margin:0 auto 8px">
+            <circle r="32" cx="40" cy="40" fill="none" stroke="var(--teal)" stroke-width="16"
+              stroke-dasharray="100 101" stroke-dashoffset="-25" transform="rotate(-90 40 40)"/>
+            <circle r="32" cx="40" cy="40" fill="none" stroke="var(--blue)" stroke-width="16"
+              stroke-dasharray="60 141" stroke-dashoffset="-125" transform="rotate(-90 40 40)"/>
+            <circle r="32" cx="40" cy="40" fill="none" stroke="var(--amber)" stroke-width="16"
+              stroke-dasharray="41 160" stroke-dashoffset="-185" transform="rotate(-90 40 40)"/>
+          </svg>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div> Corte — 49%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> Barba — 30%</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div> Combo — 21%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-chart-row">
+        <div class="chart-card" style="grid-column:1/-1">
+          <div class="chart-card-title">Agenda de hoje — 28/02/2026</div>
+          <div class="agenda-list">
+            <div class="agenda-item">
+              <div class="agenda-time">09:00</div>
+              <div class="agenda-info"><div class="agenda-name">Carlos Mendes</div><div class="agenda-service">Corte + Barba · 60 min</div></div>
+              <div class="agenda-status s-confirm">Confirmado</div>
+            </div>
+            <div class="agenda-item">
+              <div class="agenda-time">10:00</div>
+              <div class="agenda-info"><div class="agenda-name">Pedro Alves</div><div class="agenda-service">Corte · 30 min</div></div>
+              <div class="agenda-status s-vip">⭐ VIP</div>
+            </div>
+            <div class="agenda-item">
+              <div class="agenda-time">10:30</div>
+              <div class="agenda-info"><div class="agenda-name">Lucas Santos</div><div class="agenda-service">Barba · 30 min</div></div>
+              <div class="agenda-status s-pending">Aguardando sinal</div>
+            </div>
+            <div class="agenda-item">
+              <div class="agenda-time">11:00</div>
+              <div class="agenda-info"><div class="agenda-name">Rafael Costa</div><div class="agenda-service">Corte · 30 min</div></div>
+              <div class="agenda-status s-confirm">Confirmado</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- DEPOIMENTOS -->
+<section>
+  <div class="sec-label">Depoimentos</div>
+  <div class="sec-title">Quem já usa, não para</div>
+
+  <div class="testimonials-grid reveal">
+    <div class="testi-card">
+      <div class="stars">★★★★★</div>
+      <div class="testi-quote">"</div>
+      <div class="testi-text">Antes eu perdia 3-4 horas por dia só atendendo mensagem de WhatsApp. Agora o bot faz tudo e eu só aparece para trabalhar. Meu faturamento subiu 35% em 2 meses.</div>
+      <div class="testi-author">
+        <div class="testi-avatar" style="background:var(--teal-dim)">✂️</div>
+        <div>
+          <div class="testi-name">Roberto Silva</div>
+          <div class="testi-role">Barbeiro · São Paulo, SP</div>
+        </div>
+      </div>
+    </div>
+    <div class="testi-card" style="border-color:rgba(0,229,188,0.2)">
+      <div class="stars">★★★★★</div>
+      <div class="testi-quote">"</div>
+      <div class="testi-text">O sinal de pagamento acabou com os cancelamentos de última hora. Antes perdia 30% dos horários por no-show. Agora é menos de 5%. Recomendo sem hesitar.</div>
+      <div class="testi-author">
+        <div class="testi-avatar" style="background:var(--purple-dim)">💆</div>
+        <div>
+          <div class="testi-name">Ana Paula Ferreira</div>
+          <div class="testi-role">Esteticista · Rio de Janeiro, RJ</div>
+        </div>
+      </div>
+    </div>
+    <div class="testi-card">
+      <div class="stars">★★★★★</div>
+      <div class="testi-quote">"</div>
+      <div class="testi-text">Tenho 4 profissionais na clínica. O painel mostra tudo em tempo real. Integramos com o Google Agenda e nunca mais tivemos conflito de horário. Melhor investimento do ano.</div>
+      <div class="testi-author">
+        <div class="testi-avatar" style="background:var(--blue-dim)">🦷</div>
+        <div>
+          <div class="testi-name">Dr. Marcos Souza</div>
+          <div class="testi-role">Odontologista · Belo Horizonte, MG</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PRICING -->
+<section id="planos">
+  <div class="sec-label">Planos</div>
+  <div class="sec-title">Simples e transparente</div>
+  <p class="sec-sub">Sem taxa de setup. Sem fidelidade. Cancele quando quiser.</p>
+
+  <div class="pricing-grid reveal">
+    <div class="price-card">
+      <div class="price-plan">Starter</div>
+      <div class="price-value">R$ 97<span>/mês</span></div>
+      <div class="price-desc">Para profissionais autônomos que querem automatizar o agendamento.</div>
+      <div class="price-features">
+        <div class="pf"><span class="pf-check">✓</span> Bot WhatsApp 24h</div>
+        <div class="pf"><span class="pf-check">✓</span> Google Agenda sincronizado</div>
+        <div class="pf"><span class="pf-check">✓</span> Até 3 serviços cadastrados</div>
+        <div class="pf"><span class="pf-check">✓</span> Lembretes automáticos</div>
+        <div class="pf"><span class="pf-check">✓</span> Painel básico</div>
+        <div class="pf"><span class="pf-x">✗</span> Pagamento de sinal</div>
+        <div class="pf"><span class="pf-x">✗</span> Múltiplos profissionais</div>
+      </div>
+      <button class="price-btn outline" onclick="openModal()">Começar grátis</button>
+    </div>
+
+    <div class="price-card featured">
+      <div class="price-badge">✦ MAIS POPULAR</div>
+      <div class="price-plan">Pro</div>
+      <div class="price-value">R$ 197<span>/mês</span></div>
+      <div class="price-desc">Para quem quer o sistema completo: sinal, relatórios e múltiplos profissionais.</div>
+      <div class="price-features">
+        <div class="pf"><span class="pf-check">✓</span> Tudo do Starter</div>
+        <div class="pf"><span class="pf-check">✓</span> Serviços ilimitados</div>
+        <div class="pf"><span class="pf-check">✓</span> Pagamento de sinal (Pix)</div>
+        <div class="pf"><span class="pf-check">✓</span> Até 5 profissionais</div>
+        <div class="pf"><span class="pf-check">✓</span> Avaliações e fidelização</div>
+        <div class="pf"><span class="pf-check">✓</span> Relatórios PDF/Excel</div>
+        <div class="pf"><span class="pf-check">✓</span> Suporte prioritário</div>
+      </div>
+      <button class="price-btn filled" onclick="openModal()">Começar grátis por 14 dias</button>
+    </div>
+
+    <div class="price-card">
+      <div class="price-plan">Clínica</div>
+      <div class="price-value">R$ 397<span>/mês</span></div>
+      <div class="price-desc">Para clínicas e salões com equipe maior e necessidades avançadas.</div>
+      <div class="price-features">
+        <div class="pf"><span class="pf-check">✓</span> Tudo do Pro</div>
+        <div class="pf"><span class="pf-check">✓</span> Profissionais ilimitados</div>
+        <div class="pf"><span class="pf-check">✓</span> Controle de comissões</div>
+        <div class="pf"><span class="pf-check">✓</span> API para integrações</div>
+        <div class="pf"><span class="pf-check">✓</span> Onboarding personalizado</div>
+        <div class="pf"><span class="pf-check">✓</span> SLA 99,5% garantido</div>
+      </div>
+      <button class="price-btn outline" onclick="openModal()">Falar com vendas</button>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CTA -->
+<section>
+  <div class="cta-section reveal">
+    <div class="cta-title">Pronto para transformar<br>seu negócio?</div>
+    <p class="cta-sub">14 dias grátis, sem cartão de crédito. Configuração em menos de 1 hora com nosso onboarding guiado.</p>
+    <div class="cta-actions">
+      <button class="btn-primary" onclick="openModal()">
+        <span>🚀</span> Criar minha conta grátis
+      </button>
+      <a href="https://wa.me/5511999999999" style="text-decoration:none">
+        <button class="btn-secondary">💬 Falar com um especialista</button>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <div class="logo-dot"></div>
+    AgendaPro
+  </div>
+  <div class="footer-links">
+    <a href="#">Termos de uso</a>
+    <a href="#">Privacidade / LGPD</a>
+    <a href="#">Suporte</a>
+    <a href="#">Blog</a>
+  </div>
+  <div class="footer-copy">© 2026 AgendaPro. Todos os direitos reservados.</div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Comece grátis hoje 🚀</div>
+    <div class="modal-sub">14 dias sem custo, sem cartão de crédito. Sua plataforma pronta em menos de 1 hora.</div>
+    <div class="form-group">
+      <label class="form-label">Seu nome</label>
+      <input class="form-input" placeholder="Ex: João Silva" type="text">
+    </div>
+    <div class="form-group">
+      <label class="form-label">WhatsApp do negócio</label>
+      <input class="form-input" placeholder="(11) 99999-9999" type="tel">
+    </div>
+    <div class="form-group">
+      <label class="form-label">E-mail</label>
+      <input class="form-input" placeholder="joao@seunegocio.com" type="email">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tipo de negócio</label>
+      <select class="form-input" style="appearance:none">
+        <option value="">Selecione...</option>
+        <option>Barbearia / Salão</option>
+        <option>Clínica de estética</option>
+        <option>Consultório odontológico</option>
+        <option>Personal trainer</option>
+        <option>Psicólogo / Terapeuta</option>
+        <option>Outro</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" style="flex:1;justify-content:center" onclick="submitForm()">Criar conta grátis →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── CHAT ENGINE ───────────────────────────────────────────────────────────
+const now = () => {
+  const d = new Date();
+  return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+};
+
+const scenarios = {
+  agendamento: [
+    { from:'user', text:'oi', delay:0 },
+    { from:'bot', delay:900, text:'Olá! 👋 Bem-vindo à *Barbearia Silva*!\n\nAntes de começarmos, preciso da sua autorização para salvar seu contato em nosso sistema (LGPD). Você concorda?\n\n*1* — Sim, concordo\n*2* — Não concordo', opts:['1 — Concordo','Não concordo'] },
+    { from:'user', text:'1 — Concordo', delay:1200 },
+    { from:'bot', delay:1000, text:'Ótimo! ✅ Consentimento registrado.\n\nEscolha o serviço:' , opts:['✂️ Corte — R$50 · 30min','🪒 Barba — R$35 · 30min','✂️🪒 Combo — R$75 · 60min'] },
+    { from:'user', text:'✂️ Corte — R$50 · 30min', delay:1500 },
+    { from:'bot', delay:1100, text:'Quer adicionar mais algum serviço?\n\n*1* — Adicionar Barba (R$35)\n*2* — Não, só o corte mesmo', opts:['Adicionar Barba','Só o corte'] },
+    { from:'user', text:'Só o corte', delay:1200 },
+    { from:'bot', delay:1000, text:'📅 Horários disponíveis:\n\n*1* — Hoje, 14:00\n*2* — Hoje, 15:30\n*3* — Amanhã, 09:00\n*4* — Amanhã, 10:30', opts:['Hoje 14:00','Hoje 15:30','Amanhã 09:00'] },
+    { from:'user', text:'Hoje 14:00', delay:1000 },
+    { from:'bot', delay:1200, text:'💳 Para confirmar, pague o sinal de *R$25* (50% do valor):\n\n🔗 *Link Pix:* agendapro.io/pix/abc123\n\n⏱️ Válido por 30 minutos.', opts:['✅ Já paguei'] },
+    { from:'user', text:'✅ Já paguei', delay:2000 },
+    { from:'bot', delay:1000, text:'🎉 *Agendamento confirmado!*\n\n📋 Resumo:\n• Serviço: Corte\n• Data: Hoje, 14:00\n• Profissional: Carlos Silva\n• Valor total: R$50\n• Sinal pago: R$25\n\nVocê receberá um lembrete 2h antes. Até lá! 😊' },
+  ],
+  cancelamento: [
+    { from:'user', text:'cancelar', delay:0 },
+    { from:'bot', delay:800, text:'Vou te ajudar a cancelar. Seu agendamento ativo:\n\n📅 *Hoje, 14:00 — Corte*\n\nDeseja cancelar este agendamento?', opts:['Sim, cancelar','Não, manter'] },
+    { from:'user', text:'Sim, cancelar', delay:1200 },
+    { from:'bot', delay:900, text:'⚠️ *Política de cancelamento:*\nCancelamentos com menos de 2h de antecedência não recebem reembolso do sinal.\n\nQual o motivo do cancelamento?', opts:['Emergência','Esqueci outro compromisso','Problema de saúde','Outro motivo'] },
+    { from:'user', text:'Emergência', delay:1500 },
+    { from:'bot', delay:1000, text:'✅ *Cancelamento registrado.*\n\nMotivo: Emergência\nSinal: Como o cancelamento foi feito dentro do prazo, o *reembolso de R$25 será processado em até 24h úteis.*\n\nO profissional foi notificado. Até a próxima! 👋' },
+  ],
+  atraso: [
+    { from:'user', text:'vou atrasar uns 15 minutos', delay:0 },
+    { from:'bot', delay:700, text:'Recebi sua mensagem! ⏰\n\nEstou notificando o Carlos Silva agora sobre o seu atraso de 15 minutos. Aguarde a resposta dele.', },
+    { from:'bot', delay:3500, text:'*Carlos Silva respondeu:* ✅\n\nTudo bem! O Carlos vai aguardar você. Pode vir com calma. 😊\n\nCaso algo mude, é só me avisar!', },
+  ],
+  espera: [
+    { from:'user', text:'agendar', delay:0 },
+    { from:'bot', delay:800, text:'Que pena! 😕 Todos os horários de hoje e amanhã estão ocupados para o serviço *Corte*.\n\nDeseja entrar na *lista de espera*?\n\nVocê será o *1º da fila* e receberá uma notificação imediata quando um horário abrir.', opts:['✅ Sim, quero entrar','Não, obrigado'] },
+    { from:'user', text:'✅ Sim, quero entrar', delay:1200 },
+    { from:'bot', delay:900, text:'🎯 Você está na lista de espera!\n\n*Posição:* 1º da fila\n*Serviço:* Corte\n\nAssim que um horário abrir, você terá *30 minutos* para confirmar antes do próximo da fila ser notificado.\n\nFique ligado! 📱' },
+  ]
+};
+
+let chatMessages = [];
+let currentScenario = 'agendamento';
+let scenarioIndex = 0;
+let isRunning = false;
+
+function addBubble(from, text, opts) {
+  const area = document.getElementById('chatArea');
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble ' + from;
+  const lines = text.split('\n').map(l => l.replace(/\*(.*?)\*/g,'<strong>$1</strong>')).join('<br>');
+  bubble.innerHTML = lines;
+
+  if (from === 'bot' && opts && opts.length) {
+    const menu = document.createElement('div');
+    menu.className = 'menu-opts';
+    opts.forEach(o => {
+      const b = document.createElement('div');
+      b.className = 'menu-opt';
+      b.textContent = o;
+      b.onclick = () => {
+        document.getElementById('userInput').value = o;
+        sendMessage();
+      };
+      menu.appendChild(b);
+    });
+    bubble.appendChild(menu);
+  }
+
+  const timeEl = document.createElement('div');
+  timeEl.className = 'bubble-time';
+  if (from === 'user') timeEl.innerHTML = now() + ' <span class="check">✓✓</span>';
+  else timeEl.textContent = now();
+  bubble.appendChild(timeEl);
+
+  area.appendChild(bubble);
+  area.scrollTop = area.scrollHeight;
+  return bubble;
+}
+
+function showTyping() {
+  const area = document.getElementById('chatArea');
+  const t = document.createElement('div');
+  t.className = 'typing-indicator';
+  t.id = 'typingIndicator';
+  t.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  area.appendChild(t);
+  area.scrollTop = area.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typingIndicator');
+  if (t) t.remove();
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function runScenario(sc) {
+  if (isRunning) return;
+  isRunning = true;
+  const area = document.getElementById('chatArea');
+  area.innerHTML = '';
+  scenarioIndex = 0;
+  const msgs = scenarios[sc];
+
+  for (let i = 0; i < msgs.length; i++) {
+    const m = msgs[i];
+    await sleep(m.delay || 600);
+    if (m.from === 'bot') {
+      showTyping();
+      await sleep(Math.min(m.text.length * 18, 1600));
+      removeTyping();
+      addBubble('bot', m.text, m.opts);
+    } else {
+      addBubble('user', m.text);
+    }
+  }
+  isRunning = false;
+}
+
+function sendMessage() {
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addBubble('user', text);
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter') sendMessage();
+}
+
+function loadScenario(name, btn) {
+  currentScenario = name;
+  document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  runScenario(name);
+}
+
+function goStep(n) {
+  document.querySelectorAll('.flow-card').forEach((c, i) => {
+    c.classList.toggle('active', i+1 === n);
+  });
+}
+
+function scrollToDemo() {
+  document.getElementById('como-funciona').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ─── MODAL ────────────────────────────────────────────────────────────────
+const originalModalHTML = document.querySelector('.modal').innerHTML;
+function openModal() {
+  document.querySelector('.modal').innerHTML = originalModalHTML;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function closeModalOutside(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+function submitForm() {
+  const modal = document.querySelector('.modal');
+  modal.innerHTML = `
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div style="text-align:center;padding:16px 0 8px">
+      <div style="font-size:3.5rem;margin-bottom:20px;animation:popIn .4s cubic-bezier(.34,1.56,.64,1) both">🎉</div>
+      <div class="modal-title" style="margin-bottom:10px">Cadastro recebido!</div>
+      <p style="font-size:.92rem;color:var(--muted2);line-height:1.7;margin-bottom:28px">
+        Nossa equipe já foi notificada e <strong style="color:var(--white)">entrará em contato com você em breve</strong> pelo WhatsApp ou e-mail informados.<br><br>
+        Enquanto isso, continue explorando a demo. 😊
+      </p>
+      <div style="background:var(--surf2);border:1px solid var(--border2);border-radius:14px;padding:20px;margin-bottom:28px;text-align:left">
+        <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--teal);margin-bottom:14px">Próximos passos</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;gap:12px;font-size:.85rem;color:var(--muted2)">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--teal-dim);border:1px solid rgba(0,229,188,.3);display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;color:var(--teal);font-weight:800">1</div>
+            Você receberá uma mensagem no WhatsApp da nossa equipe
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:.85rem;color:var(--muted2)">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--teal-dim);border:1px solid rgba(0,229,188,.3);display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;color:var(--teal);font-weight:800">2</div>
+            Faremos o onboarding guiado da sua plataforma juntos
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:.85rem;color:var(--muted2)">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--teal-dim);border:1px solid rgba(0,229,188,.3);display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;color:var(--teal);font-weight:800">3</div>
+            Seu bot estará no ar em menos de 1 hora ✅
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" style="width:100%;justify-content:center" onclick="closeModal()">Voltar para a demo →</button>
+    </div>
+  `;
+  const style = document.createElement('style');
+  style.textContent = '@keyframes popIn{from{opacity:0;transform:scale(0.5)}to{opacity:1;transform:scale(1)}}';
+  document.head.appendChild(style);
+}
+
+// ─── SCROLL REVEAL ────────────────────────────────────────────────────────
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+runScenario('agendamento');
+</script>
+</body>
+</html>
