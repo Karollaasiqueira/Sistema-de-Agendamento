@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagramas de Fluxo v2.0 – Plataforma de Agendamento</title>
+<style>
+  :root {
+    --navy: #1F3864; --blue: #1F4E79; --blue2: #2E75B6; --blue3: #BDD7EE;
+    --green: #375623; --green2: #70AD47; --green-bg: #E2EFDA;
+    --red: #C00000; --red-bg: #FCE4D6;
+    --yellow: #BF8F00; --yellow-bg: #FFF2CC;
+    --gray: #F2F2F2; --gray2: #D9D9D9; --white: #fff; --text: #222;
+    --new-badge: #70AD47; --rev-badge: #2E75B6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: var(--text); }
+
+  /* ── Top bar ── */
+  .topbar { background: var(--navy); color: #fff; padding: 18px 32px; display: flex; align-items: center; gap: 16px; }
+  .topbar h1 { font-size: 1.25rem; font-weight: 700; }
+  .topbar .badge { background: var(--blue2); border-radius: 20px; padding: 3px 14px; font-size: .8rem; }
+  .topbar .badge-new { background: var(--green2); }
+
+  /* ── Tabs ── */
+  .tabs { background: var(--blue); display: flex; flex-wrap: wrap; gap: 2px; padding: 10px 16px 0; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+  .tab { color: #cce; padding: 8px 18px; border-radius: 6px 6px 0 0; cursor: pointer; font-size: .82rem; font-weight: 600; white-space: nowrap; transition: background .2s; border: none; background: transparent; }
+  .tab:hover { background: rgba(255,255,255,.15); }
+  .tab.active { background: #fff; color: var(--navy); }
+  .tab .new-dot { display:inline-block; width:7px; height:7px; background:var(--green2); border-radius:50%; margin-left:5px; vertical-align:middle; }
+
+  /* ── Content ── */
+  .content { display: none; padding: 28px 24px; max-width: 1100px; margin: 0 auto; }
+  .content.active { display: block; }
+
+  .section-title { font-size: 1.3rem; font-weight: 700; color: var(--navy); margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+  .section-desc { font-size: .88rem; color: #555; margin-bottom: 24px; }
+  .badge-tag { font-size: .7rem; font-weight: 700; padding: 2px 10px; border-radius: 12px; color: #fff; }
+  .badge-novo { background: var(--green2); }
+  .badge-rev { background: var(--blue2); }
+  .badge-mant { background: #888; }
+
+  /* ── Diagram canvas ── */
+  .diagram { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.1); padding: 32px 24px; overflow-x: auto; }
+
+  /* ── Flowchart ── */
+  .flow { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .flow-row { display: flex; align-items: center; justify-content: center; gap: 0; width: 100%; }
+  .flow-col { display: flex; flex-direction: column; align-items: center; gap: 0; }
+
+  /* nodes */
+  .node { border-radius: 8px; padding: 10px 18px; font-size: .8rem; font-weight: 600; text-align: center; min-width: 170px; max-width: 220px; line-height: 1.35; position: relative; }
+  .node.start    { background: var(--navy); color: #fff; border-radius: 28px; }
+  .node.end      { background: var(--navy); color: #fff; border-radius: 28px; }
+  .node.process  { background: var(--blue3); color: var(--navy); border: 2px solid var(--blue2); }
+  .node.process.green { background: var(--green-bg); border-color: var(--green2); color: var(--green); }
+  .node.process.red   { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+  .node.process.yellow{ background: var(--yellow-bg); border-color: var(--yellow); color: #7a5100; }
+  .node.decision { background: #fffbe6; border: 2px solid var(--yellow); color: #7a5100; border-radius: 0; transform: rotate(0deg); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); padding: 22px 30px; min-width: 160px; font-size:.75rem; }
+  .node.notif    { background: #fff3e0; border: 2px solid #e6820a; color: #7a3e00; border-radius: 6px; }
+  .node.integ    { background: #e8f5e9; border: 2px solid var(--green2); color: var(--green); border-radius: 6px; }
+
+  /* arrows */
+  .arrow { display: flex; align-items: center; justify-content: center; }
+  .arrow.down::before { content:''; display:block; width:2px; height:28px; background:#888; }
+  .arrow.down::after  { content:'▼'; color:#888; font-size:.75rem; margin-top:-4px; }
+  .arrow.right::before { content:''; display:block; height:2px; width:28px; background:#888; }
+  .arrow.right::after  { content:'▶'; color:#888; font-size:.75rem; margin-left:-4px; }
+
+  .arrow-label { font-size:.7rem; color:#888; font-weight:600; margin: 0 4px; }
+
+  .arrow-col { display:flex; flex-direction:column; align-items:center; }
+  .arrow-col .vline { width:2px; background:#888; flex:1; min-height:20px; }
+  .arrow-col .vtip  { color:#888; font-size:.75rem; }
+
+  /* legend */
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-size: .75rem; color: #555; }
+  .legend-box { width: 22px; height: 14px; border-radius: 3px; border: 1.5px solid #aaa; }
+  .lb-start  { background: var(--navy); border-radius: 8px; border-color:var(--navy); }
+  .lb-proc   { background: var(--blue3); border-color: var(--blue2); }
+  .lb-dec    { background: #fffbe6; border-color: var(--yellow); }
+  .lb-notif  { background: #fff3e0; border-color: #e6820a; }
+  .lb-integ  { background: #e8f5e9; border-color: var(--green2); }
+
+  /* branch */
+  .branch { display:flex; align-items:flex-start; gap:40px; justify-content:center; }
+  .branch-item { display:flex; flex-direction:column; align-items:center; gap:0; }
+  .branch-label { font-size:.72rem; font-weight:700; color: var(--yellow); background:var(--yellow-bg); padding:2px 10px; border-radius:8px; margin-bottom:4px; }
+  .branch-label.yes { color:var(--green); background:var(--green-bg); }
+  .branch-label.no  { color:var(--red); background:var(--red-bg); }
+
+  /* horizontal connector */
+  .h-line { width:80px; height:2px; background:#888; margin-top:20px; }
+
+  /* tooltip new */
+  .new-badge-inline { font-size:.65rem; font-weight:700; background:var(--green2); color:#fff; padding:1px 6px; border-radius:8px; vertical-align:middle; margin-left:5px; }
+
+  /* sidebar overview */
+  .overview-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-top:16px; }
+  .overview-card { background:#fff; border-radius:10px; padding:16px 18px; box-shadow:0 1px 6px rgba(0,0,0,.1); border-left:4px solid var(--blue2); }
+  .overview-card.novo { border-left-color:var(--green2); }
+  .overview-card h3 { font-size:.88rem; color:var(--navy); margin-bottom:6px; }
+  .overview-card p  { font-size:.78rem; color:#666; line-height:1.4; }
+  .overview-card .status { font-size:.68rem; font-weight:700; margin-top:8px; }
+  .status.novo { color:var(--green); } .status.rev { color:var(--blue2); } .status.mant { color:#888; }
+
+  @media(max-width:600px){ .node{min-width:120px;font-size:.72rem;} .branch{gap:16px;} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span style="font-size:1.5rem">📋</span>
+  <h1>Diagramas de Fluxo – Plataforma de Agendamento</h1>
+  <span class="badge">v2.0</span>
+  <span class="badge badge-new">+5 novos fluxos</span>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="show('geral')">🏗️ Visão Geral</button>
+  <button class="tab" onclick="show('onboarding')">🚀 Onboarding<span class="new-dot"></span></button>
+  <button class="tab" onclick="show('cadastro')">👤 Cadastro</button>
+  <button class="tab" onclick="show('agendamento')">📅 Agendamento</button>
+  <button class="tab" onclick="show('reagendamento')">🔄 Reagendamento<span class="new-dot"></span></button>
+  <button class="tab" onclick="show('cancelamento')">❌ Cancelamento</button>
+  <button class="tab" onclick="show('pagamento')">💳 Pagamento<span class="new-dot"></span></button>
+  <button class="tab" onclick="show('atraso')">⏰ Atraso</button>
+  <button class="tab" onclick="show('lembretes')">🔔 Lembretes</button>
+  <button class="tab" onclick="show('espera')">⏳ Lista de Espera</button>
+  <button class="tab" onclick="show('handoff')">🤝 Handoff<span class="new-dot"></span></button>
+</div>
+
+<!-- ═══════════ GERAL ═══════════ -->
+<div id="geral" class="content active">
+  <div class="section-title">🏗️ Visão Geral do Sistema <span class="badge-tag badge-rev">v2.0</span></div>
+  <div class="section-desc">Módulos, novos fluxos adicionados e integrações externas da plataforma.</div>
+  <div class="overview-grid">
+    <div class="overview-card novo"><h3>🚀 Onboarding</h3><p>Fluxo guiado de ativação para novos profissionais. Bot bloqueado até checklist completo.</p><div class="status novo">● NOVO v2.0</div></div>
+    <div class="overview-card"><h3>👤 Cadastro</h3><p>Profissionais, colaboradores e clientes. Consentimento LGPD no primeiro contato via WhatsApp.</p><div class="status rev">● Revisado v2.0</div></div>
+    <div class="overview-card"><h3>📅 Agendamento</h3><p>Fluxo completo via chatbot WhatsApp: serviço → horário → pagamento → confirmação.</p><div class="status rev">● Revisado v2.0</div></div>
+    <div class="overview-card novo"><h3>🔄 Reagendamento</h3><p>Cliente ou profissional pode reagendar. Limite de 2 vezes por agendamento.</p><div class="status novo">● NOVO v2.0</div></div>
+    <div class="overview-card"><h3>❌ Cancelamento</h3><p>Com motivo obrigatório, política de reembolso de sinal e notificação da lista de espera.</p><div class="status rev">● Revisado v2.0</div></div>
+    <div class="overview-card novo"><h3>💳 Pagamento</h3><p>Sinal antecipado com tratamento completo de falhas, expiração, reembolso e chargeback.</p><div class="status novo">● NOVO v2.0</div></div>
+    <div class="overview-card"><h3>⏰ Atraso</h3><p>Cliente avisa atraso → profissional responde via app ou WhatsApp → bot informa decisão.</p><div class="status rev">● Revisado v2.0</div></div>
+    <div class="overview-card"><h3>🔔 Lembretes</h3><p>Automático 24h e 2h antes. Rastreamento de leitura via WhatsApp status.</p><div class="status rev">● Revisado v2.0</div></div>
+    <div class="overview-card"><h3>⏳ Lista de Espera</h3><p>FIFO com confirmação em 30 minutos. Vaga passa ao próximo automaticamente.</p><div class="status mant">● Mantido</div></div>
+    <div class="overview-card novo"><h3>🤝 Handoff Bot→Humano</h3><p>Cliente digita 'humano' ou bot não reconhece mensagem → atendimento direto com profissional.</p><div class="status novo">● NOVO v2.0</div></div>
+  </div>
+  <br>
+  <div class="diagram">
+    <div class="legend">
+      <div class="legend-item"><div class="legend-box lb-start"></div>Início / Fim</div>
+      <div class="legend-item"><div class="legend-box lb-proc"></div>Processo</div>
+      <div class="legend-item"><div class="legend-box lb-dec"></div>Decisão</div>
+      <div class="legend-item"><div class="legend-box lb-notif"></div>Notificação</div>
+      <div class="legend-item"><div class="legend-box lb-integ"></div>Integração externa</div>
+    </div>
+    <div class="flow">
+      <div class="node start">🟢 INÍCIO DO SISTEMA</div>
+      <div class="arrow down"></div>
+      <div class="node process">Profissional cria conta</div>
+      <div class="arrow down"></div>
+      <div class="node process green">🚀 Onboarding guiado<span class="new-badge-inline">NOVO</span></div>
+      <div class="arrow down"></div>
+      <div class="node integ">✅ Bot ativado para clientes</div>
+      <div class="arrow down"></div>
+      <div style="display:flex;gap:32px;align-items:flex-start;justify-content:center">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+          <div class="node process">📱 Cliente envia 'oi'</div>
+          <div class="arrow down"></div>
+          <div class="node process">LGPD → consentimento</div>
+          <div class="arrow down"></div>
+          <div class="node process">📅 Agendamento</div>
+          <div class="arrow down"></div>
+          <div class="node process yellow">💳 Pagamento de sinal<span class="new-badge-inline">NOVO</span></div>
+          <div class="arrow down"></div>
+          <div class="node process green">✅ Confirmação</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:0">
+          <div class="node process">🔄 Reagendar<span class="new-badge-inline">NOVO</span></div>
+          <div style="height:16px"></div>
+          <div class="node process red">❌ Cancelar</div>
+          <div style="height:16px"></div>
+          <div class="node notif">⏰ Atraso</div>
+          <div style="height:16px"></div>
+          <div class="node notif">🔔 Lembretes</div>
+          <div style="height:16px"></div>
+          <div class="node process">⏳ Lista de espera</div>
+          <div style="height:16px"></div>
+          <div class="node process yellow">🤝 Handoff<span class="new-badge-inline">NOVO</span></div>
+        </div>
+      </div>
+      <div class="arrow down"></div>
+      <div class="node integ">🗓️ Google Agenda · 📲 WhatsApp API · 💰 Gateway · 🔔 FCM</div>
+      <div class="arrow down"></div>
+      <div class="node start">🔴 FIM / NOVO CICLO</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ONBOARDING ═══════════ -->
+<div id="onboarding" class="content">
+  <div class="section-title">🚀 Fluxo de Onboarding do Profissional <span class="badge-tag badge-novo">NOVO v2.0</span></div>
+  <div class="section-desc">RF-88 a RF-92 | Corrige lacuna L-02. Bot permanece inativo até checklist 100% concluído.</div>
+  <div class="diagram">
+    <div class="flow">
+      <div class="node start">🟢 Profissional cria conta</div>
+      <div class="arrow down"></div>
+      <div class="node process">Painel exibe checklist de ativação (RF-88)<br><small>Barra de progresso visível</small></div>
+      <div class="arrow down"></div>
+      <div class="node process">Passo 1: Cadastrar ao menos 1 serviço</div>
+      <div class="arrow down"></div>
+      <div class="node process">Passo 2: Configurar ao menos 1 dia/horário</div>
+      <div class="arrow down"></div>
+      <div class="node process">Passo 3: Conectar WhatsApp Business</div>
+      <div class="arrow down"></div>
+      <div class="node process">Passo 4: OAuth com Google Agenda</div>
+      <div class="arrow down"></div>
+      <div class="node decision">Checklist<br>100%?</div>
+      <div class="arrow down"></div>
+      <div class="branch">
+        <div class="branch-item">
+          <div class="branch-label no">❌ NÃO</div>
+          <div class="arrow down"></div>
+          <div class="node process yellow">Bot permanece INATIVO<br><small>Painel exibe itens pendentes</small></div>
+          <div class="arrow down"></div>
+          <div class="node process">Profissional pode pausar e retomar (RF-91)</div>
+          <div class="arrow down"></div>
+          <div class="node process">⬆️ Volta ao passo pendente</div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-label yes">✅ SIM</div>
+          <div class="arrow down"></div>
+          <div class="node integ">Bot ATIVADO para clientes (RF-90)</div>
+          <div class="arrow down"></div>
+          <div class="node notif">📧 E-mail de boas-vindas + tutoriais (RF-92)</div>
+          <div class="arrow down"></div>
+          <div class="node start">🔴 FIM DO ONBOARDING</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ CADASTRO ═══════════ -->
+<div id="cadastro" class="content">
+  <div class="section-title">👤 Fluxo de Cadastro <span class="badge-tag badge-rev">Revisado v2.0</span></div>
+  <div class="section-desc">RF-01 a RF-11 | Inclui consentimento LGPD no cadastro automático do cliente (RN-11).</div>
+  <div class="diagram">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px">
+      <div>
+        <h3 style="font-size:.9rem;color:var(--navy);margin-bottom:16px">Cadastro do Profissional</h3>
+        <div class="flow">
+          <div class="node start">🟢 Acessa painel</div>
+          <div class="arrow down"></div>
+          <div class="node process">Preenche dados: nome, CPF/CNPJ, telefone, e-mail, fuso horário</div>
+          <div class="arrow down"></div>
+          <div class="node process">Upload logo/banner (opcional)</div>
+          <div class="arrow down"></div>
+          <div class="node process green">Configuração de senha + 2FA opcional (RF-83 a RF-85)</div>
+          <div class="arrow down"></div>
+          <div class="node integ">Conta criada → inicia Onboarding</div>
+          <div class="arrow down"></div>
+          <div class="node start">🔴 FIM</div>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:.9rem;color:var(--navy);margin-bottom:16px">Cadastro Automático do Cliente</h3>
+        <div class="flow">
+          <div class="node start">🟢 Cliente envia 'oi' no WhatsApp</div>
+          <div class="arrow down"></div>
+          <div class="node decision">Já cadastrado?</div>
+          <div class="arrow down"></div>
+          <div class="branch">
+            <div class="branch-item">
+              <div class="branch-label no">NÃO</div>
+              <div class="arrow down"></div>
+              <div class="node process">Bot exibe aviso LGPD<br><small>Coleta consentimento explícito (RN-11)</small></div>
+              <div class="arrow down"></div>
+              <div class="node decision">Aceitou?</div>
+              <div class="arrow down"></div>
+              <div class="branch">
+                <div class="branch-item">
+                  <div class="branch-label no">NÃO</div>
+                  <div class="arrow down"></div>
+                  <div class="node process red">Fluxo encerrado.<br>Bot não avança</div>
+                </div>
+                <div class="branch-item">
+                  <div class="branch-label yes">SIM</div>
+                  <div class="arrow down"></div>
+                  <div class="node process">Cadastro automático com nome + telefone</div>
+                </div>
+              </div>
+            </div>
+            <div class="branch-item">
+              <div class="branch-label yes">SIM</div>
+              <div class="arrow down"></div>
+              <div class="node integ">Identifica cliente → exibe menu</div>
+            </div>
+          </div>
+          <div class="arrow down"></div>
+          <div class="node start">🔴 Prossegue para Agendamento</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ AGENDAMENTO ═══════════ -->
+<div id="agendamento" class="content">
+  <div class="section-title">📅 Fluxo de Agendamento via WhatsApp <span class="badge-tag badge-rev">Revisado v2.0</span></div>
+  <div class="section-desc">RF-30 a RF-34 | Inclui verificação de limite de agendamentos (RN-06) e pagamento de sinal.</div>
+  <div class="diagram">
+    <div class="flow">
+      <div class="node start">🟢 Cliente envia mensagem de ativação</div>
+      <div class="arrow down"></div>
+      <div class="node process">Bot verifica consentimento LGPD → cadastra se necessário</div>
+      <div class="arrow down"></div>
+      <div class="node decision">Limite de 3<br>agendamentos<br>ativos? (RN-06)</div>
+      <div class="arrow down"></div>
+      <div class="branch">
+        <div class="branch-item">
+          <div class="branch-label no">SIM (bloqueado)</div>
+          <div class="arrow down"></div>
+          <div class="node process yellow">Bot informa limite atingido<br><small>"Cancele um para agendar novo"</small></div>
+          <div class="arrow down"></div>
+          <div class="node start">🔴 FIM</div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-label yes">NÃO (ok)</div>
+          <div class="arrow down"></div>
+          <div class="node process">Bot exibe menu de serviços com duração e valor (RF-31)</div>
+          <div class="arrow down"></div>
+          <div class="node process">Cliente escolhe serviço(s)<br><small>Opção de combinar até 3 (RN-05)</small></div>
+          <div class="arrow down"></div>
+          <div class="node process">Bot exibe datas/horários disponíveis (RF-32)</div>
+          <div class="arrow down"></div>
+          <div class="node process">Cliente seleciona data e horário</div>
+          <div class="arrow down"></div>
+          <div class="node decision">Sinal<br>obrigatório?</div>
+          <div class="arrow down"></div>
+          <div class="branch">
+            <div class="branch-item">
+              <div class="branch-label yes">SIM</div>
+              <div class="arrow down"></div>
+              <div class="node process yellow">Bot envia link de pagamento</div>
+              <div class="arrow down"></div>
+              <div class="node process">⬇️ Fluxo de Pagamento (aba 💳)</div>
+            </div>
+            <div class="branch-item">
+              <div class="branch-label no">NÃO</div>
+              <div class="arrow down"></div>
+              <div class="node process green">Agendamento confirmado</div>
+              <div class="arrow down"></div>
+              <div class="node notif">📲 Confirmação ao cliente + link Google Agenda (RF-33/34)</div>
+              <div class="arrow down"></div>
+              <div class="node notif">🔔 Push ao profissional (RF-51)</div>
+              <div class="arrow down"></div>
+              <div class="node integ">🗓️ Sincroniza Google Agenda (RF-26)</div>
+              <div class="arrow down"></div>
+              <div class="node start">🔴 FIM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ REAGENDAMENTO ═══════════ -->
+<div id="reagendamento" class="content">
+  <div class="section-title">🔄 Fluxo de Reagendamento <span class="badge-tag badge-novo">NOVO v2.0</span></div>
+  <div class="section-desc">RF-76 a RF-80, UC-06, UC-07 | Corrige lacuna L-01. Cobre iniciativa do cliente e do profissional.</div>
+  <div class="diagram">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px">
+      <div>
+        <h3 style="font-size:.9rem;color:var(--navy);margin-bottom:16px">Cliente Reagenda (UC-06)</h3>
+        <div class="flow">
+          <div class="node start">🟢 Cliente envia 'reagendar'</div>
+          <div class="arrow down"></div>
+          <div class="node decision">Já atingiu 2<br>reagendamentos?<br>(RN-09)</div>
+          <div class="arrow down"></div>
+          <div class="branch">
+            <div class="branch-item">
+              <div class="branch-label no">SIM</div>
+              <div class="arrow down"></div>
+              <div class="node process red">Bot informa limite<br>Oferece: cancelar ou handoff</div>
+              <div class="arrow down"></div>
+              <div class="node start">🔴 FIM</div>
+            </div>
+            <div class="branch-item">
+              <div class="branch-label yes">NÃO</div>
+              <div class="arrow down"></div>
+              <div class="node decision">Dentro do<br>prazo? (RN-01)</div>
+              <div class="arrow down"></div>
+              <div class="branch">
+                <div class="branch-item">
+                  <div class="branch-label no">NÃO</div>
+                  <div class="arrow down"></div>
+                  <div class="node process yellow">Aviso de possível cobrança<br>(RF-78)</div>
+                </div>
+                <div class="branch-item">
+                  <div class="branch-label yes">SIM</div>
+                  <div class="arrow down"></div>
+                  <div class="node process">Bot exibe próximos 10 slots<br>disponíveis (RF-76)</div>
+                </div>
+              </div>
+              <div class="arrow down"></div>
+              <div class="node process">Cliente escolhe novo slot</div>
+              <div class="arrow down"></div>
+              <div class="node process green">Novo agendamento confirmado<br>Contador reagendamentos +1</div>
+              <div class="arrow down"></div>
+              <div class="node integ">🗓️ Google Agenda atualizado<br>Evento antigo removido (RF-80)</div>
+              <div class="arrow down"></div>
+              <div class="node start">🔴 FIM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:.9rem;color:var(--navy);margin-bottom:16px">Profissional Reagenda (UC-07)</h3>
+        <div class="flow">
+          <div class="node start">🟢 Profissional abre agendamento no painel</div>
+          <div class="arrow down"></div>
+          <div class="node process">Clica em 'Reagendar'<br>Seleciona até 3 horários alternativos</div>
+          <div class="arrow down"></div>
+          <div class="node notif">📲 WhatsApp ao cliente com opções (RF-77)</div>
+          <div class="arrow down"></div>
+          <div class="node decision">Cliente<br>responde?</div>
+          <div class="arrow down"></div>
+          <div class="branch">
+            <div class="branch-item">
+              <div class="branch-label yes">CONFIRMA</div>
+              <div class="arrow down"></div>
+              <div class="node process green">Novo agendamento criado</div>
+              <div class="arrow down"></div>
+              <div class="node integ">🗓️ Google Agenda atualizado</div>
+              <div class="arrow down"></div>
+              <div class="node start">🔴 FIM</div>
+            </div>
+            <div class="branch-item">
+              <div class="branch-label no">RECUSA</div>
+              <div class="arrow down"></div>
+              <div class="node process red">Agendamento cancelado</div>
+              <div class="arrow down"></div>
+              <div class="node process green">Reembolso integral do sinal (RF-76b)</div>
+              <div class="arrow down"></div>
+              <div class="node notif">📧 Comprovante de reembolso ao cliente</div>
+              <div class="arrow down"></div>
+              <div class="node start">🔴 FIM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ CANCELAMENTO ═══════════ -->
+<div id="cancelamento" class="content">
+  <div class="section-title">❌ Fluxo de Cancelamento <span class="badge-tag badge-rev">Revisado v2.0</span></div>
+  <div class="section-desc">RF-35 a RF-40, RF-75 | Inclui política de reembolso e notificação da lista de espera.</div>
+  <div class="diagram">
+    <div class="flow">
+      <div class="node start">🟢 Cliente solicita cancelamento via WhatsApp</div>
+      <div class="arrow down"></div>
+      <div class="node decision">Dentro do prazo<br>mínimo? (RN-01)</div>
+      <div class="arrow down"></div>
+      <div class="branch">
+        <div class="branch-item">
+          <div class="branch-label no">FORA DO PRAZO</div>
+          <div class="arrow down"></div>
+          <div class="node process yellow">Bot exibe aviso:<br>sinal não será reembolsado (RF-40)</div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-label yes">DENTRO DO PRAZO</div>
+          <div class="arrow down"></div>
+          <div class="node process green">Bot informa que reembolso será aplicado</div>
+        </div>
+      </div>
+      <div class="arrow down"></div>
+      <div class="node process">Bot solicita motivo obrigatório (RF-36)<br><small>Opções pré-definidas + campo livre (RF-37)</small></div>
+      <div class="arrow down"></div>
+      <div class="node process">Cliente informa motivo</div>
+      <div class="arrow down"></div>
+      <div class="node process red">Agendamento cancelado no sistema</div>
+      <div class="arrow down"></div>
+      <div class="node notif">🔔 Notificação push ao profissional com motivo (RF-52)</div>
+      <div class="arrow down"></div>
+      <div class="node integ">🗓️ Horário liberado no Google Agenda (RF-28)</div>
+      <div class="arrow down"></div>
+      <div class="node decision">Havia sinal pago<br>+ dentro do prazo?</div>
+      <div class="arrow down"></div>
+      <div class="branch">
+        <div class="branch-item">
+          <div class="branch-label yes">SIM</div>
+          <div class="arrow down"></div>
+          <div class="node process green">Reembolso automático iniciado em 24h (RF-75)</div>
+          <div class="arrow down"></div>
+          <div class="node notif">📧📲 Comprovante de reembolso ao cliente</div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-label no">NÃO</div>
+          <div class="arrow down"></div>
+          <div class="node process">Sem reembolso</div>
+        </div>
+      </div>
+      <div class="arrow down"></div>
+      <div class="node decision">Há lista<br>de espera?</div>
+      <div class="arrow down"></div>
+      <div class="branch">
+        <div class="branch-item">
+          <div class="branch-label yes">SIM</div>
+          <div class="arrow down"></div>
+          <div class="node notif">📲 Notifica 1º da fila (RF-65)</div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-label no">NÃO</div>
+          <div class="arrow down"></div>
+          <div class="node process">Horário disponível no calendário</div>
+        </div>
+      </div>
+      <div class="arrow down"></div>
+      <div class="node start">🔴 FIM</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ PAGAMENTO ═══════════ -->
+<div id="pagamento" class="content">
+  <div class="section-title">💳 Fluxo de Pagamento de Sinal <span class="badge-tag badge-novo">NOVO v2.0</span></div>
+  <div class="section-desc">RF-68 a RF-77b, UC-08 | Corrige lacuna L-03. Cobre sucesso, falha, expiração, reembolso e chargeback.</div>
+  <div class="diagram">
+    <div class="flow">
+      <div class="node start">🟢 Agendamento selecionado (sinal obrigatório)</div>
+      <div class="arrow down"></div>
+      <div class="node process">Bot envia link de pagamento (Pix / cartão)</div>
+      <div class="arrow down"></div>
+      <div class="node process yellow">Status: PENDENTE – 30 minutos (RF-73)</div>
+      <div class="arrow down"></div>
+      <div class="node decision">Pagamento<br>processado?</div>
+      <div class="arrow down"></div>
+      <div class="branch">
+        <div class="branch-item">
+          <div class="branch-label yes">✅ SUCESSO</div>
+          <div class="arrow down"></div>
+          <div class="node process green">Agendamento CONFIRMADO</div>
+          <div class="arrow down"></div>
+          <div class="node notif">📲 Comprovante ao cliente (RF-70)</div>
+          <div class="arrow down"></div>
+          <div class="node notif">🔔 Push ao profissional (RF-51)</div>
+          <div class="arrow down"></div>
+          <div class="node integ">🗓️ Google Agenda sincronizado</div>
+          <div class="arrow down"></div>
+          <div class="node start">🔴 FIM – Agendado</div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-label no">❌ FALHA</div>
+          <div class="arrow down"></div>
+          <div class="node process red">Bot notifica cliente<br>Envia novo link de tentativa (RF-73)</div>
+          <div class="arrow down"></div>
+          <div class="node decision">2ª tentativa<br>bem-sucedida?</div>
+          <div class="arrow down"></div>
+          <div class="branch">
+            <div class="branch-item">
+              <div class="branch-label yes">✅</div>
+              <div class="arrow down"></div>
+              <div class="node process green">Confirmado</div>
+            </div>
+            <div class="branch-item">
+              <div class="branch-label no">❌</div>
+              <div class="arrow down"></div>
+              <div class="node process red">2ª falha (RF-74)<br>Handoff para profissional</div>
+              <div class="arrow down"></div>
+              <div class="node start">🔴 FIM – Sem agendamento</div>
+            </div>
+          </div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-label no">⏱️ EXPIROU (30min)</div>
+          <div class="arrow down"></div>
+          <div class="node process red">Agendamento cancelado<br>automaticamente</div>
+          <div class="arrow down"></div>
+          <div class="node integ">🗓️ Horário liberado</div>
+          <div class="arrow down"></div>
+          <div class="node notif">📲 Cliente notificado</div>
+          <div class="arrow down"></div>
+          <div class="node start">🔴 FIM</div>
+        </div>
+      </div>
+    </div>
+    <br>
+    <h3 style="font-size:.9rem;color:var(--navy);margin-bottom:12px">Fluxo de Reembolso e Chargeback</h3>
+    <div class="flow">
+      <div class="node start">🟢 Cancelamento dentro do prazo (RN-01)</div>
+      <div class="arrow down"></div>
+      <div class="node process green">Reembolso automático em até 24h úteis (RF-75)</div>
+      <div class="arrow down"></div>
+      <div class="node notif">📧📲 Comprovante de reembolso ao cliente</div>
+      <div class="arrow down"></div>
+      <div class="node decision">Chargeback<br>solicitado?</div>
+      <div class="arrow down"></div>
+      <div class="branch">
+        <div class="branch-item">
+          <div class="branch-label yes">SIM (RF-77b)</div>
+          <div class="arrow down"></div>
+          <div class="node process red">Sistema registra ocorrência<br>Bloqueia novos agendamentos do cliente</div>
+          <div class="arrow down"></div>
+          <div class="node notif">🔔 Profissional notificado<br>Suporte acessa histórico completo</div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-label no">NÃO</div>
+          <div class="arrow down"></div>
+          <div class="node start">🔴 FIM</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ATRASO ═══════════ -->
+<div id="atraso" class="content">
+  <div class="section-title">⏰ Fluxo de Notificação de Atraso <span class="badge-tag badge-rev">Revisado v2.0</span></div>
+  <div class="section-desc">RF-41 a RF-46 | Profissional responde via app móvel OU WhatsApp Business (corrige I-01).</div>
+  <div class="diagram">
+    <div class="flow">
+      <div class="node start">🟢 Cliente envia mensagem de atraso</div>
+      <div class="arrow down"></div>
+      <div class="node process">Bot identifica agendamento e horário</div>
+      <div class="arrow down"></div>
+      <div class="node notif">🔔 Push no app móvel do profissional<br>📲 WhatsApp Business do profissional<br><small>(com: quem, horário, serviço) – RF-42</small></div>
+      <div class="arrow down"></div>
+      <div class="node process yellow">Aguarda resposta – timeout: 10min (RN-02)</div>
+      <div class="arrow down"></div>
+      <div class="node decision">Profissional<br>respondeu?</div>
+      <div class="arrow down"></div>
+      <div class="branch">
+        <div class="branch-item">
+          <div class="branch-label no">TIMEOUT (10min)</div>
+          <div class="arrow down"></div>
+          <div class="node process red">Resposta automática negativa ao cliente (RF-46)</div>
+          <div class="arrow down"></div>
+          <div class="node process">Bot oferece reagendamento</div>
+          <div class="arrow down"></div>
+          <div class="node start">🔴 FIM</div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-label yes">RESPONDEU</div>
+          <div class="arrow down"></div>
+          <div class="node decision">Resposta:<br>'OK' ou 'NÃO'?</div>
+          <div class="arrow down"></div>
+          <div class="branch">
+            <div class="branch-item">
+              <div class="branch-label yes">OK</div>
+              <div class="arrow down"></div>
+              <div class="node process green">Bot confirma ao cliente<br>que profissional aguardará (RF-44)</div>
+              <div class="arrow down"></div>
+              <div class="node start">🔴 FIM – Agendamento mantido</div>
+            </div>
+            <div class="branch-item">
+              <div class="branch-label no">NÃO</div>
+              <div class="arrow down"></div>
+              <div class="node process red">Bot informa impossibilidade (RF-45)</div>
+              <div class="arrow down"></div>
+              <div class="node process">Bot oferece reagendamento (RF-76)</div>
+              <div class="arrow down"></div>
+              <div class="node start">🔴 FIM</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ LEMBRETES ═══════════ -->
+<div id="lembretes" class="content">
+  <div class="section-title">🔔 Fluxo de Lembretes Automáticos <span class="badge-tag badge-rev">Revisado v2.0</span></div>
+  <div class="section-desc">RF-47 a RF-50, RF-56 | Inclui rastreamento de status de leitura via WhatsApp API.</div>
+  <div class="diagram">
+    <div class="flow">
+      <div class="node start">🟢 Sistema varre agendamentos (job automático)</div>
+      <div class="arrow down"></div>
+      <div class="node decision">Marco atingido?</div>
+      <div class="arrow down"></div>
+      <div class="branch">
+        <div class="branch-item">
+          <div class="branch-label yes">24h antes</div>
+          <div class="arrow down"></div>
+          <div class="node notif">📲 Lembrete 24h:<br>resumo do agendamento (RF-47)</div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-label yes">2h antes</div>
+          <div class="arrow down"></div>
+          <div class="node notif">📲 Lembrete 2h:<br>localização + link Maps (RF-48)</div>
+        </div>
+      </div>
+      <div class="arrow down"></div>
+      <div class="node integ">Sistema registra status: enviado (RF-56)</div>
+      <div class="arrow down"></div>
+      <div class="node decision">Cliente<br>respondeu?</div>
+      <div class="arrow down"></div>
+      <div class="branch">
+        <div class="branch-item">
+          <div class="branch-label yes">CONFIRMOU</div>
+          <div class="arrow down"></div>
+          <div class="node process green">Status: confirmado (RF-49)</div>
+          <div class="arrow down"></div>
+          <div class="node notif">🔔 Push ao profissional (RF-50)</div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-label no">CANCELOU</div>
+          <div class="arrow down"></div>
+          <div class="node process red">Inicia fluxo de cancelamento</div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-label no">LIDO / SEM RESPOSTA</div>
+          <div class="arrow down"></div>
+          <div class="node process yellow">Após 1h do lembrete 2h:<br>confirmação tácita registrada (RF-56)</div>
+        </div>
+      </div>
+      <div class="arrow down"></div>
+      <div class="node start">🔴 FIM</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ LISTA DE ESPERA ═══════════ -->
+<div id="espera" class="content">
+  <div class="section-title">⏳ Fluxo de Lista de Espera <span class="badge-tag badge-mant">Mantido</span></div>
+  <div class="section-desc">RF-64 a RF-67 | Gerenciamento automático FIFO com confirmação em 30 minutos.</div>
+  <div class="diagram">
+    <div class="flow">
+      <div class="node start">🟢 Cliente solicita horário indisponível</div>
+      <div class="arrow down"></div>
+      <div class="node process">Bot oferece entrada na lista de espera (RF-64)</div>
+      <div class="arrow down"></div>
+      <div class="node decision">Cliente<br>aceita?</div>
+      <div class="arrow down"></div>
+      <div class="branch">
+        <div class="branch-item">
+          <div class="branch-label no">NÃO</div>
+          <div class="arrow down"></div>
+          <div class="node start">🔴 FIM</div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-label yes">SIM</div>
+          <div class="arrow down"></div>
+          <div class="node process">Cliente adicionado à fila (posição FIFO)</div>
+          <div class="arrow down"></div>
+          <div class="node process yellow">Aguarda abertura de vaga</div>
+          <div class="arrow down"></div>
+          <div class="node integ">Horário liberado (cancelamento)</div>
+          <div class="arrow down"></div>
+          <div class="node notif">📲 Notificação ao 1º da fila (RF-65)</div>
+          <div class="arrow down"></div>
+          <div class="node process yellow">Cliente tem 30 minutos para confirmar (RF-67)</div>
+          <div class="arrow down"></div>
+          <div class="node decision">Confirmou<br>em 30min?</div>
+          <div class="arrow down"></div>
+          <div class="branch">
+            <div class="branch-item">
+              <div class="branch-label yes">SIM</div>
+              <div class="arrow down"></div>
+              <div class="node process green">Agendamento criado → fluxo normal</div>
+              <div class="arrow down"></div>
+              <div class="node start">🔴 FIM</div>
+            </div>
+            <div class="branch-item">
+              <div class="branch-label no">NÃO / Expirou</div>
+              <div class="arrow down"></div>
+              <div class="node process">Cliente removido da fila</div>
+              <div class="arrow down"></div>
+              <div class="node notif">📲 Próximo da fila notificado (RF-65)</div>
+              <div class="arrow down"></div>
+              <div class="node process">⬆️ Repete processo</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ HANDOFF ═══════════ -->
+<div id="handoff" class="content">
+  <div class="section-title">🤝 Fluxo de Handoff Bot → Humano <span class="badge-tag badge-novo">NOVO v2.0</span></div>
+  <div class="section-desc">RF-93 a RF-97 | Corrige lacuna L-07. Cobre solicitação explícita e ativação automática por mensagens não reconhecidas.</div>
+  <div class="diagram">
+    <div class="flow">
+      <div class="node start">🟢 Cliente em conversa com o bot</div>
+      <div class="arrow down"></div>
+      <div class="node decision">Tipo de<br>situação?</div>
+      <div class="arrow down"></div>
+      <div class="branch">
+        <div class="branch-item">
+          <div class="branch-label yes">Solicitação explícita</div>
+          <div class="arrow down"></div>
+          <div class="node process">Cliente digita 'humano', 'atendente' ou '0' (RF-93)</div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-label no">Mensagem não reconhecida</div>
+          <div class="arrow down"></div>
+          <div class="node process yellow">Bot tenta interpretar (1ª vez)</div>
+          <div class="arrow down"></div>
+          <div class="node decision">2ª tentativa<br>falhou?</div>
+          <div class="arrow down"></div>
+          <div class="branch">
+            <div class="branch-item">
+              <div class="branch-label no">NÃO</div>
+              <div class="arrow down"></div>
+              <div class="node process">Bot retoma fluxo normal</div>
+            </div>
+            <div class="branch-item">
+              <div class="branch-label yes">SIM (RF-95)</div>
+              <div class="arrow down"></div>
+              <div class="node process red">Ativa handoff automático</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="arrow down"></div>
+      <div class="node process">Bot informa cliente: atendente foi notificado (RF-94)</div>
+      <div class="arrow down"></div>
+      <div class="node notif">🔔 Push + WhatsApp ao profissional<br><small>com contexto da conversa (RF-94)</small></div>
+      <div class="arrow down"></div>
+      <div class="node integ">Histórico da conversa salvo no perfil do cliente (RF-97)</div>
+      <div class="arrow down"></div>
+      <div class="node process green">Profissional atende diretamente via WhatsApp</div>
+      <div class="arrow down"></div>
+      <div class="node decision">Profissional quer<br>devolver ao bot?</div>
+      <div class="arrow down"></div>
+      <div class="branch">
+        <div class="branch-item">
+          <div class="branch-label yes">SIM (RF-96)</div>
+          <div class="arrow down"></div>
+          <div class="node process">Profissional clica 'Devolver ao bot' no painel/app</div>
+          <div class="arrow down"></div>
+          <div class="node notif">📲 Bot envia mensagem de transição ao cliente</div>
+          <div class="arrow down"></div>
+          <div class="node integ">Bot retoma fluxo de agendamento</div>
+        </div>
+        <div class="branch-item">
+          <div class="branch-label no">NÃO</div>
+          <div class="arrow down"></div>
+          <div class="node process">Atendimento humano continua</div>
+        </div>
+      </div>
+      <div class="arrow down"></div>
+      <div class="node start">🔴 FIM</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgendaPro - Sistema de Agendamento Profissional</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Landing Page (shown when not logged in) -->
+    <div id="landing-page" class="landing-page">
+        <nav class="landing-nav">
+            <div class="container">
+                <div class="nav-brand">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>AgendaPro</span>
+                </div>
+                <button class="btn-demo" onclick="showDemo()">
+                    <i class="fas fa-play"></i> Ver Demonstração
+                </button>
+            </div>
+        </nav>
+
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1>Automatize seus agendamentos via <span class="highlight">WhatsApp</span></h1>
+                    <p class="hero-subtitle">Sistema completo de agendamento com bot inteligente, pagamento via Pix, lembretes automáticos e painel de controle.</p>
+                    <div class="hero-cta">
+                        <button class="btn-primary-large" onclick="showDemo()">
+                            <i class="fas fa-rocket"></i> Iniciar Demonstração
+                        </button>
+                        <button class="btn-secondary-large" onclick="scrollToFeatures()">
+                            <i class="fas fa-info-circle"></i> Saiba Mais
+                        </button>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat">
+                            <div class="stat-number">100%</div>
+                            <div class="stat-label">Gratuito (MVP)</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">24/7</div>
+                            <div class="stat-label">Bot Automático</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">4 Semanas</div>
+                            <div class="stat-label">Para Lançar</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <div class="phone-mockup">
+                        <div class="phone-screen">
+                            <div class="whatsapp-preview">
+                                <div class="wa-header">
+                                    <div class="wa-avatar">🏪</div>
+                                    <div class="wa-info">
+                                        <div class="wa-name">Barbearia Silva</div>
+                                        <div class="wa-status">online</div>
+                                    </div>
+                                </div>
+                                <div class="wa-chat">
+                                    <div class="wa-message wa-bot">
+                                        <div class="wa-bubble">
+                                            Olá! 👋 Bem-vindo à Barbearia Silva.<br><br>
+                                            Como posso ajudar?<br><br>
+                                            1️⃣ Agendar horário<br>
+                                            2️⃣ Cancelar agendamento<br>
+                                            3️⃣ Falar com atendente
+                                        </div>
+                                    </div>
+                                    <div class="wa-message wa-user">
+                                        <div class="wa-bubble">1</div>
+                                    </div>
+                                    <div class="wa-typing">
+                                        <span></span><span></span><span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features-section" class="features">
+            <div class="container">
+                <h2 class="section-title">Recursos Completos</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">💬</div>
+                        <h3>Bot WhatsApp</h3>
+                        <p>Atendimento automático 24/7 via WhatsApp com respostas inteligentes e menu interativo.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📅</div>
+                        <h3>Google Agenda</h3>
+                        <p>Sincronização bidirecional automática com sua agenda do Google.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💳</div>
+                        <h3>Pagamento Pix</h3>
+                        <p>Cobrança de sinal antecipado via Mercado Pago com reembolso automático.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔔</div>
+                        <h3>Lembretes</h3>
+                        <p>Notificações automáticas 24h e 2h antes do horário agendado.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔄</div>
+                        <h3>Reagendamento</h3>
+                        <p>Cliente pode reagendar até 2 vezes pelo próprio WhatsApp.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⏳</div>
+                        <h3>Lista de Espera</h3>
+                        <p>Sistema automático de fila com notificação quando abrir vaga.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Relatórios</h3>
+                        <p>Dashboard completo com métricas, gráficos e relatórios exportáveis.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🛡️</div>
+                        <h3>LGPD</h3>
+                        <p>100% em conformidade com a LGPD, com consentimento explícito.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="tech-stack">
+            <div class="container">
+                <h2 class="section-title">Stack 100% Gratuita</h2>
+                <div class="stack-grid">
+                    <div class="stack-item">
+                        <div class="stack-logo">🔧</div>
+                        <div class="stack-name">n8n</div>
+                        <div class="stack-desc">Automação</div>
+                    </div>
+                    <div class="stack-item">
+                        <div class="stack-logo">📱</div>
+                        <div class="stack-name">Evolution API</div>
+                        <div class="stack-desc">WhatsApp</div>
+                    </div>
+                    <div class="stack-item">
+                        <div class="stack-logo">📆</div>
+                        <div class="stack-name">Google Agenda</div>
+                        <div class="stack-desc">Calendário</div>
+                    </div>
+                    <div class="stack-item">
+                        <div class="stack-logo">📊</div>
+                        <div class="stack-name">Google Sheets</div>
+                        <div class="stack-desc">Banco de Dados</div>
+                    </div>
+                    <div class="stack-item">
+                        <div class="stack-logo">📲</div>
+                        <div class="stack-name">Glide Apps</div>
+                        <div class="stack-desc">Painel Visual</div>
+                    </div>
+                    <div class="stack-item">
+                        <div class="stack-logo">💰</div>
+                        <div class="stack-name">Mercado Pago</div>
+                        <div class="stack-desc">Pagamentos</div>
+                    </div>
+                </div>
+                <div class="cost-banner">
+                    💰 Custo Fixo Mensal: <strong>R$ 0,00</strong> (apenas 3,99% por transação Pix)
+                </div>
+            </div>
+        </section>
+
+        <footer class="landing-footer">
+            <div class="container">
+                <p>© 2026 AgendaPro - Sistema de Agendamento Profissional</p>
+                <p>Desenvolvido com ❤️ usando tecnologias no-code</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Main App (shown after demo start) -->
+    <div id="app" class="app" style="display: none;">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-calendar-check"></i>
+                <span>AgendaPro</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-view="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-view="whatsapp">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>Bot WhatsApp</span>
+                    <span class="badge">Demo</span>
+                </a>
+                <a href="#" class="nav-item" data-view="services">
+                    <i class="fas fa-briefcase"></i>
+                    <span>Serviços</span>
+                </a>
+                <a href="#" class="nav-item" data-view="clients">
+                    <i class="fas fa-users"></i>
+                    <span>Clientes</span>
+                </a>
+                <a href="#" class="nav-item" data-view="calendar">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Agenda</span>
+                </a>
+                <a href="#" class="nav-item" data-view="recurring">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Agendamentos Fixos</span>
+                    <span class="badge">Novo</span>
+                </a>
+                <a href="#" class="nav-item" data-view="reports">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Relatórios</span>
+                </a>
+                <a href="#" class="nav-item" data-view="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Configurações</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="exitDemo()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Sair da Demo</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="view active">
+                <div class="view-header">
+                    <h1>Dashboard</h1>
+                    <div class="header-actions">
+                        <button class="btn-primary">
+                            <i class="fas fa-download"></i> Exportar Relatório
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">24</div>
+                            <div class="stat-label">Agendamentos Hoje</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">R$ 1.920</div>
+                            <div class="stat-label">Receita Hoje</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">127</div>
+                            <div class="stat-label">Total de Clientes</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">4.8</div>
+                            <div class="stat-label">Avaliação Média</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Próximos Agendamentos</h3>
+                            <a href="#" onclick="switchView('calendar')">Ver todos</a>
+                        </div>
+                        <div class="appointments-list" id="upcoming-appointments">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Resumo Mensal</h3>
+                            <select class="month-selector">
+                                <option>Fevereiro 2026</option>
+                                <option>Janeiro 2026</option>
+                            </select>
+                        </div>
+                        <canvas id="monthly-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Serviços Mais Agendados</h3>
+                        </div>
+                        <div class="services-ranking" id="services-ranking">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <h3>Atividade Recente</h3>
+                        </div>
+                        <div class="activity-feed" id="activity-feed">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WhatsApp Bot View -->
+            <div id="view-whatsapp" class="view">
+                <div class="view-header">
+                    <h1>Simulador de Bot WhatsApp</h1>
+                    <div class="header-actions">
+                        <span class="demo-badge"><i class="fas fa-flask"></i> Modo Demonstração</span>
+                    </div>
+                </div>
+
+                <div class="whatsapp-simulator">
+                    <div class="simulator-controls">
+                        <h3>Testar Fluxos</h3>
+                        <div class="control-buttons">
+                            <button class="btn-control" onclick="startFlow('scheduling')">
+                                <i class="fas fa-calendar-plus"></i> Agendar
+                            </button>
+                            <button class="btn-control" onclick="startFlow('cancellation')">
+                                <i class="fas fa-times-circle"></i> Cancelar
+                            </button>
+                            <button class="btn-control" onclick="startFlow('delay')">
+                                <i class="fas fa-clock"></i> Atraso
+                            </button>
+                            <button class="btn-control" onclick="startFlow('handoff')">
+                                <i class="fas fa-user-headset"></i> Handoff
+                            </button>
+                            <button class="btn-control btn-danger" onclick="resetChat()">
+                                <i class="fas fa-redo"></i> Resetar
+                            </button>
+                        </div>
+                        <div class="flow-info">
+                            <p><strong>Instruções:</strong></p>
+                            <ul>
+                                <li>Clique em um botão para iniciar o fluxo</li>
+                                <li>Digite mensagens ou clique nas respostas rápidas</li>
+                                <li>O bot responderá automaticamente</li>
+                                <li>Animação de digitação simula conversa real</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="chat-container">
+                        <div class="chat-header">
+                            <div class="chat-avatar">🏪</div>
+                            <div class="chat-info">
+                                <div class="chat-name">Barbearia Silva</div>
+                                <div class="chat-status">online - bot ativo</div>
+                            </div>
+                        </div>
+                        <div class="chat-messages" id="chat-messages">
+                            <div class="chat-date">Hoje</div>
+                            <div class="message bot">
+                                <div class="message-bubble">
+                                    <p>Olá! 👋 Bem-vindo à <strong>Barbearia Silva</strong>.</p>
+                                    <p>Sou o assistente virtual e estou aqui para ajudar!</p>
+                                    <p>O que deseja fazer?</p>
+                                </div>
+                                <div class="message-time">14:23</div>
+                            </div>
+                            <div class="quick-replies" id="quick-replies">
+                                <button class="quick-reply" onclick="sendMessage('Agendar horário')">
+                                    📅 Agendar horário
+                                </button>
+                                <button class="quick-reply" onclick="sendMessage('Cancelar agendamento')">
+                                    ❌ Cancelar agendamento
+                                </button>
+                                <button class="quick-reply" onclick="sendMessage('Falar com atendente')">
+                                    👤 Falar com atendente
+                                </button>
+                            </div>
+                        </div>
+                        <div class="chat-input">
+                            <input type="text" id="message-input" placeholder="Digite uma mensagem..." onkeypress="handleKeyPress(event)">
+                            <button class="btn-send" onclick="sendUserMessage()">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Services View -->
+            <div id="view-services" class="view">
+                <div class="view-header">
+                    <h1>Gestão de Serviços</h1>
+                    <div class="header-actions">
+                        <button class="btn-primary" onclick="openServiceModal()">
+                            <i class="fas fa-plus"></i> Novo Serviço
+                        </button>
+                    </div>
+                </div>
+
+                <div class="services-grid" id="services-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Clients View -->
+            <div id="view-clients" class="view">
+                <div class="view-header">
+                    <h1>Clientes</h1>
+                    <div class="header-actions">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="client-search" placeholder="Buscar cliente..." onkeyup="filterClients()">
+                        </div>
+                        <select id="client-filter" onchange="filterClients()">
+                            <option value="all">Todos</option>
+                            <option value="regular">Regular</option>
+                            <option value="vip">VIP</option>
+                            <option value="blocked">Bloqueado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="clients-table-container">
+                    <table class="clients-table" id="clients-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Telefone</th>
+                                <th>Status</th>
+                                <th>Total Agendamentos</th>
+                                <th>Última Visita</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clients-tbody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Calendar View -->
+            <div id="view-calendar" class="view">
+                <div class="view-header">
+                    <h1>Agenda</h1>
+                    <div class="header-actions">
+                        <div class="calendar-nav">
+                            <button class="btn-icon" onclick="previousMonth()">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <span id="current-month">Fevereiro 2026</span>
+                            <button class="btn-icon" onclick="nextMonth()">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="view-toggle">
+                            <button class="btn-toggle active" data-view="month">Mês</button>
+                            <button class="btn-toggle" data-view="week">Semana</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calendar-container">
+                    <div id="calendar-grid" class="calendar-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <div class="calendar-legend">
+                    <span class="legend-item"><span class="dot blue"></span> Agendado</span>
+                    <span class="legend-item"><span class="dot green"></span> Confirmado</span>
+                    <span class="legend-item"><span class="dot yellow"></span> Pendente</span>
+                    <span class="legend-item"><span class="dot red"></span> Cancelado</span>
+                </div>
+            </div>
+
+            <!-- Recurring Appointments View -->
+            <div id="view-recurring" class="view">
+                <div class="view-header">
+                    <h1>Agendamentos Fixos (Recorrentes)</h1>
+                    <div class="header-actions">
+                        <button class="btn-primary" onclick="openRecurringModal()">
+                            <i class="fas fa-plus"></i> Novo Agendamento Fixo
+                        </button>
+                    </div>
+                </div>
+
+                <div class="info-banner">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>Agendamentos Fixos</strong>
+                        <p>Permite que clientes reservem horários recorrentes (ex: toda quinta às 15h). O sistema agenda automaticamente até 4 semanas à frente e envia lembretes antes de cada data.</p>
+                    </div>
+                </div>
+
+                <div class="recurring-grid" id="recurring-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Reports View -->
+            <div id="view-reports" class="view">
+                <div class="view-header">
+                    <h1>Relatórios e Métricas</h1>
+                    <div class="header-actions">
+                        <select class="period-selector">
+                            <option>Últimos 7 dias</option>
+                            <option>Últimos 30 dias</option>
+                            <option>Este mês</option>
+                            <option>Este ano</option>
+                        </select>
+                        <button class="btn-primary">
+                            <i class="fas fa-download"></i> Exportar PDF
+                        </button>
+                    </div>
+                </div>
+
+                <div class="reports-grid">
+                    <div class="report-card">
+                        <h3>Agendamentos por Status</h3>
+                        <canvas id="status-chart"></canvas>
+                    </div>
+                    <div class="report-card">
+                        <h3>Receita Mensal</h3>
+                        <canvas id="revenue-chart"></canvas>
+                    </div>
+                    <div class="report-card">
+                        <h3>Horários de Pico</h3>
+                        <canvas id="peak-hours-chart"></canvas>
+                    </div>
+                    <div class="report-card">
+                        <h3>Taxa de Cancelamento</h3>
+                        <div class="metric-large">
+                            <div class="metric-value">8.3%</div>
+                            <div class="metric-change negative">
+                                <i class="fas fa-arrow-down"></i> -2.1% vs mês anterior
+                            </div>
+                        </div>
+                        <canvas id="cancellation-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="report-card full-width">
+                    <h3>Motivos de Cancelamento</h3>
+                    <div class="cancellation-reasons">
+                        <div class="reason-item">
+                            <div class="reason-label">Emergência</div>
+                            <div class="reason-bar">
+                                <div class="reason-fill" style="width: 45%"></div>
+                            </div>
+                            <div class="reason-value">45%</div>
+                        </div>
+                        <div class="reason-item">
+                            <div class="reason-label">Mudança de planos</div>
+                            <div class="reason-bar">
+                                <div class="reason-fill" style="width: 30%"></div>
+                            </div>
+                            <div class="reason-value">30%</div>
+                        </div>
+                        <div class="reason-item">
+                            <div class="reason-label">Outro compromisso</div>
+                            <div class="reason-bar">
+                                <div class="reason-fill" style="width: 15%"></div>
+                            </div>
+                            <div class="reason-value">15%</div>
+                        </div>
+                        <div class="reason-item">
+                            <div class="reason-label">Outro</div>
+                            <div class="reason-bar">
+                                <div class="reason-fill" style="width: 10%"></div>
+                            </div>
+                            <div class="reason-value">10%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings View -->
+            <div id="view-settings" class="view">
+                <div class="view-header">
+                    <h1>Configurações</h1>
+                    <div class="header-actions">
+                        <button class="btn-primary" onclick="saveSettings()">
+                            <i class="fas fa-save"></i> Salvar Alterações
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-container">
+                    <div class="settings-section">
+                        <h3><i class="fas fa-store"></i> Informações do Negócio</h3>
+                        <div class="form-group">
+                            <label>Nome do Estabelecimento</label>
+                            <input type="text" id="business-name" value="Barbearia Silva">
+                        </div>
+                        <div class="form-group">
+                            <label>Telefone WhatsApp</label>
+                            <input type="tel" id="business-phone" value="+55 11 98765-4321">
+                        </div>
+                        <div class="form-group">
+                            <label>E-mail</label>
+                            <input type="email" id="business-email" value="contato@barbeariasilva.com.br">
+                        </div>
+                        <div class="form-group">
+                            <label>Endereço</label>
+                            <input type="text" id="business-address" value="Rua das Flores, 123 - São Paulo, SP">
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3><i class="fas fa-clock"></i> Horário de Funcionamento</h3>
+                        <div class="schedule-grid">
+                            <div class="schedule-item">
+                                <label><input type="checkbox" checked> Segunda-feira</label>
+                                <input type="time" value="09:00"> às <input type="time" value="18:00">
+                            </div>
+                            <div class="schedule-item">
+                                <label><input type="checkbox" checked> Terça-feira</label>
+                                <input type="time" value="09:00"> às <input type="time" value="18:00">
+                            </div>
+                            <div class="schedule-item">
+                                <label><input type="checkbox" checked> Quarta-feira</label>
+                                <input type="time" value="09:00"> às <input type="time" value="18:00">
+                            </div>
+                            <div class="schedule-item">
+                                <label><input type="checkbox" checked> Quinta-feira</label>
+                                <input type="time" value="09:00"> às <input type="time" value="18:00">
+                            </div>
+                            <div class="schedule-item">
+                                <label><input type="checkbox" checked> Sexta-feira</label>
+                                <input type="time" value="09:00"> às <input type="time" value="19:00">
+                            </div>
+                            <div class="schedule-item">
+                                <label><input type="checkbox" checked> Sábado</label>
+                                <input type="time" value="09:00"> às <input type="time" value="14:00">
+                            </div>
+                            <div class="schedule-item">
+                                <label><input type="checkbox"> Domingo</label>
+                                <input type="time" value="09:00" disabled> às <input type="time" value="14:00" disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3><i class="fas fa-cog"></i> Preferências do Sistema</h3>
+                        <div class="form-group">
+                            <label>Prazo Mínimo para Cancelamento</label>
+                            <select id="cancel-deadline">
+                                <option value="2">2 horas</option>
+                                <option value="4">4 horas</option>
+                                <option value="12">12 horas</option>
+                                <option value="24">24 horas</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Tempo para Confirmação de Agendamento (Reserva)</label>
+                            <select id="confirmation-deadline">
+                                <option value="15">15 minutos</option>
+                                <option value="30" selected>30 minutos</option>
+                                <option value="60">1 hora</option>
+                                <option value="120">2 horas</option>
+                                <option value="360">6 horas</option>
+                                <option value="720">12 horas</option>
+                                <option value="1440">24 horas</option>
+                            </select>
+                            <small class="help-text">⏱️ Após fazer o agendamento, o cliente tem esse tempo para confirmar (pagar sinal ou confirmar presença). Caso contrário, o horário é liberado automaticamente.</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Número Máximo de Atendimentos Simultâneos</label>
+                            <input type="number" id="max-concurrent" value="2" min="1" max="10">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="require-deposit" checked>
+                                Exigir pagamento de sinal antecipado
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>Percentual do Sinal (máx. 50%)</label>
+                            <input type="range" id="deposit-percentage" min="10" max="50" value="30" step="5" oninput="updateDepositLabel(this.value)">
+                            <span id="deposit-label">30%</span>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="enable-reminders" checked>
+                                Enviar lembretes automáticos
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="enable-waitlist" checked>
+                                Ativar lista de espera
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="enable-recurring" checked>
+                                Permitir agendamentos recorrentes (fixos)
+                            </label>
+                            <small class="help-text">🔄 Permite que clientes agendem horários fixos semanais (ex: toda quinta às 15h)</small>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3><i class="fas fa-bell"></i> Notificações</h3>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="notify-new-booking" checked>
+                                Notificar novos agendamentos
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="notify-cancellation" checked>
+                                Notificar cancelamentos
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="notify-delay" checked>
+                                Notificar avisos de atraso
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="daily-summary" checked>
+                                Resumo diário da agenda (9h)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="settings-section">
+                        <h3><i class="fas fa-link"></i> Integrações</h3>
+                        <div class="integration-item">
+                            <div class="integration-info">
+                                <i class="fab fa-google"></i>
+                                <div>
+                                    <strong>Google Agenda</strong>
+                                    <p>Sincronização bidirecional ativa</p>
+                                </div>
+                            </div>
+                            <button class="btn-success" disabled>
+                                <i class="fas fa-check"></i> Conectado
+                            </button>
+                        </div>
+                        <div class="integration-item">
+                            <div class="integration-info">
+                                <i class="fab fa-whatsapp"></i>
+                                <div>
+                                    <strong>WhatsApp Business</strong>
+                                    <p>Evolution API - Bot ativo</p>
+                                </div>
+                            </div>
+                            <button class="btn-success" disabled>
+                                <i class="fas fa-check"></i> Conectado
+                            </button>
+                        </div>
+                        <div class="integration-item">
+                            <div class="integration-info">
+                                <i class="fas fa-credit-card"></i>
+                                <div>
+                                    <strong>Mercado Pago</strong>
+                                    <p>Pagamentos via Pix ativos</p>
+                                </div>
+                            </div>
+                            <button class="btn-success" disabled>
+                                <i class="fas fa-check"></i> Conectado
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Modal -->
+    <div id="service-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Novo Serviço</h2>
+                <button class="btn-close" onclick="closeServiceModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nome do Serviço</label>
+                    <input type="text" id="service-name" placeholder="Ex: Corte de Cabelo">
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <textarea id="service-description" rows="3" placeholder="Descreva o serviço..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Duração (minutos)</label>
+                        <input type="number" id="service-duration" value="30" min="15" step="15">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Valor</label>
+                        <select id="service-value-type" onchange="toggleValueInputs()">
+                            <option value="fixed">Fixo</option>
+                            <option value="range">Estimado (X a Y)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row" id="value-inputs">
+                    <div class="form-group">
+                        <label>Valor (R$)</label>
+                        <input type="number" id="service-value" value="50" min="0" step="5">
+                    </div>
+                </div>
+                <div class="form-row" id="range-inputs" style="display: none;">
+                    <div class="form-group">
+                        <label>Valor Mínimo (R$)</label>
+                        <input type="number" id="service-value-min" value="40" min="0" step="5">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor Máximo (R$)</label>
+                        <input type="number" id="service-value-max" value="60" min="0" step="5">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="service-active" checked>
+                        Serviço ativo
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeServiceModal()">Cancelar</button>
+                <button class="btn-primary" onclick="saveService()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recurring Appointment Modal -->
+    <div id="recurring-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="recurring-modal-title">Novo Agendamento Fixo</h2>
+                <button class="btn-close" onclick="closeRecurringModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Cliente</label>
+                    <select id="recurring-client">
+                        <option value="">Selecione um cliente</option>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Serviço</label>
+                    <select id="recurring-service">
+                        <option value="">Selecione um serviço</option>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Dia da Semana</label>
+                        <select id="recurring-day">
+                            <option value="0">Domingo</option>
+                            <option value="1">Segunda-feira</option>
+                            <option value="2">Terça-feira</option>
+                            <option value="3">Quarta-feira</option>
+                            <option value="4" selected>Quinta-feira</option>
+                            <option value="5">Sexta-feira</option>
+                            <option value="6">Sábado</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Horário</label>
+                        <input type="time" id="recurring-time" value="15:00">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Data de Início</label>
+                    <input type="date" id="recurring-start-date">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="recurring-active" checked>
+                        Agendamento fixo ativo
+                    </label>
+                    <small class="help-text">🔄 Quando ativo, o sistema agendará automaticamente até 4 semanas à frente</small>
+                </div>
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i>
+                    <p><strong>Como funciona:</strong> O sistema criará automaticamente agendamentos toda semana no dia e horário escolhidos, por até 4 semanas à frente. Lembretes serão enviados antes de cada data agendada.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeRecurringModal()">Cancelar</button>
+                <button class="btn-primary" onclick="saveRecurring()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

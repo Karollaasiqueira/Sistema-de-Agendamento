@@ -1,0 +1,114 @@
+# AIOS Configuration - AgendaPro MVP
+# Generated: 2026-03-01
+
+project:
+  name: AgendaPro
+  version: 2.1
+  description: Sistema de Agendamento via WhatsApp
+  owner: Você
+
+environment:
+  stage: development
+  timezone: America/Sao_Paulo
+  language: pt-BR
+
+infrastructure:
+  google_sheets: true
+  google_calendar: true
+  n8n: true
+  evolution_api: true
+  mercado_pago: true
+
+sprints:
+  sprint_0:
+    name: Infrastructure Setup
+    duration: 4 days
+    status: in-progress
+    stories:
+      - STORY-010: Setup Google Sheets
+      - STORY-011: Setup n8n Cloud
+      - STORY-012: Configure Google APIs
+      - STORY-013: Deploy Evolution API
+      - STORY-014: Setup Mercado Pago
+      - STORY-015: Test All Webhooks
+
+  sprint_1:
+    name: Bot WhatsApp - Agendamento
+    duration: 7 days
+    status: pending
+    stories:
+      - STORY-020: Bot Fluxo Agendar (Menu)
+      - STORY-021: Bot Fluxo Agendar (Data/Hora)
+      - STORY-022: Bot Fluxo Agendar (Confirmação)
+      - STORY-023: Bot Fluxo Cancelar (Menu)
+      - STORY-024: Bot Fluxo Cancelar (Deletar)
+      - STORY-025: Integração Google Sheets
+      - STORY-026: Integração Google Agenda
+      - STORY-027: Testes E2E Agendar
+
+  sprint_2:
+    name: Features - Timeout + Fixos
+    duration: 7 days
+    status: pending
+    stories:
+      - STORY-030: Timeout Confirmação
+      - STORY-031: Lembretes 24h/2h
+      - STORY-032: Agendamentos Fixos
+      - STORY-033: Painel Glide Completo
+
+  sprint_3:
+    name: QA + Deploy
+    duration: 5 days
+    status: pending
+    stories:
+      - STORY-040: Testes Integração
+      - STORY-041: Testes E2E Completo
+      - STORY-042: Documentação Ops
+      - STORY-043: Deploy Produção
+
+agents:
+  analyst:
+    role: Análise de requisitos
+    status: active
+
+  pm:
+    role: Gerenciamento de projeto
+    status: active
+
+  architect:
+    role: Arquitetura técnica
+    status: active
+
+  dev:
+    role: Desenvolvimento
+    status: active
+
+  qa:
+    role: Testes e qualidade
+    status: active
+
+  devops:
+    role: Infraestrutura e deploy
+    status: active
+
+credentials:
+  google_sheets_id: "[SERÁ PREENCHIDO EM STORY-010]"
+  google_api_key: "[SERÁ PREENCHIDO EM STORY-012]"
+  n8n_webhook_url: "[SERÁ PREENCHIDO EM STORY-011]"
+  evolution_api_url: "[SERÁ PREENCHIDO EM STORY-013]"
+  mercado_pago_token: "[SERÁ PREENCHIDO EM STORY-014]"
+
+timeline:
+  start_date: 2026-03-01
+  sprint_0_end: 2026-03-05
+  sprint_1_end: 2026-03-12
+  sprint_2_end: 2026-03-19
+  sprint_3_end: 2026-03-24
+  mvp_launch: 2026-03-24
+
+goals:
+  - Infra 100% funcional
+  - Bot com 4 fluxos completos
+  - Painel admin funcionando
+  - MVP em produção
+  - 50+ testes passando

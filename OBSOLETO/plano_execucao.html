@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plano de Execução — Plataforma de Agendamento</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e17; --surface: #111827; --surface2: #1a2235; --border: #1f2d45;
+    --accent: #00d4aa; --accent2: #3b82f6; --accent3: #f59e0b;
+    --red: #ef4444; --text: #e2e8f0; --muted: #64748b; --white: #fff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
+  .hero { padding: 80px 40px 60px; max-width: 1100px; margin: 0 auto; }
+  .hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,212,170,.1); border: 1px solid rgba(0,212,170,.25); color: var(--accent); border-radius: 100px; padding: 5px 16px; font-size: .75rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 24px; }
+  .hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; line-height: 1.1; color: var(--white); margin-bottom: 16px; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { font-size: 1.05rem; color: var(--muted); max-width: 600px; margin-bottom: 36px; }
+  .hero-badges { display: flex; flex-wrap: wrap; gap: 10px; }
+  .hbadge { display: flex; align-items: center; gap: 7px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 16px; font-size: .82rem; font-weight: 500; }
+  .hbadge .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-green { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .dot-blue  { background: var(--accent2); box-shadow: 0 0 8px var(--accent2); }
+  .dot-yellow{ background: var(--accent3); box-shadow: 0 0 8px var(--accent3); }
+  .alert { max-width: 1100px; margin: 0 auto 8px; padding: 0 40px; }
+  .alert-box { background: rgba(245,158,11,.07); border: 1px solid rgba(245,158,11,.3); border-radius: 12px; padding: 14px 20px; display: flex; gap: 12px; align-items: flex-start; font-size: .85rem; color: #fbbf24; }
+  section { max-width: 1100px; margin: 0 auto; padding: 40px 40px 0; position: relative; z-index: 1; }
+  .section-label { font-family: 'Syne', sans-serif; font-size: .7rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  .section-title { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--white); margin-bottom: 24px; }
+  .stack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .stack-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; transition: border-color .2s, transform .2s; position: relative; overflow: hidden; }
+  .stack-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .stack-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); opacity: 0; transition: opacity .2s; }
+  .stack-card:hover::before { opacity: 1; }
+  .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .card-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+  .ci-green { background: rgba(0,212,170,.15); } .ci-blue { background: rgba(59,130,246,.15); }
+  .ci-yellow{ background: rgba(245,158,11,.15); } .ci-purple{ background: rgba(168,85,247,.15); } .ci-red { background: rgba(239,68,68,.15); }
+  .card-tool { font-family: 'Syne', sans-serif; font-weight: 700; font-size: .95rem; color: var(--white); }
+  .card-role { font-size: .72rem; color: var(--muted); margin-top: 1px; }
+  .card-body { font-size: .82rem; color: var(--muted); line-height: 1.5; }
+  .free-tag { display: inline-block; margin-top: 10px; background: rgba(0,212,170,.1); color: var(--accent); border: 1px solid rgba(0,212,170,.2); border-radius: 6px; padding: 2px 10px; font-size: .68rem; font-weight: 700; letter-spacing: .06em; }
+  .limit-tag { display: inline-block; margin-top: 10px; background: rgba(245,158,11,.1); color: var(--accent3); border: 1px solid rgba(245,158,11,.2); border-radius: 6px; padding: 2px 10px; font-size: .68rem; font-weight: 700; letter-spacing: .06em; margin-left: 6px; }
+  .timeline { position: relative; padding-left: 32px; }
+  .timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: linear-gradient(180deg, var(--accent), var(--accent2), var(--accent3), #a855f7); }
+  .phase { position: relative; margin-bottom: 36px; }
+  .phase::before { content: ''; position: absolute; left: -27px; top: 4px; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); box-shadow: 0 0 12px var(--accent); }
+  .phase:nth-child(2)::before { background: var(--accent2); box-shadow: 0 0 12px var(--accent2); }
+  .phase:nth-child(3)::before { background: var(--accent3); box-shadow: 0 0 12px var(--accent3); }
+  .phase:nth-child(4)::before { background: #a855f7; box-shadow: 0 0 12px #a855f7; }
+  .phase-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .phase-week { font-family: 'Syne', sans-serif; font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 3px 10px; color: var(--muted); }
+  .phase-title { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700; color: var(--white); }
+  .phase-goal { font-size: .8rem; color: var(--accent); font-weight: 600; margin-bottom: 14px; }
+  .phase-steps { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+  .step { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; font-size: .82rem; }
+  .step-num { font-family: 'Syne', sans-serif; font-size: .65rem; font-weight: 800; color: var(--muted); letter-spacing: .08em; margin-bottom: 6px; }
+  .step-name { font-weight: 500; color: var(--white); margin-bottom: 4px; font-size: .85rem; }
+  .step-desc { color: var(--muted); font-size: .78rem; line-height: 1.45; }
+  .step-tool { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; font-size: .7rem; font-weight: 600; color: var(--accent2); background: rgba(59,130,246,.08); border: 1px solid rgba(59,130,246,.15); border-radius: 5px; padding: 2px 8px; }
+  .progress-bar { height: 4px; background: var(--border); border-radius: 4px; margin: 8px 0 16px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .cost-table { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .cost-row { display: grid; grid-template-columns: 1fr 160px 140px; padding: 14px 24px; border-bottom: 1px solid var(--border); font-size: .85rem; align-items: center; }
+  .cost-row:last-child { border-bottom: none; }
+  .cost-row.header { background: var(--surface2); font-size: .7rem; font-family: 'Syne', sans-serif; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .cost-row.total { background: rgba(0,212,170,.05); font-family: 'Syne', sans-serif; font-weight: 800; color: var(--white); font-size: 1rem; border-top: 2px solid var(--accent); }
+  .cost-name { color: var(--text); } .cost-plan { color: var(--muted); font-size: .78rem; }
+  .cost-value { font-weight: 700; text-align: right; } .free { color: var(--accent); } .paid { color: var(--accent3); }
+  .limit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .limit-card { background: var(--surface); border: 1px solid rgba(239,68,68,.2); border-radius: 12px; padding: 18px; }
+  .limit-title { font-weight: 700; color: #fca5a5; font-size: .88rem; margin-bottom: 6px; }
+  .limit-desc  { font-size: .8rem; color: var(--muted); margin-bottom: 8px; }
+  .limit-fix   { font-size: .78rem; color: var(--accent); font-weight: 600; }
+  .cta-box { background: linear-gradient(135deg, rgba(0,212,170,.08), rgba(59,130,246,.08)); border: 1px solid rgba(0,212,170,.2); border-radius: 16px; padding: 32px; margin-top: 40px; text-align: center; }
+  .cta-box h3 { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--white); margin-bottom: 8px; }
+  .cta-box p  { font-size: .88rem; color: var(--muted); max-width: 500px; margin: 0 auto 20px; }
+  .cta-chips  { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .chip { background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 6px 16px; font-size: .78rem; font-weight: 600; color: var(--text); cursor: pointer; transition: border-color .2s; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  footer { max-width: 1100px; margin: 60px auto 0; padding: 24px 40px 40px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: .78rem; color: var(--muted); flex-wrap: wrap; gap: 8px; }
+  @media(max-width: 640px) { .hero, section, footer { padding-left: 20px; padding-right: 20px; } .cost-row { grid-template-columns: 1fr 100px; } .cost-row .cost-plan { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-eyebrow">🚀 Plano de execução sem custo</div>
+  <h1>Do zero ao MVP<br><span>em 4 semanas</span></h1>
+  <p>Stack 100% gratuita para lançar sua plataforma de agendamento com WhatsApp + Google Agenda. Sem programar uma linha de código.</p>
+  <div class="hero-badges">
+    <div class="hbadge"><div class="dot dot-green"></div>R$ 0,00 / mês</div>
+    <div class="hbadge"><div class="dot dot-blue"></div>No-code total</div>
+    <div class="hbadge"><div class="dot dot-yellow"></div>WhatsApp Business ✓</div>
+    <div class="hbadge"><div class="dot dot-yellow"></div>Google Agenda ✓</div>
+    <div class="hbadge"><div class="dot dot-green"></div>Pronto em ~4 semanas</div>
+  </div>
+</div>
+
+<div class="alert">
+  <div class="alert-box">
+    <div>⚠️</div>
+    <div><strong>Antes de começar:</strong> as ferramentas gratuitas cobrem ~80% do ERS v2.0. Pagamentos e automações avançadas têm limitações no plano free — explicadas ao final. O MVP funcional (agendamento, lembretes, cancelamento, handoff) cabe 100% no gratuito.</div>
+  </div>
+</div>
+
+<!-- STACK -->
+<section>
+  <div class="section-label">Ferramentas</div>
+  <div class="section-title">Stack no-code 100% gratuita</div>
+  <div class="stack-grid">
+    <div class="stack-card">
+      <div class="card-header"><div class="card-icon ci-blue">⚙️</div><div><div class="card-tool">n8n</div><div class="card-role">Automação e lógica do bot — o cérebro</div></div></div>
+      <div class="card-body">Recebe mensagens do WhatsApp, processa toda a lógica (qual serviço, qual horário, quem é o cliente), agenda no Google, responde ao cliente. Você monta os fluxos arrastando blocos visualmente.</div>
+      <span class="free-tag">✓ GRATUITO — self-hosted ou Free Cloud</span>
+    </div>
+    <div class="stack-card">
+      <div class="card-header"><div class="card-icon ci-green">💬</div><div><div class="card-tool">Evolution API</div><div class="card-role">Conexão do WhatsApp Business</div></div></div>
+      <div class="card-body">Conecta seu número WhatsApp Business ao n8n via webhook. Open source e self-hosted — sem mensalidade. Alternativa mais simples para começar: Z-API (7 dias grátis).</div>
+      <span class="free-tag">✓ GRATUITO — open source</span>
+      <span class="limit-tag">⚡ Requer servidor (Oracle Free)</span>
+    </div>
+    <div class="stack-card">
+      <div class="card-header"><div class="card-icon ci-yellow">📅</div><div><div class="card-tool">Google Agenda</div><div class="card-role">Calendário central — você já tem</div></div></div>
+      <div class="card-body">Cada profissional tem seu calendário. O n8n lê a disponibilidade e cria/cancela eventos automaticamente via Google Calendar API. Sincronização em tempo real.</div>
+      <span class="free-tag">✓ GRATUITO — você já possui</span>
+    </div>
+    <div class="stack-card">
+      <div class="card-header"><div class="card-icon ci-purple">📊</div><div><div class="card-tool">Google Sheets</div><div class="card-role">Banco de dados — você já tem</div></div></div>
+      <div class="card-body">Armazena clientes, histórico de agendamentos, classificações (regular/VIP), lista de espera e logs. Você visualiza e edita direto na planilha como sempre fez.</div>
+      <span class="free-tag">✓ GRATUITO — você já possui</span>
+    </div>
+    <div class="stack-card">
+      <div class="card-header"><div class="card-icon ci-blue">🖥️</div><div><div class="card-tool">Glide Apps</div><div class="card-role">Painel do profissional (dashboard)</div></div></div>
+      <div class="card-body">Transforma sua planilha em um app visual no celular. Você vê agenda do dia, lista de clientes, histórico e métricas. Conecta na Google Sheets sem código.</div>
+      <span class="free-tag">✓ GRATUITO — até 500 linhas</span>
+    </div>
+    <div class="stack-card">
+      <div class="card-header"><div class="card-icon ci-red">💳</div><div><div class="card-tool">Mercado Pago</div><div class="card-role">Pagamento de sinal antecipado</div></div></div>
+      <div class="card-body">Gera links de pagamento Pix via API gratuita. O n8n envia o link ao cliente no WhatsApp automaticamente. Sem mensalidade — paga só quando recebe.</div>
+      <span class="free-tag">✓ SEM mensalidade</span>
+      <span class="limit-tag">⚡ 3,99% por transação Pix</span>
+    </div>
+  </div>
+</section>
+
+<!-- ARQUITETURA -->
+<section style="padding-top:32px">
+  <div class="section-label">Como funciona</div>
+  <div class="section-title">Arquitetura do sistema</div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;overflow-x:auto">
+    <div style="display:flex;align-items:center;flex-wrap:wrap;justify-content:center;gap:8px;font-size:.82rem;font-weight:600">
+      <div style="background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.3);border-radius:10px;padding:10px 16px;color:var(--accent);text-align:center">📱 Cliente<br><small style="font-weight:400;color:var(--muted)">WhatsApp</small></div>
+      <div style="color:var(--muted);font-size:1.2rem">→</div>
+      <div style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:10px;padding:10px 16px;color:var(--accent2);text-align:center">🔗 Evolution API<br><small style="font-weight:400;color:var(--muted)">Webhook</small></div>
+      <div style="color:var(--muted);font-size:1.2rem">→</div>
+      <div style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3);border-radius:10px;padding:10px 16px;color:#c084fc;text-align:center">⚙️ n8n<br><small style="font-weight:400;color:var(--muted)">Lógica central</small></div>
+      <div style="color:var(--muted);font-size:1.2rem">→</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:8px 14px;color:var(--accent3);font-size:.78rem">📅 Google Agenda</div>
+        <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:8px 14px;color:#86efac;font-size:.78rem">📊 Google Sheets</div>
+        <div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:8px 14px;color:#fca5a5;font-size:.78rem">💳 Mercado Pago</div>
+      </div>
+      <div style="color:var(--muted);font-size:1.2rem">→</div>
+      <div style="background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.3);border-radius:10px;padding:10px 16px;color:var(--accent);text-align:center">📱 Resposta<br><small style="font-weight:400;color:var(--muted)">ao cliente</small></div>
+    </div>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section style="padding-top:40px">
+  <div class="section-label">Cronograma</div>
+  <div class="section-title">4 semanas do zero ao lançamento</div>
+  <div class="timeline">
+
+    <div class="phase">
+      <div class="phase-header"><span class="phase-week">Semana 1</span><span class="phase-title">Infraestrutura &amp; Contas</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:25%"></div></div>
+      <div class="phase-goal">🎯 Meta: todas as ferramentas criadas e conectadas entre si</div>
+      <div class="phase-steps">
+        <div class="step"><div class="step-num">PASSO 01</div><div class="step-name">Criar conta no n8n</div><div class="step-desc">Acesse n8n.io → "Start for free". Será o cérebro de toda automação. Pode começar no cloud gratuito.</div><span class="step-tool">⚙️ n8n.io</span></div>
+        <div class="step"><div class="step-num">PASSO 02</div><div class="step-name">Configurar Evolution API</div><div class="step-desc">Crie conta grátis no Oracle Cloud (VM free forever) → instale Evolution API via Docker → escaneie QR Code com seu WhatsApp Business.</div><span class="step-tool">💬 Evolution API</span></div>
+        <div class="step"><div class="step-num">PASSO 03</div><div class="step-name">Montar planilha de dados</div><div class="step-desc">Crie Google Sheets com 5 abas: Clientes, Agendamentos, Serviços, ListaEspera, Logs. Posso te entregar o template completo pronto.</div><span class="step-tool">📊 Google Sheets</span></div>
+        <div class="step"><div class="step-num">PASSO 04</div><div class="step-name">Conectar Google Agenda no n8n</div><div class="step-desc">No n8n, crie credencial Google Calendar via OAuth 2.0. Autorize acesso à agenda do profissional.</div><span class="step-tool">📅 Google Agenda</span></div>
+        <div class="step"><div class="step-num">PASSO 05</div><div class="step-name">Criar conta Mercado Pago</div><div class="step-desc">Conta PJ em mercadopago.com.br → área de desenvolvedores → gere o Access Token para a API.</div><span class="step-tool">💳 Mercado Pago</span></div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header"><span class="phase-week">Semana 2</span><span class="phase-title">Bot de Agendamento (Core)</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:50%"></div></div>
+      <div class="phase-goal">🎯 Meta: cliente consegue agendar pelo WhatsApp do início ao fim</div>
+      <div class="phase-steps">
+        <div class="step"><div class="step-num">PASSO 06</div><div class="step-name">Boas-vindas + LGPD</div><div class="step-desc">n8n recebe mensagem → checa se cliente existe na Sheets → se novo, envia aviso de coleta de dados e aguarda confirmação antes de prosseguir.</div><span class="step-tool">⚙️ n8n + Sheets</span></div>
+        <div class="step"><div class="step-num">PASSO 07</div><div class="step-name">Menu de serviços dinâmico</div><div class="step-desc">n8n lê aba "Serviços" da planilha e monta automaticamente a mensagem com opções numeradas e preços.</div><span class="step-tool">⚙️ n8n + Sheets</span></div>
+        <div class="step"><div class="step-num">PASSO 08</div><div class="step-name">Verificação de disponibilidade</div><div class="step-desc">n8n consulta Google Agenda e lista horários livres nos próximos 7 dias. Exibe lista numerada ao cliente para escolha.</div><span class="step-tool">📅 Google Agenda</span></div>
+        <div class="step"><div class="step-num">PASSO 09</div><div class="step-name">Confirmação do agendamento</div><div class="step-desc">Após cliente escolher: cria evento no Google Agenda, salva na planilha, envia confirmação com resumo completo para cliente e profissional.</div><span class="step-tool">⚙️ n8n</span></div>
+        <div class="step"><div class="step-num">PASSO 10</div><div class="step-name">Cancelamento com motivo</div><div class="step-desc">Cliente envia "cancelar" → bot pede motivo obrigatório → cancela no Agenda → atualiza planilha → notifica você no WhatsApp.</div><span class="step-tool">⚙️ n8n</span></div>
+        <div class="step"><div class="step-num">PASSO 11</div><div class="step-name">Handoff humano</div><div class="step-desc">Cliente envia "humano" ou 0 → bot pausa e te notifica com contexto da conversa. Você responde diretamente pelo WhatsApp.</div><span class="step-tool">💬 WhatsApp</span></div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header"><span class="phase-week">Semana 3</span><span class="phase-title">Lembretes, Pagamento &amp; Extras</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:75%"></div></div>
+      <div class="phase-goal">🎯 Meta: lembretes automáticos funcionando e sinal sendo cobrado</div>
+      <div class="phase-steps">
+        <div class="step"><div class="step-num">PASSO 12</div><div class="step-name">Lembretes 24h e 2h</div><div class="step-desc">No n8n: Schedule Trigger rodando de hora em hora → busca agendamentos próximos → envia lembrete personalizado com localização.</div><span class="step-tool">⚙️ n8n Schedule</span></div>
+        <div class="step"><div class="step-num">PASSO 13</div><div class="step-name">Fluxo de atraso</div><div class="step-desc">Cliente envia "atraso" → bot te notifica com contexto (quem, horário, serviço) → você responde OK ou NÃO → bot comunica o cliente.</div><span class="step-tool">⚙️ n8n</span></div>
+        <div class="step"><div class="step-num">PASSO 14</div><div class="step-name">Cobrança de sinal (Pix)</div><div class="step-desc">n8n chama API Mercado Pago para gerar link Pix → envia ao cliente → webhook confirma pagamento → agendamento confirmado automaticamente.</div><span class="step-tool">💳 Mercado Pago API</span></div>
+        <div class="step"><div class="step-num">PASSO 15</div><div class="step-name">Reagendamento</div><div class="step-desc">Cliente envia "reagendar" → bot verifica limite (máx 2x por RN-09) → exibe próximos 10 slots → cliente escolhe → Agenda atualizado.</div><span class="step-tool">⚙️ n8n</span></div>
+        <div class="step"><div class="step-num">PASSO 16</div><div class="step-name">Lista de espera</div><div class="step-desc">Horário lotado → bot oferece fila → salva na aba "ListaEspera" → quando há cancelamento, n8n notifica o 1º da fila com 30min para confirmar.</div><span class="step-tool">⚙️ n8n + Sheets</span></div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-header"><span class="phase-week">Semana 4</span><span class="phase-title">Painel, Testes &amp; Lançamento</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+      <div class="phase-goal">🎯 Meta: painel visual, testes com clientes reais, lançamento</div>
+      <div class="phase-steps">
+        <div class="step"><div class="step-num">PASSO 17</div><div class="step-name">Painel no Glide Apps</div><div class="step-desc">glide.new → conecta na Google Sheets → cria telas: Agenda do dia, Clientes, Histórico. Instala como app no celular. Sem código.</div><span class="step-tool">🖥️ Glide Apps</span></div>
+        <div class="step"><div class="step-num">PASSO 18</div><div class="step-name">Testes internos completos</div><div class="step-desc">Simule cada fluxo com 2 celulares: agendar, cancelar, reagendar, atraso, lista de espera, pagamento, handoff. Anote e ajuste as mensagens.</div><span class="step-tool">🧪 Manual</span></div>
+        <div class="step"><div class="step-num">PASSO 19</div><div class="step-name">Beta com 3-5 clientes reais</div><div class="step-desc">Selecione clientes de confiança, avise que está testando o sistema e colete feedback direto. Ajuste o tom das mensagens do bot.</div><span class="step-tool">👥 Beta fechado</span></div>
+        <div class="step"><div class="step-num">PASSO 20</div><div class="step-name">🚀 Lançamento oficial</div><div class="step-desc">Divulgue o número para todos os clientes. Monitore os fluxos nas primeiras 48h. A plataforma está no ar.</div><span class="step-tool">🚀 Go live</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- CUSTOS -->
+<section style="padding-top:40px">
+  <div class="section-label">Financeiro</div>
+  <div class="section-title">Custo total do MVP</div>
+  <div class="cost-table">
+    <div class="cost-row header"><span>Ferramenta</span><span>Plano</span><span style="text-align:right">Custo/mês</span></div>
+    <div class="cost-row"><div><div class="cost-name">n8n (automação)</div><div class="cost-plan">Community self-hosted ou Free Cloud</div></div><span class="cost-plan">Free</span><span class="cost-value free">R$ 0</span></div>
+    <div class="cost-row"><div><div class="cost-name">Evolution API (WhatsApp)</div><div class="cost-plan">Open source, self-hosted no Oracle Free</div></div><span class="cost-plan">Free</span><span class="cost-value free">R$ 0</span></div>
+    <div class="cost-row"><div><div class="cost-name">Oracle Cloud (servidor)</div><div class="cost-plan">Always Free Tier — 1 VM 1GB RAM</div></div><span class="cost-plan">Always Free</span><span class="cost-value free">R$ 0</span></div>
+    <div class="cost-row"><div><div class="cost-name">Google Agenda + Sheets</div><div class="cost-plan">Conta Google que você já possui</div></div><span class="cost-plan">Já possui</span><span class="cost-value free">R$ 0</span></div>
+    <div class="cost-row"><div><div class="cost-name">Glide Apps (painel)</div><div class="cost-plan">Free plan — até 500 linhas de dados</div></div><span class="cost-plan">Free</span><span class="cost-value free">R$ 0</span></div>
+    <div class="cost-row"><div><div class="cost-name">Mercado Pago (cobranças)</div><div class="cost-plan">Sem mensalidade — cobrado por transação</div></div><span class="cost-plan">Por uso</span><span class="cost-value paid">3,99% Pix</span></div>
+    <div class="cost-row total"><span>TOTAL MENSAL FIXO</span><span></span><span class="cost-value free">R$ 0,00</span></div>
+  </div>
+</section>
+
+<!-- LIMITAÇÕES -->
+<section style="padding-top:40px">
+  <div class="section-label">Transparência</div>
+  <div class="section-title">Limitações honestas do plano gratuito</div>
+  <div class="limit-grid">
+    <div class="limit-card"><div class="limit-title">⚡ Evolution API exige servidor</div><div class="limit-desc">Precisa instalar em um servidor. Sem servidor = sem WhatsApp funcionando.</div><div class="limit-fix">✅ Oracle Cloud tem VM gratuita para sempre (Always Free). Posso te guiar na instalação passo a passo.</div></div>
+    <div class="limit-card"><div class="limit-title">⚡ Glide: limite de 500 linhas</div><div class="limit-desc">O plano free suporta até 500 linhas de dados. Suficiente para os primeiros meses.</div><div class="limit-fix">✅ Softr.io como alternativa gratuita, ou manter visualização direto na Google Sheets até escalar.</div></div>
+    <div class="limit-card"><div class="limit-title">⚡ n8n Cloud: 5.000 exec/mês</div><div class="limit-desc">O plano free do n8n Cloud limita execuções. Volume alto pode estourar o limite.</div><div class="limit-fix">✅ n8n self-hosted no mesmo Oracle Cloud resolve — sem limite de execuções.</div></div>
+    <div class="limit-card"><div class="limit-title">⚡ WhatsApp não-oficial</div><div class="limit-desc">Evolution API não é a API Meta Oficial. Risco baixo para uso em negócio próprio.</div><div class="limit-fix">✅ API Meta Oficial é gratuita até 1.000 conversas/mês. Migração simples quando escalar.</div></div>
+    <div class="limit-card"><div class="limit-title">⚡ App móvel nativo</div><div class="limit-desc">O ERS v2.0 especifica app iOS/Android para o profissional. No-code entrega PWA.</div><div class="limit-fix">✅ Glide gera PWA instalável no celular + notificações via WhatsApp. Funcional para validar o produto.</div></div>
+    <div class="limit-card"><div class="limit-title">⚡ Múltiplos profissionais</div><div class="limit-desc">Gerenciar equipes com agendas separadas é mais trabalhoso no no-code.</div><div class="limit-fix">✅ MVP com 1 profissional funciona perfeitamente. Expansão para equipe discutimos na próxima etapa.</div></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section>
+  <div class="cta-box">
+    <h3>Por onde quer começar? Posso entregar cada peça pronta 🚀</h3>
+    <p>Diga qual item abaixo você precisa primeiro e eu crio agora mesmo — template, workflow, mensagens ou guia de configuração.</p>
+    <div class="cta-chips">
+      <span class="chip">📊 Template Google Sheets</span>
+      <span class="chip">⚙️ Workflows n8n prontos</span>
+      <span class="chip">💬 Roteiro de mensagens do bot</span>
+      <span class="chip">📅 Setup Google Agenda</span>
+      <span class="chip">💳 Config Mercado Pago</span>
+      <span class="chip">🖥️ Painel no Glide</span>
+      <span class="chip">🔧 Guia Oracle + Evolution API</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>Plano de Execução — Plataforma de Agendamento</span>
+  <span>MVP no-code · R$ 0,00/mês fixo · ~4 semanas · ERS v2.0</span>
+</footer>
+
+</body>
+</html>
