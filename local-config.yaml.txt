@@ -1,0 +1,30 @@
+project:
+  name: AgendaPro
+  version: 2.1
+  type: brownfield
+
+agents:
+  enabled: true
+  list:
+    - pm
+    - dev
+    - qa
+    - architect
+    - devops
+
+tasks:
+  sprint0:
+    - STORY-010
+    - STORY-011
+    - STORY-012
+    - STORY-013
+    - STORY-014
+    - STORY-015
+
+execution:
+  mode: sequential
+  autoCommit: true
+  autoPush: true
+```
+
+
