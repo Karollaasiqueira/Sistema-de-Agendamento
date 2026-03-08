@@ -613,7 +613,7 @@
                     <i class="fas fa-info-circle"></i>
                     <div>
                         <strong>Agendamentos Fixos</strong>
-                        <p>Permite que clientes reservem horários recorrentes (ex: toda quinta às 15h). O sistema agenda automaticamente até 4 semanas à frente e envia lembretes antes de cada data.</p>
+                        <p>Permite que clientes reservem horários recorrentes, semanais ou quinzenais (ex: toda quinta às 15h ou a cada 2 semanas). O sistema agenda automaticamente até 4 ocorrências à frente e envia lembretes antes de cada data.</p>
                     </div>
                 </div>
 
@@ -1010,6 +1010,13 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>Profissional</label>
+                    <select id="recurring-professional">
+                        <option value="">Selecione um profissional</option>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>Serviço</label>
                     <select id="recurring-service">
                         <option value="">Selecione um serviço</option>
@@ -1017,6 +1024,13 @@
                     </select>
                 </div>
                 <div class="form-row">
+                    <div class="form-group">
+                        <label>Frequência</label>
+                        <select id="recurring-frequency">
+                            <option value="weekly">Semanal (toda semana)</option>
+                            <option value="biweekly">Quinzenal (a cada 2 semanas)</option>
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label>Dia da Semana</label>
                         <select id="recurring-day">
@@ -1029,25 +1043,27 @@
                             <option value="6">Sábado</option>
                         </select>
                     </div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label>Horário</label>
                         <input type="time" id="recurring-time" value="15:00">
                     </div>
-                </div>
-                <div class="form-group">
-                    <label>Data de Início</label>
-                    <input type="date" id="recurring-start-date">
+                    <div class="form-group">
+                        <label>Data de Início</label>
+                        <input type="date" id="recurring-start-date">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>
                         <input type="checkbox" id="recurring-active" checked>
                         Agendamento fixo ativo
                     </label>
-                    <small class="help-text">🔄 Quando ativo, o sistema agendará automaticamente até 4 semanas à frente</small>
+                    <small class="help-text">🔄 Quando ativo, o sistema agendará automaticamente as próximas datas à frente</small>
                 </div>
                 <div class="info-box">
                     <i class="fas fa-info-circle"></i>
-                    <p><strong>Como funciona:</strong> O sistema criará automaticamente agendamentos toda semana no dia e horário escolhidos, por até 4 semanas à frente. Lembretes serão enviados antes de cada data agendada.</p>
+                    <p><strong>Como funciona:</strong> O sistema criará automaticamente agendamentos no dia e horário escolhidos, de acordo com a frequência selecionada (semanal ou quinzenal), por até 4 ocorrências à frente. Lembretes serão enviados antes de cada data.</p>
                 </div>
             </div>
             <div class="modal-footer">

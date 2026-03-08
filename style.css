@@ -2471,6 +2471,33 @@ body {
     border-top: 1px solid var(--light-gray);
 }
 
+.recurring-badges {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.freq-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 10px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.freq-weekly {
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--primary);
+}
+
+.freq-biweekly {
+    background: rgba(139, 92, 246, 0.12);
+    color: var(--secondary);
+}
+
 /* Info Box */
 .info-box {
     background: rgba(59, 130, 246, 0.05);

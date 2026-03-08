@@ -39,9 +39,22 @@ let demoData = {
             serviceName: 'Luzes/Mechas', 
             dayOfWeek: 4,
             time: '15:00', 
+            frequency: 'weekly',
             startDate: '2026-02-06',
             active: true,
             createdAt: '2026-01-15T10:00:00'
+        },
+        { 
+            id: 2, 
+            clientId: 1, 
+            professionalId: 1,
+            serviceName: 'Corte de Cabelo', 
+            dayOfWeek: 6,
+            time: '10:00', 
+            frequency: 'biweekly',
+            startDate: '2026-02-01',
+            active: true,
+            createdAt: '2026-01-20T09:00:00'
         }
     ],
     reviews: [
@@ -1674,12 +1687,18 @@ function renderRecurring() {
     }
     
     const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    const freqLabels = { weekly: 'Semanal', biweekly: 'Quinzenal' };
+    const freqIcons = { weekly: 'calendar-week', biweekly: 'calendar-alt' };
     
     container.innerHTML = demoData.recurringAppointments.map(recurring => {
         const client = demoData.clients.find(c => c.id === recurring.clientId);
+        const professional = demoData.professionals.find(p => p.id === recurring.professionalId);
         const statusClass = recurring.active ? 'success' : 'default';
         const statusText = recurring.active ? 'Ativo' : 'Pausado';
-        const nextDates = getNextRecurringDates(recurring.dayOfWeek, recurring.time, 4);
+        const freq = recurring.frequency || 'weekly';
+        const interval = freq === 'biweekly' ? 14 : 7;
+        const nextDates = getNextRecurringDates(recurring.dayOfWeek, recurring.time, 4, interval);
+        const freqBadgeClass = freq === 'biweekly' ? 'freq-biweekly' : 'freq-weekly';
         
         return `
             <div class="recurring-card">
@@ -1691,16 +1710,24 @@ function renderRecurring() {
                             <span>${formatPhone(client.phone)}</span>
                         </div>
                     </div>
-                    <span class="badge badge-${statusClass}">${statusText}</span>
+                    <div class="recurring-badges">
+                        <span class="freq-badge ${freqBadgeClass}"><i class="fas fa-${freqIcons[freq]}"></i> ${freqLabels[freq]}</span>
+                        <span class="badge badge-${statusClass}">${statusText}</span>
+                    </div>
                 </div>
                 <div class="recurring-details">
                     <div class="detail-item">
                         <i class="fas fa-cut"></i>
                         <span>${recurring.serviceName}</span>
                     </div>
+                    ${professional ? `
                     <div class="detail-item">
-                        <i class="fas fa-calendar-week"></i>
-                        <span>Toda ${dayNames[recurring.dayOfWeek]}</span>
+                        <i class="fas fa-user-tie" style="color:${professional.color}"></i>
+                        <span>${professional.name}</span>
+                    </div>` : ''}
+                    <div class="detail-item">
+                        <i class="fas fa-redo"></i>
+                        <span>${freq === 'biweekly' ? 'A cada 2 semanas -' : 'Toda'} ${dayNames[recurring.dayOfWeek]}</span>
                     </div>
                     <div class="detail-item">
                         <i class="fas fa-clock"></i>
@@ -1738,12 +1765,13 @@ function renderRecurring() {
     }).join('');
 }
 
-function getNextRecurringDates(dayOfWeek, time, count) {
+function getNextRecurringDates(dayOfWeek, time, count, intervalDays) {
     const dates = [];
     const today = new Date();
     let current = new Date(today);
+    const interval = intervalDays || 7;
     
-    // Find next occurrence
+    // Find next occurrence of this day of week
     while (current.getDay() !== dayOfWeek) {
         current.setDate(current.getDate() + 1);
     }
@@ -1755,7 +1783,7 @@ function getNextRecurringDates(dayOfWeek, time, count) {
             month: 'short' 
         });
         dates.push(`${dateStr} às ${time}`);
-        current.setDate(current.getDate() + 7); // Next week
+        current.setDate(current.getDate() + interval);
     }
     
     return dates;
@@ -1770,6 +1798,13 @@ function openRecurringModal(recurringId = null) {
     clientSelect.innerHTML = '<option value="">Selecione um cliente</option>' +
         demoData.clients.filter(c => c.status !== 'blocked').map(client => 
             `<option value="${client.id}">${client.name}</option>`
+        ).join('');
+    
+    // Populate professional dropdown
+    const profSelect = document.getElementById('recurring-professional');
+    profSelect.innerHTML = '<option value="">Selecione um profissional</option>' +
+        demoData.professionals.filter(p => p.active).map(prof => 
+            `<option value="${prof.id}">${prof.name} - ${prof.specialty}</option>`
         ).join('');
     
     // Populate service dropdown
@@ -1790,7 +1825,8 @@ function openRecurringModal(recurringId = null) {
         title.textContent = 'Editar Agendamento Fixo';
         
         clientSelect.value = recurring.clientId;
-        // Service select would need serviceId - for now just showing demo
+        if (recurring.professionalId) profSelect.value = recurring.professionalId;
+        document.getElementById('recurring-frequency').value = recurring.frequency || 'weekly';
         document.getElementById('recurring-day').value = recurring.dayOfWeek;
         document.getElementById('recurring-time').value = recurring.time;
         startDateInput.value = recurring.startDate;
@@ -1798,7 +1834,9 @@ function openRecurringModal(recurringId = null) {
     } else {
         title.textContent = 'Novo Agendamento Fixo';
         document.getElementById('recurring-client').value = '';
+        document.getElementById('recurring-professional').value = '';
         document.getElementById('recurring-service').value = '';
+        document.getElementById('recurring-frequency').value = 'weekly';
         document.getElementById('recurring-day').value = '4';
         document.getElementById('recurring-time').value = '15:00';
         document.getElementById('recurring-active').checked = true;
@@ -1813,7 +1851,9 @@ function closeRecurringModal() {
 
 function saveRecurring() {
     const clientId = parseInt(document.getElementById('recurring-client').value);
+    const professionalId = parseInt(document.getElementById('recurring-professional').value) || null;
     const serviceId = parseInt(document.getElementById('recurring-service').value);
+    const frequency = document.getElementById('recurring-frequency').value;
     const dayOfWeek = parseInt(document.getElementById('recurring-day').value);
     const time = document.getElementById('recurring-time').value;
     const startDate = document.getElementById('recurring-start-date').value;
@@ -1826,11 +1866,15 @@ function saveRecurring() {
     
     const client = demoData.clients.find(c => c.id === clientId);
     const service = demoData.services.find(s => s.id === serviceId);
+    const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    const freqLabel = frequency === 'biweekly' ? 'Quinzenal' : 'Semanal';
     
     const recurring = {
         id: Date.now(),
         clientId,
+        professionalId,
         serviceName: service.name,
+        frequency,
         dayOfWeek,
         time,
         startDate,
@@ -1840,22 +1884,21 @@ function saveRecurring() {
     
     demoData.recurringAppointments.push(recurring);
     
-    // Create first 4 weeks of appointments automatically
+    // Create next 4 occurrences automatically
     if (active) {
         createRecurringAppointments(recurring);
     }
     
     renderRecurring();
     closeRecurringModal();
-    showToast(`Agendamento fixo criado para ${client.name} - Toda ${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][dayOfWeek]} às ${time}`, 'success');
+    showToast(`${freqLabel}: ${client.name} - ${dayNames[dayOfWeek]} às ${time}`, 'success');
 }
 
 function createRecurringAppointments(recurring) {
-    const client = demoData.clients.find(c => c.id === recurring.clientId);
-    const dates = getNextRecurringDatesForCreation(recurring.dayOfWeek, recurring.startDate, 4);
+    const interval = recurring.frequency === 'biweekly' ? 14 : 7;
+    const dates = getNextRecurringDatesForCreation(recurring.dayOfWeek, recurring.startDate, 4, interval);
     
     dates.forEach(date => {
-        // Check if appointment doesn't already exist
         const exists = demoData.appointments.some(apt => 
             apt.clientId === recurring.clientId && 
             apt.date === date && 
@@ -1866,6 +1909,7 @@ function createRecurringAppointments(recurring) {
             demoData.appointments.push({
                 id: Date.now() + Math.random(),
                 clientId: recurring.clientId,
+                professionalId: recurring.professionalId,
                 service: recurring.serviceName,
                 date: date,
                 time: recurring.time,
@@ -1879,12 +1923,13 @@ function createRecurringAppointments(recurring) {
     });
 }
 
-function getNextRecurringDatesForCreation(dayOfWeek, startDate, count) {
+function getNextRecurringDatesForCreation(dayOfWeek, startDate, count, intervalDays) {
     const dates = [];
     const start = new Date(startDate);
     let current = new Date(start);
+    const interval = intervalDays || 7;
     
-    // Find next occurrence
+    // Find next occurrence of this day of week
     while (current.getDay() !== dayOfWeek) {
         current.setDate(current.getDate() + 1);
     }
@@ -1892,7 +1937,7 @@ function getNextRecurringDatesForCreation(dayOfWeek, startDate, count) {
     for (let i = 0; i < count; i++) {
         const dateStr = current.toISOString().split('T')[0];
         dates.push(dateStr);
-        current.setDate(current.getDate() + 7); // Next week
+        current.setDate(current.getDate() + interval);
     }
     
     return dates;
