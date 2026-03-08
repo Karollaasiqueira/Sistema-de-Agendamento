@@ -215,6 +215,10 @@
                 <a href="#" class="nav-item" data-view="recurring">
                     <i class="fas fa-sync-alt"></i>
                     <span>Agendamentos Fixos</span>
+                </a>
+                <a href="#" class="nav-item" data-view="reviews">
+                    <i class="fas fa-star"></i>
+                    <span>Avaliações</span>
                     <span class="badge">Novo</span>
                 </a>
                 <a href="#" class="nav-item" data-view="reports">
@@ -594,6 +598,40 @@
                                 <div class="reason-fill" style="width: 10%"></div>
                             </div>
                             <div class="reason-value">10%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reviews View -->
+            <div id="view-reviews" class="view">
+                <div class="view-header">
+                    <h1>Avaliações</h1>
+                    <div class="header-actions">
+                        <select id="reviews-filter" onchange="renderReviews()">
+                            <option value="all">Todas</option>
+                            <option value="5">5 estrelas</option>
+                            <option value="4">4 estrelas</option>
+                            <option value="3">3 estrelas</option>
+                            <option value="2">2 estrelas</option>
+                            <option value="1">1 estrela</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="reviews-summary" id="reviews-summary">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div class="reviews-content">
+                    <div class="reviews-chart-container">
+                        <h3>Distribuição de Avaliações</h3>
+                        <canvas id="reviews-distribution-chart"></canvas>
+                    </div>
+                    <div class="reviews-list-container">
+                        <h3>Avaliações Recentes</h3>
+                        <div class="reviews-list" id="reviews-list">
+                            <!-- Populated by JS -->
                         </div>
                     </div>
                 </div>

@@ -36,6 +36,18 @@ let demoData = {
             active: true,
             createdAt: '2026-01-15T10:00:00'
         }
+    ],
+    reviews: [
+        { id: 1, clientId: 1, service: 'Corte de Cabelo', rating: 5, comment: 'Excelente como sempre! Corte perfeito, recomendo demais.', date: '2026-02-25', appointmentId: 1 },
+        { id: 2, clientId: 4, service: 'Luzes/Mechas', rating: 5, comment: 'Amei o resultado! Ficou exatamente como eu queria.', date: '2026-02-20', appointmentId: 4 },
+        { id: 3, clientId: 2, service: 'Corte + Barba', rating: 4, comment: 'Muito bom, só demorou um pouquinho mais que o esperado.', date: '2026-02-18', appointmentId: 2 },
+        { id: 4, clientId: 3, service: 'Barba', rating: 5, comment: 'Barba impecável! Atendimento nota 10.', date: '2026-02-15', appointmentId: 3 },
+        { id: 5, clientId: 1, service: 'Corte de Cabelo', rating: 4, comment: 'Bom corte, ambiente agradável.', date: '2026-02-10', appointmentId: 5 },
+        { id: 6, clientId: 4, service: 'Design de Sobrancelha', rating: 5, comment: 'Perfeito! Muito caprichosa.', date: '2026-02-08', appointmentId: null },
+        { id: 7, clientId: 3, service: 'Corte de Cabelo', rating: 3, comment: 'Foi ok, mas já tive cortes melhores aqui.', date: '2026-02-05', appointmentId: null },
+        { id: 8, clientId: 2, service: 'Barba', rating: 5, comment: 'Nota 10! Profissional muito atencioso.', date: '2026-02-01', appointmentId: null },
+        { id: 9, clientId: 1, service: 'Corte + Barba', rating: 4, comment: 'Ótimo serviço, preço justo.', date: '2026-01-28', appointmentId: null },
+        { id: 10, clientId: 4, service: 'Luzes/Mechas', rating: 5, comment: 'Melhor profissional da cidade para luzes!', date: '2026-01-20', appointmentId: null }
     ]
 };
 
@@ -127,6 +139,9 @@ function switchView(viewName) {
         case 'recurring':
             renderRecurring();
             break;
+        case 'reviews':
+            renderReviews();
+            break;
         case 'reports':
             renderReports();
             break;
@@ -149,6 +164,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ========== DASHBOARD ==========
 function renderDashboard() {
+    // Update stats dynamically
+    const today = new Date().toISOString().split('T')[0];
+    const todayAppointments = demoData.appointments.filter(a => a.date === today);
+    const totalClients = demoData.clients.length;
+    const avgRating = demoData.reviews.length > 0 
+        ? (demoData.reviews.reduce((sum, r) => sum + r.rating, 0) / demoData.reviews.length).toFixed(1)
+        : '0.0';
+    
+    // Update stat cards
+    const statValues = document.querySelectorAll('.stat-card .stat-value');
+    if (statValues.length >= 4) {
+        statValues[0].textContent = todayAppointments.length || '0';
+        statValues[2].textContent = totalClients;
+        statValues[3].textContent = avgRating;
+    }
+    
     renderUpcomingAppointments();
     renderServicesRanking();
     renderActivityFeed();
@@ -1102,6 +1133,225 @@ function renderCancellationChart() {
                 y: {
                     beginAtZero: true,
                     max: 15
+                }
+            }
+        }
+    });
+}
+
+// ========== REVIEWS ==========
+function renderReviews() {
+    renderReviewsSummary();
+    renderReviewsList();
+    renderReviewsChart();
+}
+
+function renderReviewsSummary() {
+    const container = document.getElementById('reviews-summary');
+    const reviews = demoData.reviews;
+    
+    if (reviews.length === 0) {
+        container.innerHTML = '<div class="empty-state">Nenhuma avaliação ainda</div>';
+        return;
+    }
+    
+    const avgRating = (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1);
+    const totalReviews = reviews.length;
+    const fiveStars = reviews.filter(r => r.rating === 5).length;
+    const fiveStarPercent = Math.round((fiveStars / totalReviews) * 100);
+    
+    // Rating distribution
+    const distribution = [5, 4, 3, 2, 1].map(star => {
+        const count = reviews.filter(r => r.rating === star).length;
+        const percent = Math.round((count / totalReviews) * 100);
+        return { star, count, percent };
+    });
+    
+    container.innerHTML = `
+        <div class="reviews-overview">
+            <div class="rating-big">
+                <div class="rating-number">${avgRating}</div>
+                <div class="rating-stars">${renderStars(Math.round(avgRating))}</div>
+                <div class="rating-total">${totalReviews} avaliações</div>
+            </div>
+            <div class="rating-bars">
+                ${distribution.map(d => `
+                    <div class="rating-bar-row">
+                        <span class="bar-label">${d.star} <i class="fas fa-star"></i></span>
+                        <div class="rating-bar">
+                            <div class="rating-bar-fill" style="width: ${d.percent}%"></div>
+                        </div>
+                        <span class="bar-count">${d.count}</span>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="rating-highlights">
+                <div class="highlight-card">
+                    <div class="highlight-value">${fiveStarPercent}%</div>
+                    <div class="highlight-label">5 estrelas</div>
+                </div>
+                <div class="highlight-card">
+                    <div class="highlight-value">${avgRating >= 4.5 ? '🔥' : avgRating >= 4 ? '👍' : '📊'}</div>
+                    <div class="highlight-label">${avgRating >= 4.5 ? 'Excelente' : avgRating >= 4 ? 'Muito Bom' : avgRating >= 3 ? 'Bom' : 'Regular'}</div>
+                </div>
+                <div class="highlight-card">
+                    <div class="highlight-value">${getMostReviewedService()}</div>
+                    <div class="highlight-label">Mais avaliado</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function getMostReviewedService() {
+    const count = {};
+    demoData.reviews.forEach(r => {
+        count[r.service] = (count[r.service] || 0) + 1;
+    });
+    const sorted = Object.entries(count).sort((a, b) => b[1] - a[1]);
+    return sorted.length > 0 ? sorted[0][0] : '-';
+}
+
+function renderStars(rating) {
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+        stars += `<i class="fas fa-star ${i <= rating ? 'star-filled' : 'star-empty'}"></i>`;
+    }
+    return stars;
+}
+
+function renderStarsInteractive(currentRating, reviewId) {
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+        stars += `<i class="fas fa-star star-interactive ${i <= currentRating ? 'star-filled' : 'star-empty'}" 
+                    data-rating="${i}" data-review="${reviewId}"
+                    onmouseenter="previewStars(this)" 
+                    onmouseleave="resetStars(this)"
+                    onclick="setRating(${reviewId}, ${i})"></i>`;
+    }
+    return stars;
+}
+
+function previewStars(el) {
+    const rating = parseInt(el.dataset.rating);
+    const container = el.parentElement || el.closest('.stars-interactive');
+    const stars = container ? container.querySelectorAll('.star-interactive') : el.parentNode.querySelectorAll('.star-interactive');
+    stars.forEach((star, index) => {
+        star.classList.toggle('star-filled', index < rating);
+        star.classList.toggle('star-empty', index >= rating);
+    });
+}
+
+function resetStars(el) {
+    // Reset is handled by the parent container's mouseleave
+}
+
+function renderReviewsList() {
+    const container = document.getElementById('reviews-list');
+    const filter = document.getElementById('reviews-filter').value;
+    
+    let reviews = [...demoData.reviews].sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    if (filter !== 'all') {
+        reviews = reviews.filter(r => r.rating === parseInt(filter));
+    }
+    
+    if (reviews.length === 0) {
+        container.innerHTML = '<div class="empty-state">Nenhuma avaliação encontrada para esse filtro</div>';
+        return;
+    }
+    
+    container.innerHTML = reviews.map(review => {
+        const client = demoData.clients.find(c => c.id === review.clientId);
+        const clientName = client ? client.name : 'Cliente';
+        const dateFormatted = new Date(review.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+        
+        return `
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="review-client">
+                        <div class="review-avatar">${clientName.charAt(0)}</div>
+                        <div>
+                            <strong>${clientName}</strong>
+                            <span class="review-service">${review.service}</span>
+                        </div>
+                    </div>
+                    <div class="review-meta">
+                        <div class="review-stars">${renderStars(review.rating)}</div>
+                        <span class="review-date">${dateFormatted}</span>
+                    </div>
+                </div>
+                <p class="review-comment">${review.comment}</p>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderReviewsChart() {
+    const ctx = document.getElementById('reviews-distribution-chart');
+    if (!ctx) return;
+    
+    // Destroy existing chart if any
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) existingChart.destroy();
+    
+    // Reviews per service
+    const serviceReviews = {};
+    demoData.reviews.forEach(r => {
+        if (!serviceReviews[r.service]) {
+            serviceReviews[r.service] = { total: 0, sum: 0 };
+        }
+        serviceReviews[r.service].total++;
+        serviceReviews[r.service].sum += r.rating;
+    });
+    
+    const labels = Object.keys(serviceReviews);
+    const avgData = labels.map(s => (serviceReviews[s].sum / serviceReviews[s].total).toFixed(1));
+    const countData = labels.map(s => serviceReviews[s].total);
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Nota Média',
+                    data: avgData,
+                    backgroundColor: '#f59e0b',
+                    borderRadius: 6,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Qtd. Avaliações',
+                    data: countData,
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 6,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    position: 'left',
+                    min: 0,
+                    max: 5,
+                    title: { display: true, text: 'Nota Média' }
+                },
+                y1: {
+                    type: 'linear',
+                    position: 'right',
+                    min: 0,
+                    grid: { drawOnChartArea: false },
+                    title: { display: true, text: 'Quantidade' }
                 }
             }
         }
