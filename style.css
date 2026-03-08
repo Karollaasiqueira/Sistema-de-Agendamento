@@ -2123,6 +2123,16 @@ body {
     .recurring-grid {
         grid-template-columns: 1fr;
     }
+
+    /* Professionals */
+    .professionals-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .prof-metrics {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
     
     .info-banner {
         flex-direction: column;
@@ -2765,4 +2775,171 @@ body {
 }
 
 /* Responsive reviews handled in main responsive section */
+
+/* ========== PROFESSIONALS ========== */
+.professionals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 1.5rem;
+}
+
+.professional-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    transition: var(--transition);
+}
+
+.professional-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.prof-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.prof-identity {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.prof-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.prof-identity strong {
+    display: block;
+    font-size: 1.05rem;
+    color: var(--dark);
+}
+
+.prof-specialty {
+    font-size: 0.85rem;
+    color: var(--gray);
+}
+
+.prof-services {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+}
+
+.prof-service-tag {
+    background: var(--light-gray);
+    color: var(--dark);
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.prof-metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid var(--light-gray);
+    border-bottom: 1px solid var(--light-gray);
+}
+
+.prof-metric {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    color: var(--gray);
+}
+
+.prof-metric i {
+    color: var(--primary);
+    font-size: 0.8rem;
+}
+
+.prof-contact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 1rem;
+    font-size: 0.82rem;
+    color: var(--gray);
+}
+
+.prof-contact i {
+    width: 16px;
+    text-align: center;
+    margin-right: 0.3rem;
+    color: var(--primary);
+}
+
+.prof-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--light-gray);
+}
+
+/* Color picker */
+.color-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.color-picker-row input[type="color"] {
+    width: 50px;
+    height: 40px;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius);
+    cursor: pointer;
+    padding: 2px;
+}
+
+.color-preview {
+    font-size: 0.85rem;
+    color: var(--gray);
+}
+
+/* Checkbox group */
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--light-gray);
+    border-radius: var(--radius);
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0.35rem 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
 

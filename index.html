@@ -217,6 +217,11 @@
                     <i class="fas fa-briefcase"></i>
                     <span>Serviços</span>
                 </a>
+                <a href="#" class="nav-item" data-view="professionals">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Profissionais</span>
+                    <span class="badge">Novo</span>
+                </a>
                 <a href="#" class="nav-item" data-view="clients">
                     <i class="fas fa-users"></i>
                     <span>Clientes</span>
@@ -477,6 +482,84 @@
                             <!-- Populated by JS -->
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- Professionals View -->
+            <div id="view-professionals" class="view">
+                <div class="view-header">
+                    <h1>Profissionais</h1>
+                    <div class="header-actions">
+                        <button class="btn-primary" onclick="openProfessionalModal()">
+                            <i class="fas fa-plus"></i> Novo Profissional
+                        </button>
+                    </div>
+                </div>
+
+                <div class="professionals-stats" id="professionals-stats">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div class="professionals-grid" id="professionals-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Professional Modal -->
+            <div id="professional-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 id="professional-modal-title">Novo Profissional</h2>
+                        <button class="btn-close" onclick="closeProfessionalModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Nome Completo</label>
+                            <input type="text" id="prof-name" placeholder="Ex: Bruno Silva">
+                        </div>
+                        <div class="form-group">
+                            <label>Telefone</label>
+                            <input type="tel" id="prof-phone" placeholder="+55 11 99999-9999">
+                        </div>
+                        <div class="form-group">
+                            <label>E-mail</label>
+                            <input type="email" id="prof-email" placeholder="profissional@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Especialidade / Cargo</label>
+                            <input type="text" id="prof-specialty" placeholder="Ex: Barbeiro, Cabeleireiro, Manicure">
+                        </div>
+                        <div class="form-group">
+                            <label>Cor de Identificação</label>
+                            <div class="color-picker-row">
+                                <input type="color" id="prof-color" value="#3b82f6">
+                                <span class="color-preview" id="prof-color-preview">Cor na agenda</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Serviços que realiza</label>
+                            <div class="checkbox-group" id="prof-services-checkboxes">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Comissão (%)</label>
+                            <input type="number" id="prof-commission" value="40" min="0" max="100" step="5">
+                            <small class="help-text">Percentual de comissão sobre cada atendimento</small>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="prof-active" checked>
+                                Profissional ativo
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-secondary" onclick="closeProfessionalModal()">Cancelar</button>
+                        <button class="btn-primary" onclick="saveProfessional()">Salvar</button>
+                    </div>
                 </div>
             </div>
 

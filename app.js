@@ -4,6 +4,12 @@
 
 // ========== DEMO DATA ==========
 let demoData = {
+    professionals: [
+        { id: 1, name: 'Bruno Silva', phone: '+55 11 91111-1111', email: 'bruno@barbeariasilva.com', specialty: 'Barbeiro Senior', color: '#3b82f6', serviceIds: [1, 2, 3], commission: 45, active: true, avatar: 'BS' },
+        { id: 2, name: 'Camila Rocha', phone: '+55 11 92222-2222', email: 'camila@barbeariasilva.com', specialty: 'Cabeleireira / Colorista', color: '#8b5cf6', serviceIds: [1, 4, 5], commission: 40, active: true, avatar: 'CR' },
+        { id: 3, name: 'Rafael Mendes', phone: '+55 11 93333-3333', email: 'rafael@barbeariasilva.com', specialty: 'Barbeiro', color: '#10b981', serviceIds: [1, 2, 3, 4], commission: 40, active: true, avatar: 'RM' },
+        { id: 4, name: 'Juliana Alves', phone: '+55 11 94444-4444', email: 'juliana@barbeariasilva.com', specialty: 'Designer de Sobrancelhas', color: '#f59e0b', serviceIds: [4], commission: 35, active: false, avatar: 'JA' }
+    ],
     services: [
         { id: 1, name: 'Corte de Cabelo', description: 'Corte tradicional com máquina e tesoura', duration: 30, valueType: 'fixed', value: 50, active: true },
         { id: 2, name: 'Barba', description: 'Aparar e modelar barba', duration: 20, valueType: 'fixed', value: 30, active: true },
@@ -19,18 +25,19 @@ let demoData = {
         { id: 5, name: 'Pedro Souza', phone: '+55 11 94321-0987', status: 'blocked', totalAppointments: 2, lastVisit: '2026-01-10', created: '2025-12-20' }
     ],
     appointments: [
-        { id: 1, clientId: 1, service: 'Corte de Cabelo', date: '2026-02-28', time: '15:00', status: 'confirmed', confirmedAt: '2026-02-27T10:00:00' },
-        { id: 2, clientId: 2, service: 'Corte + Barba', date: '2026-02-28', time: '16:00', status: 'pending', createdAt: '2026-02-28T13:00:00' },
-        { id: 3, clientId: 3, service: 'Barba', date: '2026-03-01', time: '10:00', status: 'confirmed', confirmedAt: '2026-02-25T14:30:00' },
-        { id: 4, clientId: 4, service: 'Luzes/Mechas', date: '2026-03-01', time: '14:00', status: 'confirmed', confirmedAt: '2026-02-26T09:15:00' },
-        { id: 5, clientId: 1, service: 'Corte de Cabelo', date: '2026-03-03', time: '11:00', status: 'confirmed', confirmedAt: '2026-02-28T08:00:00' }
+        { id: 1, clientId: 1, professionalId: 1, service: 'Corte de Cabelo', date: '2026-02-28', time: '15:00', status: 'confirmed', confirmedAt: '2026-02-27T10:00:00' },
+        { id: 2, clientId: 2, professionalId: 3, service: 'Corte + Barba', date: '2026-02-28', time: '16:00', status: 'pending', createdAt: '2026-02-28T13:00:00' },
+        { id: 3, clientId: 3, professionalId: 1, service: 'Barba', date: '2026-03-01', time: '10:00', status: 'confirmed', confirmedAt: '2026-02-25T14:30:00' },
+        { id: 4, clientId: 4, professionalId: 2, service: 'Luzes/Mechas', date: '2026-03-01', time: '14:00', status: 'confirmed', confirmedAt: '2026-02-26T09:15:00' },
+        { id: 5, clientId: 1, professionalId: 3, service: 'Corte de Cabelo', date: '2026-03-03', time: '11:00', status: 'confirmed', confirmedAt: '2026-02-28T08:00:00' }
     ],
     recurringAppointments: [
         { 
             id: 1, 
             clientId: 4, 
+            professionalId: 2,
             serviceName: 'Luzes/Mechas', 
-            dayOfWeek: 4, // Quinta-feira (0=Domingo, 4=Quinta)
+            dayOfWeek: 4,
             time: '15:00', 
             startDate: '2026-02-06',
             active: true,
@@ -38,16 +45,16 @@ let demoData = {
         }
     ],
     reviews: [
-        { id: 1, clientId: 1, service: 'Corte de Cabelo', rating: 5, comment: 'Excelente como sempre! Corte perfeito, recomendo demais.', date: '2026-02-25', appointmentId: 1 },
-        { id: 2, clientId: 4, service: 'Luzes/Mechas', rating: 5, comment: 'Amei o resultado! Ficou exatamente como eu queria.', date: '2026-02-20', appointmentId: 4 },
-        { id: 3, clientId: 2, service: 'Corte + Barba', rating: 4, comment: 'Muito bom, só demorou um pouquinho mais que o esperado.', date: '2026-02-18', appointmentId: 2 },
-        { id: 4, clientId: 3, service: 'Barba', rating: 5, comment: 'Barba impecável! Atendimento nota 10.', date: '2026-02-15', appointmentId: 3 },
-        { id: 5, clientId: 1, service: 'Corte de Cabelo', rating: 4, comment: 'Bom corte, ambiente agradável.', date: '2026-02-10', appointmentId: 5 },
-        { id: 6, clientId: 4, service: 'Design de Sobrancelha', rating: 5, comment: 'Perfeito! Muito caprichosa.', date: '2026-02-08', appointmentId: null },
-        { id: 7, clientId: 3, service: 'Corte de Cabelo', rating: 3, comment: 'Foi ok, mas já tive cortes melhores aqui.', date: '2026-02-05', appointmentId: null },
-        { id: 8, clientId: 2, service: 'Barba', rating: 5, comment: 'Nota 10! Profissional muito atencioso.', date: '2026-02-01', appointmentId: null },
-        { id: 9, clientId: 1, service: 'Corte + Barba', rating: 4, comment: 'Ótimo serviço, preço justo.', date: '2026-01-28', appointmentId: null },
-        { id: 10, clientId: 4, service: 'Luzes/Mechas', rating: 5, comment: 'Melhor profissional da cidade para luzes!', date: '2026-01-20', appointmentId: null }
+        { id: 1, clientId: 1, professionalId: 1, service: 'Corte de Cabelo', rating: 5, comment: 'Excelente como sempre! Corte perfeito, recomendo demais.', date: '2026-02-25', appointmentId: 1 },
+        { id: 2, clientId: 4, professionalId: 2, service: 'Luzes/Mechas', rating: 5, comment: 'Amei o resultado! Ficou exatamente como eu queria.', date: '2026-02-20', appointmentId: 4 },
+        { id: 3, clientId: 2, professionalId: 3, service: 'Corte + Barba', rating: 4, comment: 'Muito bom, só demorou um pouquinho mais que o esperado.', date: '2026-02-18', appointmentId: 2 },
+        { id: 4, clientId: 3, professionalId: 1, service: 'Barba', rating: 5, comment: 'Barba impecável! Atendimento nota 10.', date: '2026-02-15', appointmentId: 3 },
+        { id: 5, clientId: 1, professionalId: 3, service: 'Corte de Cabelo', rating: 4, comment: 'Bom corte, ambiente agradável.', date: '2026-02-10', appointmentId: 5 },
+        { id: 6, clientId: 4, professionalId: 2, service: 'Design de Sobrancelha', rating: 5, comment: 'Perfeito! Muito caprichosa.', date: '2026-02-08', appointmentId: null },
+        { id: 7, clientId: 3, professionalId: 1, service: 'Corte de Cabelo', rating: 3, comment: 'Foi ok, mas já tive cortes melhores aqui.', date: '2026-02-05', appointmentId: null },
+        { id: 8, clientId: 2, professionalId: 3, service: 'Barba', rating: 5, comment: 'Nota 10! Profissional muito atencioso.', date: '2026-02-01', appointmentId: null },
+        { id: 9, clientId: 1, professionalId: 1, service: 'Corte + Barba', rating: 4, comment: 'Ótimo serviço, preço justo.', date: '2026-01-28', appointmentId: null },
+        { id: 10, clientId: 4, professionalId: 2, service: 'Luzes/Mechas', rating: 5, comment: 'Melhor profissional da cidade para luzes!', date: '2026-01-20', appointmentId: null }
     ]
 };
 
@@ -139,6 +146,9 @@ function switchView(viewName) {
         case 'services':
             renderServices();
             break;
+        case 'professionals':
+            renderProfessionals();
+            break;
         case 'clients':
             renderClients();
             break;
@@ -210,8 +220,11 @@ function renderUpcomingAppointments() {
     
     container.innerHTML = upcoming.map(apt => {
         const client = demoData.clients.find(c => c.id === apt.clientId);
+        const professional = demoData.professionals.find(p => p.id === apt.professionalId);
         const statusClass = apt.status === 'confirmed' ? 'success' : apt.status === 'pending' ? 'warning' : 'default';
         const statusText = apt.status === 'confirmed' ? 'Confirmado' : apt.status === 'pending' ? 'Pendente' : 'Agendado';
+        const profName = professional ? professional.name.split(' ')[0] : '';
+        const profColor = professional ? professional.color : 'var(--gray)';
         
         return `
             <div class="appointment-item">
@@ -221,7 +234,7 @@ function renderUpcomingAppointments() {
                 </div>
                 <div class="appointment-details">
                     <strong>${client.name}</strong>
-                    <span>${apt.service}</span>
+                    <span>${apt.service}${profName ? ` · <span style="color:${profColor};font-weight:600">${profName}</span>` : ''}</span>
                 </div>
                 <span class="badge badge-${statusClass}">${statusText}</span>
             </div>
@@ -1001,8 +1014,9 @@ function renderCalendar() {
             <div class="calendar-cell ${isToday ? 'today' : ''}">
                 <div class="cell-date">${day}</div>
                 ${appointments.map(apt => {
-                    const statusClass = apt.status === 'confirmed' ? 'blue' : apt.status === 'pending' ? 'yellow' : 'gray';
-                    return `<div class="cell-appointment ${statusClass}">${apt.time} - ${apt.service}</div>`;
+                    const professional = demoData.professionals.find(p => p.id === apt.professionalId);
+                    const bgColor = professional ? professional.color : (apt.status === 'confirmed' ? 'var(--primary)' : apt.status === 'pending' ? 'var(--warning)' : 'var(--gray)');
+                    return `<div class="cell-appointment" style="background:${bgColor}">${apt.time} - ${apt.service}</div>`;
                 }).join('')}
             </div>
         `;
@@ -1148,6 +1162,258 @@ function renderCancellationChart() {
     });
 }
 
+// ========== PROFESSIONALS ==========
+let editingProfessionalId = null;
+
+function renderProfessionals() {
+    renderProfessionalsStats();
+    renderProfessionalsGrid();
+}
+
+function renderProfessionalsStats() {
+    const container = document.getElementById('professionals-stats');
+    const profs = demoData.professionals;
+    const activeCount = profs.filter(p => p.active).length;
+    const totalAppointments = demoData.appointments.length;
+    
+    // Calculate top professional
+    const profAppCount = {};
+    demoData.appointments.forEach(a => {
+        if (a.professionalId) {
+            profAppCount[a.professionalId] = (profAppCount[a.professionalId] || 0) + 1;
+        }
+    });
+    const topProfId = Object.entries(profAppCount).sort((a, b) => b[1] - a[1])[0];
+    const topProf = topProfId ? demoData.professionals.find(p => p.id === parseInt(topProfId[0])) : null;
+    
+    // Calculate avg rating per professional
+    const profRatings = {};
+    demoData.reviews.forEach(r => {
+        if (r.professionalId) {
+            if (!profRatings[r.professionalId]) profRatings[r.professionalId] = { sum: 0, count: 0 };
+            profRatings[r.professionalId].sum += r.rating;
+            profRatings[r.professionalId].count++;
+        }
+    });
+    
+    container.innerHTML = `
+        <div class="stats-grid" style="margin-bottom:1.5rem">
+            <div class="stat-card">
+                <div class="stat-icon blue"><i class="fas fa-user-tie"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">${profs.length}</div>
+                    <div class="stat-label">Total Profissionais</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">${activeCount}</div>
+                    <div class="stat-label">Ativos</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange"><i class="fas fa-trophy"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">${topProf ? topProf.name.split(' ')[0] : '-'}</div>
+                    <div class="stat-label">Mais Agendamentos</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon purple"><i class="fas fa-calendar-check"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">${totalAppointments}</div>
+                    <div class="stat-label">Atendimentos Total</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderProfessionalsGrid() {
+    const container = document.getElementById('professionals-grid');
+    
+    if (demoData.professionals.length === 0) {
+        container.innerHTML = '<div class="empty-state">Nenhum profissional cadastrado</div>';
+        return;
+    }
+    
+    container.innerHTML = demoData.professionals.map(prof => {
+        const services = prof.serviceIds.map(sid => {
+            const s = demoData.services.find(sv => sv.id === sid);
+            return s ? s.name : '';
+        }).filter(Boolean);
+        
+        const appointments = demoData.appointments.filter(a => a.professionalId === prof.id);
+        const reviews = demoData.reviews.filter(r => r.professionalId === prof.id);
+        const avgRating = reviews.length > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : '-';
+        
+        const statusClass = prof.active ? 'success' : 'danger';
+        const statusText = prof.active ? 'Ativo' : 'Inativo';
+        
+        return `
+            <div class="professional-card" style="border-left: 4px solid ${prof.color}">
+                <div class="prof-header">
+                    <div class="prof-identity">
+                        <div class="prof-avatar" style="background:${prof.color}">${prof.avatar}</div>
+                        <div>
+                            <strong>${prof.name}</strong>
+                            <span class="prof-specialty">${prof.specialty}</span>
+                        </div>
+                    </div>
+                    <span class="badge badge-${statusClass}">${statusText}</span>
+                </div>
+                <div class="prof-services">
+                    ${services.map(s => `<span class="prof-service-tag">${s}</span>`).join('')}
+                </div>
+                <div class="prof-metrics">
+                    <div class="prof-metric">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>${appointments.length} atendimentos</span>
+                    </div>
+                    <div class="prof-metric">
+                        <i class="fas fa-star" style="color:#f59e0b"></i>
+                        <span>${avgRating} ${reviews.length > 0 ? `(${reviews.length})` : ''}</span>
+                    </div>
+                    <div class="prof-metric">
+                        <i class="fas fa-percent"></i>
+                        <span>${prof.commission}% comissão</span>
+                    </div>
+                </div>
+                <div class="prof-contact">
+                    <span><i class="fas fa-phone"></i> ${formatPhone(prof.phone)}</span>
+                    <span><i class="fas fa-envelope"></i> ${prof.email}</span>
+                </div>
+                <div class="prof-actions">
+                    <button class="btn-icon" onclick="editProfessional(${prof.id})" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon" onclick="toggleProfessionalStatus(${prof.id})" title="${prof.active ? 'Desativar' : 'Ativar'}">
+                        <i class="fas fa-${prof.active ? 'eye-slash' : 'eye'}"></i>
+                    </button>
+                    <button class="btn-icon btn-danger" onclick="deleteProfessional(${prof.id})" title="Excluir">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function openProfessionalModal(profId = null) {
+    const modal = document.getElementById('professional-modal');
+    const title = document.getElementById('professional-modal-title');
+    editingProfessionalId = profId;
+    
+    // Populate services checkboxes
+    const checkboxContainer = document.getElementById('prof-services-checkboxes');
+    checkboxContainer.innerHTML = demoData.services.filter(s => s.active).map(s => `
+        <label class="checkbox-label">
+            <input type="checkbox" value="${s.id}" class="prof-service-cb">
+            ${s.name}
+        </label>
+    `).join('');
+    
+    if (profId) {
+        const prof = demoData.professionals.find(p => p.id === profId);
+        title.textContent = 'Editar Profissional';
+        document.getElementById('prof-name').value = prof.name;
+        document.getElementById('prof-phone').value = prof.phone;
+        document.getElementById('prof-email').value = prof.email;
+        document.getElementById('prof-specialty').value = prof.specialty;
+        document.getElementById('prof-color').value = prof.color;
+        document.getElementById('prof-commission').value = prof.commission;
+        document.getElementById('prof-active').checked = prof.active;
+        
+        // Check services
+        document.querySelectorAll('.prof-service-cb').forEach(cb => {
+            cb.checked = prof.serviceIds.includes(parseInt(cb.value));
+        });
+    } else {
+        title.textContent = 'Novo Profissional';
+        document.getElementById('prof-name').value = '';
+        document.getElementById('prof-phone').value = '';
+        document.getElementById('prof-email').value = '';
+        document.getElementById('prof-specialty').value = '';
+        document.getElementById('prof-color').value = '#3b82f6';
+        document.getElementById('prof-commission').value = 40;
+        document.getElementById('prof-active').checked = true;
+        document.querySelectorAll('.prof-service-cb').forEach(cb => cb.checked = false);
+    }
+    
+    modal.style.display = 'flex';
+}
+
+function closeProfessionalModal() {
+    document.getElementById('professional-modal').style.display = 'none';
+    editingProfessionalId = null;
+}
+
+function saveProfessional() {
+    const name = document.getElementById('prof-name').value.trim();
+    const phone = document.getElementById('prof-phone').value.trim();
+    const email = document.getElementById('prof-email').value.trim();
+    const specialty = document.getElementById('prof-specialty').value.trim();
+    const color = document.getElementById('prof-color').value;
+    const commission = parseInt(document.getElementById('prof-commission').value);
+    const active = document.getElementById('prof-active').checked;
+    const serviceIds = Array.from(document.querySelectorAll('.prof-service-cb:checked')).map(cb => parseInt(cb.value));
+    
+    if (!name) {
+        showToast('Por favor, informe o nome do profissional', 'error');
+        return;
+    }
+    
+    if (serviceIds.length === 0) {
+        showToast('Selecione ao menos um serviço', 'error');
+        return;
+    }
+    
+    const avatar = name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+    
+    if (editingProfessionalId) {
+        const prof = demoData.professionals.find(p => p.id === editingProfessionalId);
+        if (prof) {
+            Object.assign(prof, { name, phone, email, specialty, color, commission, active, serviceIds, avatar });
+            showToast(`Profissional ${name} atualizado!`, 'success');
+        }
+    } else {
+        demoData.professionals.push({
+            id: Date.now(),
+            name, phone, email, specialty, color, commission, active, serviceIds, avatar
+        });
+        showToast(`Profissional ${name} adicionado!`, 'success');
+    }
+    
+    closeProfessionalModal();
+    renderProfessionals();
+}
+
+function editProfessional(id) {
+    openProfessionalModal(id);
+}
+
+function toggleProfessionalStatus(id) {
+    const prof = demoData.professionals.find(p => p.id === id);
+    prof.active = !prof.active;
+    renderProfessionals();
+    showToast(`${prof.name} ${prof.active ? 'ativado' : 'desativado'}!`, 'success');
+}
+
+function deleteProfessional(id) {
+    const prof = demoData.professionals.find(p => p.id === id);
+    if (confirm(`Tem certeza que deseja excluir ${prof.name}?\n\nOs agendamentos existentes deste profissional não serão removidos.`)) {
+        demoData.professionals = demoData.professionals.filter(p => p.id !== id);
+        renderProfessionals();
+        showToast(`Profissional ${prof.name} removido!`, 'success');
+    }
+}
+
+function getProfessionalName(id) {
+    const prof = demoData.professionals.find(p => p.id === id);
+    return prof ? prof.name : '';
+}
+
 // ========== REVIEWS ==========
 function renderReviews() {
     renderReviewsSummary();
@@ -1272,7 +1538,9 @@ function renderReviewsList() {
     
     container.innerHTML = reviews.map(review => {
         const client = demoData.clients.find(c => c.id === review.clientId);
+        const professional = demoData.professionals.find(p => p.id === review.professionalId);
         const clientName = client ? client.name : 'Cliente';
+        const profName = professional ? professional.name : '';
         const dateFormatted = new Date(review.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
         
         return `
@@ -1282,7 +1550,7 @@ function renderReviewsList() {
                         <div class="review-avatar">${clientName.charAt(0)}</div>
                         <div>
                             <strong>${clientName}</strong>
-                            <span class="review-service">${review.service}</span>
+                            <span class="review-service">${review.service}${profName ? ` · com ${profName}` : ''}</span>
                         </div>
                     </div>
                     <div class="review-meta">
