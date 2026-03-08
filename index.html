@@ -184,6 +184,19 @@
 
     <!-- Main App (shown after demo start) -->
     <div id="app" class="app" style="display: none;">
+        <!-- Mobile Header -->
+        <div class="mobile-header">
+            <button class="hamburger-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="mobile-brand">
+                <i class="fas fa-calendar-check"></i>
+                <span>AgendaPro</span>
+            </div>
+            <div class="mobile-spacer"></div>
+        </div>
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">

@@ -91,6 +91,11 @@ function getCurrentTime() {
 }
 
 // ========== NAVIGATION ==========
+function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+    document.querySelector('.sidebar-overlay').classList.toggle('open');
+}
+
 function showDemo() {
     document.getElementById('landing-page').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
@@ -118,6 +123,10 @@ function switchView(viewName) {
     // Show selected view
     document.getElementById(`view-${viewName}`).classList.add('active');
     document.querySelector(`.nav-item[data-view="${viewName}"]`).classList.add('active');
+    
+    // Close sidebar on mobile
+    document.querySelector('.sidebar').classList.remove('open');
+    document.querySelector('.sidebar-overlay').classList.remove('open');
     
     // Render view content
     switch(viewName) {
