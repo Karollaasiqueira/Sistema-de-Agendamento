@@ -1,0 +1,1418 @@
+// ==========================================
+// AgendaPro - Complete Application Logic
+// ==========================================
+
+// ========== DEMO DATA ==========
+let demoData = {
+    services: [
+        { id: 1, name: 'Corte de Cabelo', description: 'Corte tradicional com máquina e tesoura', duration: 30, valueType: 'fixed', value: 50, active: true },
+        { id: 2, name: 'Barba', description: 'Aparar e modelar barba', duration: 20, valueType: 'fixed', value: 30, active: true },
+        { id: 3, name: 'Corte + Barba', description: 'Pacote completo', duration: 45, valueType: 'fixed', value: 70, active: true },
+        { id: 4, name: 'Design de Sobrancelha', description: 'Modelagem de sobrancelha', duration: 15, valueType: 'fixed', value: 20, active: true },
+        { id: 5, name: 'Luzes/Mechas', description: 'Coloração e luzes', duration: 90, valueType: 'range', valueMin: 80, valueMax: 150, active: true }
+    ],
+    clients: [
+        { id: 1, name: 'Carlos Silva', phone: '+55 11 98765-4321', status: 'vip', totalAppointments: 15, lastVisit: '2026-02-25', created: '2025-12-10' },
+        { id: 2, name: 'Maria Santos', phone: '+55 11 97654-3210', status: 'regular', totalAppointments: 3, lastVisit: '2026-02-20', created: '2026-01-15' },
+        { id: 3, name: 'João Oliveira', phone: '+55 11 96543-2109', status: 'regular', totalAppointments: 7, lastVisit: '2026-02-22', created: '2025-11-05' },
+        { id: 4, name: 'Ana Costa', phone: '+55 11 95432-1098', status: 'vip', totalAppointments: 22, lastVisit: '2026-02-26', created: '2025-09-20' },
+        { id: 5, name: 'Pedro Souza', phone: '+55 11 94321-0987', status: 'blocked', totalAppointments: 2, lastVisit: '2026-01-10', created: '2025-12-20' }
+    ],
+    appointments: [
+        { id: 1, clientId: 1, service: 'Corte de Cabelo', date: '2026-02-28', time: '15:00', status: 'confirmed', confirmedAt: '2026-02-27T10:00:00' },
+        { id: 2, clientId: 2, service: 'Corte + Barba', date: '2026-02-28', time: '16:00', status: 'pending', createdAt: '2026-02-28T13:00:00' },
+        { id: 3, clientId: 3, service: 'Barba', date: '2026-03-01', time: '10:00', status: 'confirmed', confirmedAt: '2026-02-25T14:30:00' },
+        { id: 4, clientId: 4, service: 'Luzes/Mechas', date: '2026-03-01', time: '14:00', status: 'confirmed', confirmedAt: '2026-02-26T09:15:00' },
+        { id: 5, clientId: 1, service: 'Corte de Cabelo', date: '2026-03-03', time: '11:00', status: 'confirmed', confirmedAt: '2026-02-28T08:00:00' }
+    ],
+    recurringAppointments: [
+        { 
+            id: 1, 
+            clientId: 4, 
+            serviceName: 'Luzes/Mechas', 
+            dayOfWeek: 4, // Quinta-feira (0=Domingo, 4=Quinta)
+            time: '15:00', 
+            startDate: '2026-02-06',
+            active: true,
+            createdAt: '2026-01-15T10:00:00'
+        }
+    ]
+};
+
+// ========== UTILITY FUNCTIONS ==========
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
+    toast.innerHTML = `
+        <i class="fas fa-${icon}"></i>
+        <span>${message}</span>
+    `;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('toast-show');
+    }, 10);
+    
+    setTimeout(() => {
+        toast.classList.remove('toast-show');
+        setTimeout(() => container.removeChild(toast), 300);
+    }, 3000);
+}
+
+function formatCurrency(value) {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    }).format(value);
+}
+
+function formatPhone(phone) {
+    return phone.replace(/(\+55\s?)(\d{2})\s?(\d{5})-?(\d{4})/, '($2) $3-$4');
+}
+
+function getCurrentTime() {
+    return new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+// ========== NAVIGATION ==========
+function showDemo() {
+    document.getElementById('landing-page').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    showToast('Bem-vindo à demonstração do AgendaPro! 🎉', 'success');
+    renderDashboard();
+}
+
+function exitDemo() {
+    if (confirm('Deseja sair da demonstração?')) {
+        document.getElementById('app').style.display = 'none';
+        document.getElementById('landing-page').style.display = 'block';
+        showToast('Demonstração encerrada. Volte sempre!', 'info');
+    }
+}
+
+function scrollToFeatures() {
+    document.getElementById('features-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function switchView(viewName) {
+    // Hide all views
+    document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    
+    // Show selected view
+    document.getElementById(`view-${viewName}`).classList.add('active');
+    document.querySelector(`.nav-item[data-view="${viewName}"]`).classList.add('active');
+    
+    // Render view content
+    switch(viewName) {
+        case 'dashboard':
+            renderDashboard();
+            break;
+        case 'whatsapp':
+            // WhatsApp view is always ready
+            break;
+        case 'services':
+            renderServices();
+            break;
+        case 'clients':
+            renderClients();
+            break;
+        case 'calendar':
+            renderCalendar();
+            break;
+        case 'recurring':
+            renderRecurring();
+            break;
+        case 'reports':
+            renderReports();
+            break;
+        case 'settings':
+            // Settings are static HTML
+            break;
+    }
+}
+
+// Event listener for navigation
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const view = item.dataset.view;
+            switchView(view);
+        });
+    });
+});
+
+// ========== DASHBOARD ==========
+function renderDashboard() {
+    renderUpcomingAppointments();
+    renderServicesRanking();
+    renderActivityFeed();
+    renderMonthlyChart();
+}
+
+function renderUpcomingAppointments() {
+    const container = document.getElementById('upcoming-appointments');
+    const today = new Date().toISOString().split('T')[0];
+    const upcoming = demoData.appointments
+        .filter(apt => apt.date >= today)
+        .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time))
+        .slice(0, 5);
+    
+    if (upcoming.length === 0) {
+        container.innerHTML = '<p class="empty-state">Nenhum agendamento próximo</p>';
+        return;
+    }
+    
+    container.innerHTML = upcoming.map(apt => {
+        const client = demoData.clients.find(c => c.id === apt.clientId);
+        const statusClass = apt.status === 'confirmed' ? 'success' : apt.status === 'pending' ? 'warning' : 'default';
+        const statusText = apt.status === 'confirmed' ? 'Confirmado' : apt.status === 'pending' ? 'Pendente' : 'Agendado';
+        
+        return `
+            <div class="appointment-item">
+                <div class="appointment-time">
+                    <strong>${apt.time}</strong>
+                    <span>${new Date(apt.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>
+                </div>
+                <div class="appointment-details">
+                    <strong>${client.name}</strong>
+                    <span>${apt.service}</span>
+                </div>
+                <span class="badge badge-${statusClass}">${statusText}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderServicesRanking() {
+    const container = document.getElementById('services-ranking');
+    const serviceCount = {};
+    
+    demoData.appointments.forEach(apt => {
+        serviceCount[apt.service] = (serviceCount[apt.service] || 0) + 1;
+    });
+    
+    const sorted = Object.entries(serviceCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+    
+    const total = sorted.reduce((sum, [, count]) => sum + count, 0);
+    
+    container.innerHTML = sorted.map(([service, count], index) => {
+        const percentage = Math.round((count / total) * 100);
+        return `
+            <div class="ranking-item">
+                <div class="ranking-position">${index + 1}</div>
+                <div class="ranking-details">
+                    <strong>${service}</strong>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${percentage}%"></div>
+                    </div>
+                </div>
+                <div class="ranking-count">${count}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderActivityFeed() {
+    const container = document.getElementById('activity-feed');
+    const activities = [
+        { icon: 'calendar-check', text: 'Novo agendamento de Maria Santos', time: '5 min atrás', type: 'success' },
+        { icon: 'times-circle', text: 'Cancelamento de Pedro Souza', time: '23 min atrás', type: 'danger' },
+        { icon: 'clock', text: 'João Oliveira avisou atraso', time: '1 hora atrás', type: 'warning' },
+        { icon: 'star', text: 'Nova avaliação 5★ de Ana Costa', time: '2 horas atrás', type: 'success' },
+        { icon: 'bell', text: 'Lembrete enviado para Carlos Silva', time: '3 horas atrás', type: 'info' }
+    ];
+    
+    container.innerHTML = activities.map(activity => `
+        <div class="activity-item">
+            <div class="activity-icon activity-${activity.type}">
+                <i class="fas fa-${activity.icon}"></i>
+            </div>
+            <div class="activity-content">
+                <p>${activity.text}</p>
+                <span class="activity-time">${activity.time}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderMonthlyChart() {
+    const ctx = document.getElementById('monthly-chart');
+    if (!ctx) return;
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+            datasets: [{
+                label: 'Agendamentos',
+                data: [45, 52, 48, 61],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+// ========== WHATSAPP BOT SIMULATOR ==========
+let chatState = {
+    currentFlow: null,
+    step: 0,
+    userData: {},
+    conversationStarted: false
+};
+
+const botFlows = {
+    scheduling: [
+        {
+            bot: 'Ótimo! Vamos agendar seu horário. 📅\n\nPrimeiro, qual serviço você deseja?',
+            quickReplies: ['Corte de Cabelo', 'Barba', 'Corte + Barba', 'Design de Sobrancelha']
+        },
+        {
+            bot: 'Perfeito! Agora escolha uma data disponível:',
+            quickReplies: ['Hoje 28/02', 'Amanhã 01/03', '02/03 (segunda)', '03/03 (terça)']
+        },
+        {
+            bot: 'Horários disponíveis para esse dia:',
+            quickReplies: ['09:00', '10:30', '14:00', '15:30', '17:00']
+        },
+        {
+            bot: '⏱️ Atenção: Você tem 30 minutos para confirmar este agendamento.\n\nEste serviço requer pagamento antecipado de 30% (R$ 15,00 via Pix).\n\n💳 Link de pagamento: [pix.me/exemplo]\n\nO agendamento será confirmado após o pagamento. Caso não confirme em 30 minutos, o horário será liberado automaticamente.',
+            quickReplies: ['✅ Paguei', '❌ Cancelar']
+        },
+        {
+            bot: '✅ Pagamento confirmado!\n\n📋 Resumo do agendamento:\n• Serviço: {service}\n• Data: {date}\n• Horário: {time}\n• Local: Rua das Flores, 123\n\n🔔 Você receberá lembretes 24h e 2h antes.\n\nAté breve! 😊',
+            quickReplies: null,
+            final: true
+        }
+    ],
+    cancellation: [
+        {
+            bot: 'Entendo que você deseja cancelar um agendamento. 📅\n\nPor favor, informe o motivo do cancelamento:',
+            quickReplies: ['Emergência', 'Mudança de planos', 'Outro compromisso', 'Outro motivo']
+        },
+        {
+            bot: '✅ Agendamento cancelado com sucesso.\n\nComo o cancelamento foi feito com mais de 2h de antecedência, o valor do sinal será reembolsado em até 24h úteis.\n\n💰 Reembolso: R$ 15,00\n\nAté a próxima! 😊',
+            quickReplies: null,
+            final: true
+        }
+    ],
+    delay: [
+        {
+            bot: 'Entendi que você está atrasado(a). ⏰\n\nQuanto tempo de atraso você terá aproximadamente?',
+            quickReplies: ['5-10 minutos', '10-15 minutos', '15-30 minutos', 'Mais de 30 minutos']
+        },
+        {
+            bot: '⏳ Aguarde um momento...\n\nEstou verificando com o profissional se ele pode aguardar.',
+            quickReplies: null
+        },
+        {
+            bot: '✅ O profissional confirmou que pode aguardar!\n\nPor favor, chegue o quanto antes.\n\nEndereço: Rua das Flores, 123 - São Paulo, SP',
+            quickReplies: null,
+            final: true
+        }
+    ],
+    handoff: [
+        {
+            bot: '👤 Entendido! Vou transferir você para um atendente humano.\n\n⏳ Por favor, aguarde um momento...',
+            quickReplies: null
+        },
+        {
+            bot: '🟢 Conectado com atendente!\n\n*Bruno Silva* está online agora.\n\nOlá! Sou o Bruno, em que posso ajudar?',
+            quickReplies: null,
+            final: true
+        }
+    ]
+};
+
+function startFlow(flowName) {
+    chatState = {
+        currentFlow: flowName,
+        step: 0,
+        userData: {},
+        conversationStarted: true
+    };
+    
+    // Clear quick replies
+    document.getElementById('quick-replies').innerHTML = '';
+    
+    // Send bot message
+    const flow = botFlows[flowName][0];
+    sendBotMessage(flow.bot, flow.quickReplies);
+}
+
+function resetChat() {
+    const container = document.getElementById('chat-messages');
+    container.innerHTML = `
+        <div class="chat-date">Hoje</div>
+        <div class="message bot">
+            <div class="message-bubble">
+                <p>Olá! 👋 Bem-vindo à <strong>Barbearia Silva</strong>.</p>
+                <p>Sou o assistente virtual e estou aqui para ajudar!</p>
+                <p>O que deseja fazer?</p>
+            </div>
+            <div class="message-time">${getCurrentTime()}</div>
+        </div>
+    `;
+    
+    document.getElementById('quick-replies').innerHTML = `
+        <button class="quick-reply" onclick="sendMessage('Agendar horário')">
+            📅 Agendar horário
+        </button>
+        <button class="quick-reply" onclick="sendMessage('Cancelar agendamento')">
+            ❌ Cancelar agendamento
+        </button>
+        <button class="quick-reply" onclick="sendMessage('Falar com atendente')">
+            👤 Falar com atendente
+        </button>
+    `;
+    
+    chatState = {
+        currentFlow: null,
+        step: 0,
+        userData: {},
+        conversationStarted: false
+    };
+    
+    showToast('Chat resetado!', 'info');
+}
+
+function sendMessage(text) {
+    const container = document.getElementById('chat-messages');
+    
+    // Add user message
+    const userMsg = document.createElement('div');
+    userMsg.className = 'message user';
+    userMsg.innerHTML = `
+        <div class="message-bubble">${text}</div>
+        <div class="message-time">${getCurrentTime()}</div>
+    `;
+    container.appendChild(userMsg);
+    
+    // Scroll to bottom
+    container.scrollTop = container.scrollHeight;
+    
+    // Clear input
+    document.getElementById('message-input').value = '';
+    
+    // Process user input
+    processUserMessage(text);
+}
+
+function sendUserMessage() {
+    const input = document.getElementById('message-input');
+    const text = input.value.trim();
+    
+    if (text) {
+        sendMessage(text);
+    }
+}
+
+function handleKeyPress(event) {
+    if (event.key === 'Enter') {
+        sendUserMessage();
+    }
+}
+
+function processUserMessage(text) {
+    // Clear quick replies
+    document.getElementById('quick-replies').innerHTML = '';
+    
+    // Determine flow based on message
+    if (!chatState.conversationStarted) {
+        if (text.toLowerCase().includes('agendar')) {
+            startFlow('scheduling');
+        } else if (text.toLowerCase().includes('cancelar')) {
+            startFlow('cancellation');
+        } else if (text.toLowerCase().includes('atendente') || text.toLowerCase().includes('humano')) {
+            startFlow('handoff');
+        } else if (text.toLowerCase().includes('atraso')) {
+            startFlow('delay');
+        } else {
+            // Default response
+            setTimeout(() => {
+                sendBotMessage('Desculpe, não entendi. 🤔\n\nPor favor, escolha uma das opções abaixo:', 
+                    ['📅 Agendar', '❌ Cancelar', '👤 Atendente']);
+            }, 1000);
+        }
+    } else {
+        // Continue current flow
+        advanceFlow(text);
+    }
+}
+
+function advanceFlow(userInput) {
+    if (!chatState.currentFlow) return;
+    
+    // Store user data
+    const flowSteps = ['service', 'date', 'time', 'payment', 'reason'];
+    if (chatState.step < flowSteps.length) {
+        chatState.userData[flowSteps[chatState.step]] = userInput;
+    }
+    
+    chatState.step++;
+    const flow = botFlows[chatState.currentFlow];
+    
+    if (chatState.step < flow.length) {
+        const nextStep = flow[chatState.step];
+        let message = nextStep.bot;
+        
+        // Replace placeholders
+        message = message
+            .replace('{service}', chatState.userData.service || 'Serviço')
+            .replace('{date}', chatState.userData.date || 'Data')
+            .replace('{time}', chatState.userData.time || 'Horário');
+        
+        setTimeout(() => {
+            sendBotMessage(message, nextStep.quickReplies);
+            
+            if (nextStep.final) {
+                chatState.conversationStarted = false;
+            }
+        }, 1500);
+    } else {
+        // Flow completed
+        chatState.conversationStarted = false;
+    }
+}
+
+function sendBotMessage(text, quickReplies = null) {
+    const container = document.getElementById('chat-messages');
+    
+    // Show typing indicator
+    const typing = document.createElement('div');
+    typing.className = 'message bot';
+    typing.innerHTML = `
+        <div class="message-bubble typing-indicator">
+            <span></span><span></span><span></span>
+        </div>
+    `;
+    container.appendChild(typing);
+    container.scrollTop = container.scrollHeight;
+    
+    // After delay, replace with actual message
+    setTimeout(() => {
+        container.removeChild(typing);
+        
+        const botMsg = document.createElement('div');
+        botMsg.className = 'message bot';
+        botMsg.innerHTML = `
+            <div class="message-bubble">${text.replace(/\n/g, '<br>')}</div>
+            <div class="message-time">${getCurrentTime()}</div>
+        `;
+        container.appendChild(botMsg);
+        container.scrollTop = container.scrollHeight;
+        
+        // Show quick replies if provided
+        if (quickReplies) {
+            const quickRepliesContainer = document.getElementById('quick-replies');
+            quickRepliesContainer.innerHTML = quickReplies.map(reply => 
+                `<button class="quick-reply" onclick="sendMessage('${reply}')">${reply}</button>`
+            ).join('');
+        }
+    }, 1500);
+}
+
+// ========== SERVICES MANAGEMENT ==========
+function renderServices() {
+    const container = document.getElementById('services-grid');
+    
+    container.innerHTML = demoData.services.map(service => {
+        const valueDisplay = service.valueType === 'fixed' 
+            ? formatCurrency(service.value)
+            : `${formatCurrency(service.valueMin)} - ${formatCurrency(service.valueMax)}`;
+        
+        const statusClass = service.active ? 'success' : 'danger';
+        const statusText = service.active ? 'Ativo' : 'Inativo';
+        
+        return `
+            <div class="service-card">
+                <div class="service-header">
+                    <h3>${service.name}</h3>
+                    <span class="badge badge-${statusClass}">${statusText}</span>
+                </div>
+                <p class="service-description">${service.description}</p>
+                <div class="service-info">
+                    <div class="info-item">
+                        <i class="fas fa-clock"></i>
+                        <span>${service.duration} min</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-dollar-sign"></i>
+                        <span>${valueDisplay}</span>
+                    </div>
+                </div>
+                <div class="service-actions">
+                    <button class="btn-icon" onclick="editService(${service.id})" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon" onclick="toggleServiceStatus(${service.id})" title="${service.active ? 'Desativar' : 'Ativar'}">
+                        <i class="fas fa-${service.active ? 'eye-slash' : 'eye'}"></i>
+                    </button>
+                    <button class="btn-icon btn-danger" onclick="deleteService(${service.id})" title="Excluir">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+let editingServiceId = null;
+
+function openServiceModal(serviceId = null) {
+    const modal = document.getElementById('service-modal');
+    const title = document.getElementById('modal-title');
+    editingServiceId = serviceId;
+    
+    if (serviceId) {
+        const service = demoData.services.find(s => s.id === serviceId);
+        title.textContent = 'Editar Serviço';
+        
+        document.getElementById('service-name').value = service.name;
+        document.getElementById('service-description').value = service.description;
+        document.getElementById('service-duration').value = service.duration;
+        document.getElementById('service-value-type').value = service.valueType;
+        document.getElementById('service-active').checked = service.active;
+        
+        toggleValueInputs();
+        
+        if (service.valueType === 'fixed') {
+            document.getElementById('service-value').value = service.value;
+        } else {
+            document.getElementById('service-value-min').value = service.valueMin;
+            document.getElementById('service-value-max').value = service.valueMax;
+        }
+    } else {
+        title.textContent = 'Novo Serviço';
+        document.getElementById('service-name').value = '';
+        document.getElementById('service-description').value = '';
+        document.getElementById('service-duration').value = 30;
+        document.getElementById('service-value-type').value = 'fixed';
+        document.getElementById('service-value').value = 50;
+        document.getElementById('service-active').checked = true;
+        toggleValueInputs();
+    }
+    
+    modal.style.display = 'flex';
+}
+
+function closeServiceModal() {
+    document.getElementById('service-modal').style.display = 'none';
+}
+
+function toggleValueInputs() {
+    const type = document.getElementById('service-value-type').value;
+    const valueInputs = document.getElementById('value-inputs');
+    const rangeInputs = document.getElementById('range-inputs');
+    
+    if (type === 'fixed') {
+        valueInputs.style.display = 'flex';
+        rangeInputs.style.display = 'none';
+    } else {
+        valueInputs.style.display = 'none';
+        rangeInputs.style.display = 'flex';
+    }
+}
+
+function saveService() {
+    const name = document.getElementById('service-name').value.trim();
+    const description = document.getElementById('service-description').value.trim();
+    const duration = parseInt(document.getElementById('service-duration').value);
+    const valueType = document.getElementById('service-value-type').value;
+    const active = document.getElementById('service-active').checked;
+    
+    if (!name) {
+        showToast('Por favor, informe o nome do serviço', 'error');
+        return;
+    }
+    
+    if (editingServiceId) {
+        // Update existing service
+        const service = demoData.services.find(s => s.id === editingServiceId);
+        if (service) {
+            service.name = name;
+            service.description = description;
+            service.duration = duration;
+            service.valueType = valueType;
+            service.active = active;
+            
+            if (valueType === 'fixed') {
+                service.value = parseFloat(document.getElementById('service-value').value);
+                delete service.valueMin;
+                delete service.valueMax;
+            } else {
+                service.valueMin = parseFloat(document.getElementById('service-value-min').value);
+                service.valueMax = parseFloat(document.getElementById('service-value-max').value);
+                delete service.value;
+            }
+            
+            showToast('Serviço atualizado com sucesso!', 'success');
+        }
+    } else {
+        // Create new service
+        const service = {
+            id: Date.now(),
+            name,
+            description,
+            duration,
+            valueType,
+            active
+        };
+        
+        if (valueType === 'fixed') {
+            service.value = parseFloat(document.getElementById('service-value').value);
+        } else {
+            service.valueMin = parseFloat(document.getElementById('service-value-min').value);
+            service.valueMax = parseFloat(document.getElementById('service-value-max').value);
+        }
+        
+        demoData.services.push(service);
+        showToast('Serviço criado com sucesso!', 'success');
+    }
+    
+    editingServiceId = null;
+    renderServices();
+    closeServiceModal();
+}
+
+function editService(id) {
+    openServiceModal(id);
+}
+
+function toggleServiceStatus(id) {
+    const service = demoData.services.find(s => s.id === id);
+    service.active = !service.active;
+    renderServices();
+    showToast(`Serviço ${service.active ? 'ativado' : 'desativado'} com sucesso!`, 'success');
+}
+
+function deleteService(id) {
+    if (confirm('Tem certeza que deseja excluir este serviço?')) {
+        demoData.services = demoData.services.filter(s => s.id !== id);
+        renderServices();
+        showToast('Serviço excluído com sucesso!', 'success');
+    }
+}
+
+// ========== CLIENTS MANAGEMENT ==========
+function renderClients() {
+    const tbody = document.getElementById('clients-tbody');
+    const searchTerm = document.getElementById('client-search').value.toLowerCase();
+    const filter = document.getElementById('client-filter').value;
+    
+    let filtered = demoData.clients;
+    
+    if (searchTerm) {
+        filtered = filtered.filter(c => 
+            c.name.toLowerCase().includes(searchTerm) || 
+            c.phone.includes(searchTerm)
+        );
+    }
+    
+    if (filter !== 'all') {
+        filtered = filtered.filter(c => c.status === filter);
+    }
+    
+    tbody.innerHTML = filtered.map(client => {
+        const statusClass = client.status === 'vip' ? 'success' : client.status === 'blocked' ? 'danger' : 'default';
+        const statusText = client.status === 'vip' ? 'VIP' : client.status === 'blocked' ? 'Bloqueado' : 'Regular';
+        const lastVisit = new Date(client.lastVisit).toLocaleDateString('pt-BR');
+        
+        return `
+            <tr>
+                <td><strong>${client.name}</strong></td>
+                <td>${formatPhone(client.phone)}</td>
+                <td><span class="badge badge-${statusClass}">${statusText}</span></td>
+                <td>${client.totalAppointments}</td>
+                <td>${lastVisit}</td>
+                <td>
+                    <button class="btn-icon" onclick="viewClient(${client.id})" title="Ver detalhes">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn-icon" onclick="editClient(${client.id})" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function filterClients() {
+    renderClients();
+}
+
+function viewClient(id) {
+    const client = demoData.clients.find(c => c.id === id);
+    if (!client) return;
+    
+    const clientAppointments = demoData.appointments.filter(a => a.clientId === id);
+    const statusClass = client.status === 'vip' ? 'success' : client.status === 'blocked' ? 'danger' : 'default';
+    const statusText = client.status === 'vip' ? 'VIP' : client.status === 'blocked' ? 'Bloqueado' : 'Regular';
+    
+    const appointmentsHTML = clientAppointments.length > 0 
+        ? clientAppointments.map(apt => {
+            const aptStatusClass = apt.status === 'confirmed' ? 'success' : apt.status === 'pending' ? 'warning' : 'danger';
+            const aptStatusText = apt.status === 'confirmed' ? 'Confirmado' : apt.status === 'pending' ? 'Pendente' : 'Cancelado';
+            return `
+                <div class="appointment-item">
+                    <div class="appointment-time">
+                        <strong>${apt.time}</strong>
+                        <span>${new Date(apt.date).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                    <div class="appointment-details">
+                        <strong>${apt.service}</strong>
+                    </div>
+                    <span class="badge badge-${aptStatusClass}">${aptStatusText}</span>
+                </div>
+            `;
+        }).join('')
+        : '<p class="empty-state">Nenhum agendamento encontrado</p>';
+    
+    // Create and show modal
+    let modal = document.getElementById('client-detail-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'client-detail-modal';
+        modal.className = 'modal';
+        document.body.appendChild(modal);
+    }
+    
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-circle"></i> ${client.name}</h2>
+                <button class="btn-close" onclick="closeClientDetailModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="client-detail-grid">
+                    <div class="detail-section">
+                        <h4>Informações</h4>
+                        <div class="detail-item"><i class="fas fa-phone"></i> <span>${formatPhone(client.phone)}</span></div>
+                        <div class="detail-item"><i class="fas fa-tag"></i> <span class="badge badge-${statusClass}">${statusText}</span></div>
+                        <div class="detail-item"><i class="fas fa-calendar-plus"></i> <span>Cliente desde ${new Date(client.created).toLocaleDateString('pt-BR')}</span></div>
+                        <div class="detail-item"><i class="fas fa-calendar-check"></i> <span>${client.totalAppointments} agendamentos</span></div>
+                        <div class="detail-item"><i class="fas fa-clock"></i> <span>Última visita: ${new Date(client.lastVisit).toLocaleDateString('pt-BR')}</span></div>
+                    </div>
+                    <div class="detail-section">
+                        <h4>Histórico de Agendamentos</h4>
+                        <div class="appointments-list">${appointmentsHTML}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeClientDetailModal()">Fechar</button>
+                <button class="btn-primary" onclick="closeClientDetailModal(); editClient(${client.id});">
+                    <i class="fas fa-edit"></i> Editar Cliente
+                </button>
+            </div>
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+}
+
+function closeClientDetailModal() {
+    const modal = document.getElementById('client-detail-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function editClient(id) {
+    const client = demoData.clients.find(c => c.id === id);
+    if (!client) return;
+    
+    let modal = document.getElementById('client-edit-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'client-edit-modal';
+        modal.className = 'modal';
+        document.body.appendChild(modal);
+    }
+    
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Editar Cliente</h2>
+                <button class="btn-close" onclick="closeClientEditModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nome</label>
+                    <input type="text" id="edit-client-name" value="${client.name}">
+                </div>
+                <div class="form-group">
+                    <label>Telefone</label>
+                    <input type="tel" id="edit-client-phone" value="${client.phone}">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="edit-client-status">
+                        <option value="regular" ${client.status === 'regular' ? 'selected' : ''}>Regular</option>
+                        <option value="vip" ${client.status === 'vip' ? 'selected' : ''}>VIP</option>
+                        <option value="blocked" ${client.status === 'blocked' ? 'selected' : ''}>Bloqueado</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeClientEditModal()">Cancelar</button>
+                <button class="btn-primary" onclick="saveClientEdit(${client.id})">Salvar</button>
+            </div>
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+}
+
+function closeClientEditModal() {
+    const modal = document.getElementById('client-edit-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function saveClientEdit(id) {
+    const client = demoData.clients.find(c => c.id === id);
+    if (!client) return;
+    
+    const name = document.getElementById('edit-client-name').value.trim();
+    const phone = document.getElementById('edit-client-phone').value.trim();
+    const status = document.getElementById('edit-client-status').value;
+    
+    if (!name || !phone) {
+        showToast('Por favor, preencha nome e telefone', 'error');
+        return;
+    }
+    
+    client.name = name;
+    client.phone = phone;
+    client.status = status;
+    
+    closeClientEditModal();
+    renderClients();
+    showToast(`Cliente ${name} atualizado com sucesso!`, 'success');
+}
+
+// ========== CALENDAR ==========
+let calendarState = {
+    year: new Date().getFullYear(),
+    month: new Date().getMonth()
+};
+
+function renderCalendar() {
+    const container = document.getElementById('calendar-grid');
+    const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    
+    const today = new Date();
+    const year = calendarState.year;
+    const month = calendarState.month;
+    
+    document.getElementById('current-month').textContent = `${monthNames[month]} ${year}`;
+    
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDay = firstDay.getDay();
+    
+    let html = '<div class="calendar-header">';
+    ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].forEach(day => {
+        html += `<div class="calendar-day-name">${day}</div>`;
+    });
+    html += '</div><div class="calendar-days">';
+    
+    // Empty cells before first day
+    for (let i = 0; i < startDay; i++) {
+        html += '<div class="calendar-cell empty"></div>';
+    }
+    
+    // Days of month
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const appointments = demoData.appointments.filter(apt => apt.date === date);
+        const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+        
+        html += `
+            <div class="calendar-cell ${isToday ? 'today' : ''}">
+                <div class="cell-date">${day}</div>
+                ${appointments.map(apt => {
+                    const statusClass = apt.status === 'confirmed' ? 'blue' : apt.status === 'pending' ? 'yellow' : 'gray';
+                    return `<div class="cell-appointment ${statusClass}">${apt.time} - ${apt.service}</div>`;
+                }).join('')}
+            </div>
+        `;
+    }
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function previousMonth() {
+    calendarState.month--;
+    if (calendarState.month < 0) {
+        calendarState.month = 11;
+        calendarState.year--;
+    }
+    renderCalendar();
+}
+
+function nextMonth() {
+    calendarState.month++;
+    if (calendarState.month > 11) {
+        calendarState.month = 0;
+        calendarState.year++;
+    }
+    renderCalendar();
+}
+
+// ========== REPORTS ==========
+function renderReports() {
+    renderStatusChart();
+    renderRevenueChart();
+    renderPeakHoursChart();
+    renderCancellationChart();
+}
+
+function renderStatusChart() {
+    const ctx = document.getElementById('status-chart');
+    if (!ctx) return;
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Confirmado', 'Pendente', 'Cancelado'],
+            datasets: [{
+                data: [18, 4, 2],
+                backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function renderRevenueChart() {
+    const ctx = document.getElementById('revenue-chart');
+    if (!ctx) return;
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+            datasets: [{
+                label: 'Receita (R$)',
+                data: [3200, 4100, 3800, 4500, 5200, 4800],
+                backgroundColor: '#3b82f6'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function renderPeakHoursChart() {
+    const ctx = document.getElementById('peak-hours-chart');
+    if (!ctx) return;
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['9h', '10h', '11h', '12h', '14h', '15h', '16h', '17h', '18h'],
+            datasets: [{
+                label: 'Agendamentos',
+                data: [3, 5, 7, 4, 6, 8, 9, 7, 5],
+                borderColor: '#8b5cf6',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function renderCancellationChart() {
+    const ctx = document.getElementById('cancellation-chart');
+    if (!ctx) return;
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+            datasets: [{
+                label: 'Taxa (%)',
+                data: [12, 10.5, 9.2, 8.8, 10.4, 8.3],
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 15
+                }
+            }
+        }
+    });
+}
+
+// ========== SETTINGS ==========
+function saveSettings() {
+    const settings = {
+        businessName: document.getElementById('business-name').value,
+        businessPhone: document.getElementById('business-phone').value,
+        businessEmail: document.getElementById('business-email').value,
+        businessAddress: document.getElementById('business-address').value,
+        cancelDeadline: document.getElementById('cancel-deadline').value,
+        confirmationDeadline: document.getElementById('confirmation-deadline').value,
+        maxConcurrent: document.getElementById('max-concurrent').value,
+        requireDeposit: document.getElementById('require-deposit').checked,
+        depositPercentage: document.getElementById('deposit-percentage').value,
+        enableReminders: document.getElementById('enable-reminders').checked,
+        enableWaitlist: document.getElementById('enable-waitlist').checked,
+        enableRecurring: document.getElementById('enable-recurring').checked,
+        notifyNewBooking: document.getElementById('notify-new-booking').checked,
+        notifyCancellation: document.getElementById('notify-cancellation').checked,
+        notifyDelay: document.getElementById('notify-delay').checked,
+        dailySummary: document.getElementById('daily-summary').checked
+    };
+    
+    localStorage.setItem('agendapro-settings', JSON.stringify(settings));
+    showToast('Configurações salvas com sucesso!', 'success');
+}
+
+function updateDepositLabel(value) {
+    document.getElementById('deposit-label').textContent = value + '%';
+}
+
+// ========== RECURRING APPOINTMENTS ==========
+function renderRecurring() {
+    const container = document.getElementById('recurring-grid');
+    
+    if (demoData.recurringAppointments.length === 0) {
+        container.innerHTML = '<div class="empty-state">Nenhum agendamento fixo cadastrado</div>';
+        return;
+    }
+    
+    const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    
+    container.innerHTML = demoData.recurringAppointments.map(recurring => {
+        const client = demoData.clients.find(c => c.id === recurring.clientId);
+        const statusClass = recurring.active ? 'success' : 'default';
+        const statusText = recurring.active ? 'Ativo' : 'Pausado';
+        const nextDates = getNextRecurringDates(recurring.dayOfWeek, recurring.time, 4);
+        
+        return `
+            <div class="recurring-card">
+                <div class="recurring-header">
+                    <div class="recurring-client">
+                        <i class="fas fa-user-circle"></i>
+                        <div>
+                            <strong>${client.name}</strong>
+                            <span>${formatPhone(client.phone)}</span>
+                        </div>
+                    </div>
+                    <span class="badge badge-${statusClass}">${statusText}</span>
+                </div>
+                <div class="recurring-details">
+                    <div class="detail-item">
+                        <i class="fas fa-cut"></i>
+                        <span>${recurring.serviceName}</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-calendar-week"></i>
+                        <span>Toda ${dayNames[recurring.dayOfWeek]}</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-clock"></i>
+                        <span>${recurring.time}</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-play-circle"></i>
+                        <span>Desde ${new Date(recurring.startDate).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                </div>
+                <div class="next-appointments">
+                    <strong>Próximos agendamentos automáticos:</strong>
+                    <div class="next-dates">
+                        ${nextDates.map(date => `
+                            <div class="next-date">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>${date}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="recurring-actions">
+                    <button class="btn-icon" onclick="editRecurring(${recurring.id})" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon" onclick="toggleRecurringStatus(${recurring.id})" title="${recurring.active ? 'Pausar' : 'Ativar'}">
+                        <i class="fas fa-${recurring.active ? 'pause' : 'play'}-circle"></i>
+                    </button>
+                    <button class="btn-icon btn-danger" onclick="deleteRecurring(${recurring.id})" title="Excluir">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function getNextRecurringDates(dayOfWeek, time, count) {
+    const dates = [];
+    const today = new Date();
+    let current = new Date(today);
+    
+    // Find next occurrence
+    while (current.getDay() !== dayOfWeek) {
+        current.setDate(current.getDate() + 1);
+    }
+    
+    for (let i = 0; i < count; i++) {
+        const dateStr = current.toLocaleDateString('pt-BR', { 
+            weekday: 'short', 
+            day: '2-digit', 
+            month: 'short' 
+        });
+        dates.push(`${dateStr} às ${time}`);
+        current.setDate(current.getDate() + 7); // Next week
+    }
+    
+    return dates;
+}
+
+function openRecurringModal(recurringId = null) {
+    const modal = document.getElementById('recurring-modal');
+    const title = document.getElementById('recurring-modal-title');
+    
+    // Populate client dropdown
+    const clientSelect = document.getElementById('recurring-client');
+    clientSelect.innerHTML = '<option value="">Selecione um cliente</option>' +
+        demoData.clients.filter(c => c.status !== 'blocked').map(client => 
+            `<option value="${client.id}">${client.name}</option>`
+        ).join('');
+    
+    // Populate service dropdown
+    const serviceSelect = document.getElementById('recurring-service');
+    serviceSelect.innerHTML = '<option value="">Selecione um serviço</option>' +
+        demoData.services.filter(s => s.active).map(service => 
+            `<option value="${service.id}">${service.name}</option>`
+        ).join('');
+    
+    // Set today as minimum start date
+    const startDateInput = document.getElementById('recurring-start-date');
+    const today = new Date().toISOString().split('T')[0];
+    startDateInput.min = today;
+    startDateInput.value = today;
+    
+    if (recurringId) {
+        const recurring = demoData.recurringAppointments.find(r => r.id === recurringId);
+        title.textContent = 'Editar Agendamento Fixo';
+        
+        clientSelect.value = recurring.clientId;
+        // Service select would need serviceId - for now just showing demo
+        document.getElementById('recurring-day').value = recurring.dayOfWeek;
+        document.getElementById('recurring-time').value = recurring.time;
+        startDateInput.value = recurring.startDate;
+        document.getElementById('recurring-active').checked = recurring.active;
+    } else {
+        title.textContent = 'Novo Agendamento Fixo';
+        document.getElementById('recurring-client').value = '';
+        document.getElementById('recurring-service').value = '';
+        document.getElementById('recurring-day').value = '4';
+        document.getElementById('recurring-time').value = '15:00';
+        document.getElementById('recurring-active').checked = true;
+    }
+    
+    modal.style.display = 'flex';
+}
+
+function closeRecurringModal() {
+    document.getElementById('recurring-modal').style.display = 'none';
+}
+
+function saveRecurring() {
+    const clientId = parseInt(document.getElementById('recurring-client').value);
+    const serviceId = parseInt(document.getElementById('recurring-service').value);
+    const dayOfWeek = parseInt(document.getElementById('recurring-day').value);
+    const time = document.getElementById('recurring-time').value;
+    const startDate = document.getElementById('recurring-start-date').value;
+    const active = document.getElementById('recurring-active').checked;
+    
+    if (!clientId || !serviceId) {
+        showToast('Por favor, selecione cliente e serviço', 'error');
+        return;
+    }
+    
+    const client = demoData.clients.find(c => c.id === clientId);
+    const service = demoData.services.find(s => s.id === serviceId);
+    
+    const recurring = {
+        id: Date.now(),
+        clientId,
+        serviceName: service.name,
+        dayOfWeek,
+        time,
+        startDate,
+        active,
+        createdAt: new Date().toISOString()
+    };
+    
+    demoData.recurringAppointments.push(recurring);
+    
+    // Create first 4 weeks of appointments automatically
+    if (active) {
+        createRecurringAppointments(recurring);
+    }
+    
+    renderRecurring();
+    closeRecurringModal();
+    showToast(`Agendamento fixo criado para ${client.name} - Toda ${['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][dayOfWeek]} às ${time}`, 'success');
+}
+
+function createRecurringAppointments(recurring) {
+    const client = demoData.clients.find(c => c.id === recurring.clientId);
+    const dates = getNextRecurringDatesForCreation(recurring.dayOfWeek, recurring.startDate, 4);
+    
+    dates.forEach(date => {
+        // Check if appointment doesn't already exist
+        const exists = demoData.appointments.some(apt => 
+            apt.clientId === recurring.clientId && 
+            apt.date === date && 
+            apt.time === recurring.time
+        );
+        
+        if (!exists) {
+            demoData.appointments.push({
+                id: Date.now() + Math.random(),
+                clientId: recurring.clientId,
+                service: recurring.serviceName,
+                date: date,
+                time: recurring.time,
+                status: 'confirmed',
+                isRecurring: true,
+                recurringId: recurring.id,
+                createdAt: new Date().toISOString(),
+                confirmedAt: new Date().toISOString()
+            });
+        }
+    });
+}
+
+function getNextRecurringDatesForCreation(dayOfWeek, startDate, count) {
+    const dates = [];
+    const start = new Date(startDate);
+    let current = new Date(start);
+    
+    // Find next occurrence
+    while (current.getDay() !== dayOfWeek) {
+        current.setDate(current.getDate() + 1);
+    }
+    
+    for (let i = 0; i < count; i++) {
+        const dateStr = current.toISOString().split('T')[0];
+        dates.push(dateStr);
+        current.setDate(current.getDate() + 7); // Next week
+    }
+    
+    return dates;
+}
+
+function editRecurring(id) {
+    openRecurringModal(id);
+}
+
+function toggleRecurringStatus(id) {
+    const recurring = demoData.recurringAppointments.find(r => r.id === id);
+    recurring.active = !recurring.active;
+    
+    const client = demoData.clients.find(c => c.id === recurring.clientId);
+    const statusText = recurring.active ? 'ativado' : 'pausado';
+    
+    renderRecurring();
+    showToast(`Agendamento fixo ${statusText} para ${client.name}`, 'success');
+}
+
+function deleteRecurring(id) {
+    if (confirm('Tem certeza que deseja excluir este agendamento fixo?\n\nOs agendamentos já criados não serão removidos, mas novos não serão criados automaticamente.')) {
+        const recurring = demoData.recurringAppointments.find(r => r.id === id);
+        const client = demoData.clients.find(c => c.id === recurring.clientId);
+        
+        demoData.recurringAppointments = demoData.recurringAppointments.filter(r => r.id !== id);
+        renderRecurring();
+        showToast(`Agendamento fixo removido para ${client.name}`, 'success');
+    }
+}
+
+// ========== INITIALIZATION ==========
+document.addEventListener('DOMContentLoaded', () => {
+    // Load saved settings
+    const savedSettings = localStorage.getItem('agendapro-settings');
+    if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        // Apply settings to form fields
+        Object.keys(settings).forEach(key => {
+            const element = document.getElementById(key.replace(/([A-Z])/g, '-$1').toLowerCase());
+            if (element) {
+                if (element.type === 'checkbox') {
+                    element.checked = settings[key];
+                } else {
+                    element.value = settings[key];
+                }
+            }
+        });
+    }
+});
