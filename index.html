@@ -178,4 +178,101 @@
             const cols = await r.json();
             colaboradores = cols;
             const container = document.getElementById('colaboradoresContainer');
-            const select = document.getElementById('colaborador
+            const select = document.getElementById('colaborador');
+            if (cols.length) {
+                container.style.display = 'block';
+                select.innerHTML = cols.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        function mostrarOpcoesRecorrencia() {
+            const tipo = document.getElementById('tipoAgendamento').value;
+            document.getElementById('recorrenciaContainer').style.display = tipo === 'recorrente' ? 'block' : 'none';
+        }
+
+        async function salvarCliente(nome, email, telefone) {
+            const r = await fetch('/api/clientes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, email: email || `${telefone}@cliente.whatsapp`, telefone })
+            });
+            const data = await r.json();
+            return data.id;
+        }
+
+        document.getElementById('agendamentoForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const servicoId = document.getElementById('servicoSelecionado').value;
+            if (!servicoId) return alert('Selecione um serviço!');
+            const servico = servicos.find(s => s.id == servicoId);
+            const nome = document.getElementById('clienteNome').value;
+            const whatsapp = document.getElementById('clienteWhatsApp').value;
+            const email = document.getElementById('clienteEmail').value;
+            const data = document.getElementById('dataAgendamento').value;
+            const hora = document.getElementById('horaAgendamento').value;
+            const obs = document.getElementById('observacoes').value;
+            const tipo = document.getElementById('tipoAgendamento').value;
+            const dataFim = document.getElementById('dataFimRecorrencia').value;
+            const colaboradorId = document.getElementById('colaborador')?.value || null;
+
+            const clienteId = await salvarCliente(nome, email, whatsapp);
+            await fetch('/api/agendamentos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cliente_id: clienteId,
+                    servico_id: servicoId,
+                    colaborador_id: colaboradorId,
+                    data_agendamento: data,
+                    hora_agendamento: hora,
+                    observacoes: obs,
+                    tipo_agendamento: tipo,
+                    recorrencia: tipo === 'recorrente' ? 'semanal' : null,
+                    data_fim_recorrencia: dataFim || null
+                })
+            });
+
+            const r = await fetch('/api/configuracoes/whatsapp_empresa');
+            const config = await r.json();
+            const numeroEmpresa = config.valor || '5511999999999';
+            const dataFormatada = new Date(data).toLocaleDateString('pt-BR');
+            const msg = `🏛️ NOVO AGENDAMENTO\n\n👤 Cliente: ${nome}\n📱 WhatsApp: ${whatsapp}\n💼 Serviço: ${servico.nome}\n💰 Valor: R$ ${parseFloat(servico.preco).toFixed(2)}\n📅 Data: ${dataFormatada}\n⏰ Horário: ${hora}\n📝 Obs: ${obs || 'Nenhuma'}\n\n✅ Status: Pendente`;
+            window.open(`https://wa.me/${numeroEmpresa}?text=${encodeURIComponent(msg)}`, '_blank');
+        });
+
+        async function consultarAgendamentos() {
+            const whatsapp = document.getElementById('whatsappConsulta').value;
+            if (!whatsapp) return alert('Digite seu WhatsApp');
+            const r = await fetch(`/api/agendamentos/telefone/${whatsapp}`);
+            const lista = await r.json();
+            let html = '<h3>Seus agendamentos:</h3>';
+            if (!lista.length) html += '<p>Nenhum agendamento encontrado.</p>';
+            else lista.forEach(a => {
+                html += `<div class="agendamento-item"><strong>${a.servico_nome}</strong><br>${new Date(a.data_agendamento).toLocaleDateString('pt-BR')} às ${a.hora_agendamento}<br>Status: ${a.status}</div>`;
+            });
+            document.getElementById('resultadoAgendamentos').innerHTML = html;
+        }
+
+        function mostrarFormAgendamento() {
+            document.getElementById('formAgendamento').style.display = 'block';
+            document.getElementById('meusAgendamentos').style.display = 'none';
+            document.getElementById('dataAgendamento').min = new Date().toISOString().split('T')[0];
+        }
+
+        function buscarMeusAgendamentos() {
+            document.getElementById('formAgendamento').style.display = 'none';
+            document.getElementById('meusAgendamentos').style.display = 'block';
+        }
+
+        async function contatarWhatsApp() {
+            const r = await fetch('/api/configuracoes/whatsapp_empresa');
+            const config = await r.json();
+            window.open(`https://wa.me/${config.valor || '5511999999999'}`, '_blank');
+        }
+
+        carregarServicos();
+    </script>
+</body>
+</html>
