@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes - AgendaPro</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .btn-add {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.3s;
+        }
+        
+        .btn-add:hover {
+            transform: scale(1.05);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            width: 500px;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            color: #333;
+        }
+        
+        .close {
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .btn-submit:hover {
+            transform: scale(1.02);
+        }
+        
+        .btn-edit {
+            background: #ffc107;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .search-box button {
+            padding: 12px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-calendar-check"></i>
+                <span>AgendaPro</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="/"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="/clientes" class="active"><i class="fas fa-users"></i> Clientes</a>
+                <a href="/agendamentos"><i class="fas fa-calendar"></i> Agendamentos</a>
+                <a href="/servicos"><i class="fas fa-cut"></i> Serviços</a>
+            </nav>
+            <div class="sidebar-footer">
+                <p>© 2026 AgendaPro</p>
+                <p class="versao">Versão 2.1</p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <h1>Gerenciar Clientes</h1>
+                <div class="user-info">
+                    <span>Olá, <strong>Administrador</strong></span>
+                    <i class="fas fa-user-circle"></i>
+                </div>
+            </header>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>Lista de Clientes</h2>
+                    <button class="btn-add" onclick="abrirModalNovo()">
+                        <i class="fas fa-plus"></i> Novo Cliente
+                    </button>
+                </div>
+
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Buscar por nome ou email...">
+                    <button onclick="buscarClientes()"><i class="fas fa-search"></i> Buscar</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Telefone</th>
+                                <th>Endereço</th>
+                                <th>Data Cadastro</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaClientes">
+                            <tr>
+                                <td colspan="7" class="text-center">Carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Cliente -->
+    <div id="modalCliente" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitulo">Novo Cliente</h2>
+                <span class="close" onclick="fecharModal()">&times;</span>
+            </div>
+            <form id="formCliente" onsubmit="salvarCliente(event)">
+                <input type="hidden" id="clienteId">
+                <div class="form-group">
+                    <label>Nome *</label>
+                    <input type="text" id="nome" required>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Telefone</label>
+                    <input type="text" id="telefone" placeholder="(11) 99999-9999">
+                </div>
+                <div class="form-group">
+                    <label>Endereço</label>
+                    <input type="text" id="endereco" placeholder="Rua, número, bairro">
+                </div>
+                <button type="submit" class="btn-submit">Salvar Cliente</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let clientes = [];
+        
+        async function carregarClientes() {
+            try {
+                const response = await fetch('/api/clientes');
+                clientes = await response.json();
+                exibirClientes(clientes);
+            } catch (error) {
+                console.error('Erro ao carregar clientes:', error);
+                document.getElementById('tabelaClientes').innerHTML = 
+                    '<tr><td colspan="7" class="text-center text-danger">Erro ao carregar dados</td></tr>';
+            }
+        }
+        
+        function exibirClientes(clientes) {
+            const tbody = document.getElementById('tabelaClientes');
+            
+            if (clientes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum cliente encontrado</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = clientes.map(c => `
+                <tr>
+                    <td>${c.id}</td>
+                    <td>${c.nome}</td>
+                    <td>${c.email}</td>
+                    <td>${c.telefone || '---'}</td>
+                    <td>${c.endereco || '---'}</td>
+                    <td>${new Date(c.data_cadastro).toLocaleDateString('pt-BR')}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editarCliente(${c.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn-delete" onclick="deletarCliente(${c.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function buscarClientes() {
+            const termo = document.getElementById('searchInput').value.toLowerCase();
+            if (!termo) {
+                exibirClientes(clientes);
+                return;
+            }
+            
+            const filtrados = clientes.filter(c => 
+                c.nome.toLowerCase().includes(termo) || 
+                c.email.toLowerCase().includes(termo)
+            );
+            exibirClientes(filtrados);
+        }
+        
+        function abrirModalNovo() {
+            document.getElementById('modalTitulo').textContent = 'Novo Cliente';
+            document.getElementById('formCliente').reset();
+            document.getElementById('clienteId').value = '';
+            document.getElementById('modalCliente').style.display = 'block';
+        }
+        
+        function fecharModal() {
+            document.getElementById('modalCliente').style.display = 'none';
+        }
+        
+        async function salvarCliente(event) {
+            event.preventDefault();
+            
+            const id = document.getElementById('clienteId').value;
+            const cliente = {
+                nome: document.getElementById('nome').value,
+                email: document.getElementById('email').value,
+                telefone: document.getElementById('telefone').value,
+                endereco: document.getElementById('endereco').value
+            };
+            
+            try {
+                if (id) {
+                    await fetch(`/api/clientes/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(cliente)
+                    });
+                    alert('✅ Cliente atualizado com sucesso!');
+                } else {
+                    await fetch('/api/clientes', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(cliente)
+                    });
+                    alert('✅ Cliente cadastrado com sucesso!');
+                }
+                
+                fecharModal();
+                carregarClientes();
+            } catch (error) {
+                alert('Erro ao salvar cliente');
+            }
+        }
+        
+        function editarCliente(id) {
+            const cliente = clientes.find(c => c.id === id);
+            if (!cliente) return;
+            
+            document.getElementById('modalTitulo').textContent = 'Editar Cliente';
+            document.getElementById('clienteId').value = cliente.id;
+            document.getElementById('nome').value = cliente.nome;
+            document.getElementById('email').value = cliente.email;
+            document.getElementById('telefone').value = cliente.telefone || '';
+            document.getElementById('endereco').value = cliente.endereco || '';
+            document.getElementById('modalCliente').style.display = 'block';
+        }
+        
+        async function deletarCliente(id) {
+            if (!confirm('Tem certeza que deseja deletar este cliente?')) return;
+            
+            try {
+                await fetch(`/api/clientes/${id}`, { method: 'DELETE' });
+                alert('✅ Cliente deletado com sucesso!');
+                carregarClientes();
+            } catch (error) {
+                alert('Erro ao deletar cliente');
+            }
+        }
+        
+        // Fechar modal ao clicar fora
+        window.onclick = function(event) {
+            const modal = document.getElementById('modalCliente');
+            if (event.target === modal) {
+                fecharModal();
+            }
+        }
+        
+        // Carregar clientes ao iniciar
+        carregarClientes();
+    </script>
+</body>
+</html>
