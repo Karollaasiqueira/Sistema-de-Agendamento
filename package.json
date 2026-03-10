@@ -20,9 +20,12 @@
   },
   "homepage": "https://github.com/Karollaasiqueira/Sistema-de-Agendamento#readme",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "connect-sqlite3": "^0.9.16",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "express-session": "^1.19.0",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {

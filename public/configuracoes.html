@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Configurações - AgendaPro</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="logo">AgendaPro</div>
+            <nav class="nav-menu">
+                <a href="/">Dashboard</a>
+                <a href="/clientes">Clientes</a>
+                <a href="/agendamentos">Agendamentos</a>
+                <a href="/servicos">Serviços</a>
+                <a href="/configuracoes" class="active">Configurações</a>
+            </nav>
+        </aside>
+        
+        <main class="main-content">
+            <h1>Configurações do WhatsApp</h1>
+            
+            <div class="form-section">
+                <div class="form-group">
+                    <label>Número do WhatsApp da empresa:</label>
+                    <input type="text" id="whatsapp" placeholder="5548999999999">
+                    <small>Formato: 55 + DDD + número (ex: 5548999999999)</small>
+                </div>
+                
+                <button onclick="salvarWhatsApp()" class="btn-submit">
+                    Salvar Configuração
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function carregarWhatsApp() {
+            const response = await fetch('/api/configuracoes/whatsapp_empresa');
+            const data = await response.json();
+            document.getElementById('whatsapp').value = data.valor || '';
+        }
+        
+        async function salvarWhatsApp() {
+            const valor = document.getElementById('whatsapp').value;
+            
+            await fetch('/api/configuracoes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chave: 'whatsapp_empresa',
+                    valor: valor
+                })
+            });
+            
+            alert('✅ Número salvo com sucesso!');
+        }
+        
+        carregarWhatsApp();
+    </script>
+</body>
+</html>

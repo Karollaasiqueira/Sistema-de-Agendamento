@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aniversariantes - AgendaPro</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .aniversario-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #ff6b6b;
+            transition: transform 0.3s;
+        }
+        .aniversario-card:hover {
+            transform: translateY(-5px);
+        }
+        .aniversario-card .nome {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+        .aniversario-card .data {
+            color: #ff6b6b;
+            font-weight: 500;
+            margin: 10px 0;
+        }
+        .aniversario-card .contato {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        .btn-parabens {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.3s;
+            text-decoration: none;
+        }
+        .btn-parabens:hover {
+            transform: scale(1.05);
+        }
+        .filtros {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .filtro-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            background: white;
+            color: #333;
+            border: 2px solid #e0e0e0;
+        }
+        .filtro-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .stats-number {
+            font-size: 48px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        .stats-label {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .mensagem-pronta {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 2px solid #e0e0e0;
+        }
+        .mensagem-pronta textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            margin: 10px 0;
+            resize: vertical;
+        }
+        .btn-enviar-todos {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 20px;
+            width: 100%;
+        }
+        .sem-aniversarios {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+        }
+        .sem-aniversarios i {
+            font-size: 80px;
+            margin-bottom: 20px;
+            color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-calendar-check"></i>
+                <span>AgendaPro</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="/"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="/clientes"><i class="fas fa-users"></i> Clientes</a>
+                <a href="/agendamentos"><i class="fas fa-calendar"></i> Agendamentos</a>
+                <a href="/servicos"><i class="fas fa-cut"></i> Serviços</a>
+                <a href="/colaboradores"><i class="fas fa-user-md"></i> Colaboradores</a>
+                <a href="/aniversariantes" class="active"><i class="fas fa-birthday-cake"></i> Aniversariantes</a>
+                <a href="/configuracoes"><i class="fas fa-cog"></i> WhatsApp</a>
+                <a href="/configuracoes-avancadas"><i class="fas fa-sliders-h"></i> Avançado</a>
+                <a href="/empresa"><i class="fas fa-building"></i> Minha Empresa</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <h1>🎂 Aniversariantes</h1>
+                <div class="user-info">
+                    <span id="userName">Carregando...</span>
+                    <i class="fas fa-user-circle"></i>
+                    <button onclick="logout()" style="background:none; border:none; color:#dc3545; margin-left:10px; cursor:pointer;">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Stats Cards -->
+            <div class="cards">
+                <div class="card">
+                    <div class="card-icon blue">
+                        <i class="fas fa-birthday-cake"></i>
+                    </div>
+                    <div class="card-info">
+                        <h3 id="totalHoje">0</h3>
+                        <p>Aniversariantes Hoje</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon green">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="card-info">
+                        <h3 id="totalMes">0</h3>
+                        <p>Aniversariantes deste mês</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon orange">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <div class="card-info">
+                        <h3 id="proximos">0</h3>
+                        <p>Próximos 30 dias</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filtros">
+                <button class="filtro-btn active" onclick="filtrar('hoje')">🎂 Hoje</button>
+                <button class="filtro-btn" onclick="filtrar('mes')">📅 Este mês</button>
+                <button class="filtro-btn" onclick="filtrar('proximos')">⏰ Próximos 30 dias</button>
+                <button class="filtro-btn" onclick="filtrar('todos')">👥 Todos os clientes</button>
+            </div>
+
+            <!-- Mensagem Padrão -->
+            <div class="mensagem-pronta">
+                <h3>💬 Mensagem de Aniversário</h3>
+                <textarea id="mensagemPadrao" rows="4">🎉 Feliz Aniversário! 🎂
+
+Que seu dia seja repleto de alegrias e realizações! A equipe {empresa} deseja tudo de bom para você. 🥳
+
+Continuamos à disposição para cuidar de você com muito carinho.
+
+✨ Um abraço especial!</textarea>
+                <button class="btn-enviar-todos" onclick="enviarParaTodos()">
+                    <i class="fab fa-whatsapp"></i> Enviar mensagem para todos os aniversariantes da seleção
+                </button>
+            </div>
+
+            <!-- Lista de Aniversariantes -->
+            <div id="listaAniversariantes" class="section" style="margin-top:30px;">
+                <h2 id="tituloLista">Aniversariantes de Hoje</h2>
+                <div id="containerLista"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let aniversariantesAtuais = [];
+        let dadosEmpresa = {};
+        let filtroAtual = 'hoje';
+
+        async function carregarDadosUsuario() {
+            const response = await fetch('/api/auth/me');
+            const usuario = await response.json();
+            document.getElementById('userName').textContent = usuario.nome || 'Usuário';
+        }
+
+        async function carregarEmpresa() {
+            const response = await fetch('/api/empresa');
+            dadosEmpresa = await response.json();
+        }
+
+        async function carregarStats() {
+            const response = await fetch('/api/dashboard');
+            const stats = await response.json();
+            
+            document.getElementById('totalHoje').textContent = stats.aniversariantes_hoje || 0;
+            
+            const responseMes = await fetch('/api/aniversariantes/mes/' + (new Date().getMonth() + 1));
+            const aniversariantesMes = await responseMes.json();
+            document.getElementById('totalMes').textContent = aniversariantesMes.length;
+            
+            const responseProximos = await fetch('/api/aniversariantes/proximos/30');
+            const proximos = await responseProximos.json();
+            document.getElementById('proximos').textContent = proximos.length;
+        }
+
+        async function filtrar(tipo) {
+            filtroAtual = tipo;
+            
+            // Atualizar botões
+            document.querySelectorAll('.filtro-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            let titulo = '';
+            let dados = [];
+
+            if (tipo === 'hoje') {
+                const response = await fetch('/api/aniversariantes/hoje');
+                dados = await response.json();
+                titulo = '🎂 Aniversariantes de Hoje';
+            } else if (tipo === 'mes') {
+                const mes = new Date().getMonth() + 1;
+                const response = await fetch(`/api/aniversariantes/mes/${mes}`);
+                dados = await response.json();
+                titulo = `📅 Aniversariantes de ${getNomeMes(mes)}`;
+            } else if (tipo === 'proximos') {
+                const response = await fetch('/api/aniversariantes/proximos/30');
+                dados = await response.json();
+                titulo = '⏰ Próximos 30 dias';
+            } else {
+                const response = await fetch('/api/clientes');
+                dados = await response.json();
+                titulo = '👥 Todos os Clientes';
+            }
+
+            aniversariantesAtuais = dados;
+            document.getElementById('tituloLista').textContent = titulo;
+            exibirLista(dados);
+        }
+
+        function getNomeMes(numero) {
+            const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                          'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            return meses[numero - 1];
+        }
+
+        function formatarData(dataISO) {
+            if (!dataISO) return 'Não informada';
+            const data = new Date(dataISO + 'T12:00:00');
+            return data.toLocaleDateString('pt-BR');
+        }
+
+        function exibirLista(clientes) {
+            const container = document.getElementById('containerLista');
+            
+            if (!clientes || clientes.length === 0) {
+                container.innerHTML = `
+                    <div class="sem-aniversarios">
+                        <i class="fas fa-calendar-times"></i>
+                        <h3>Nenhum aniversariante encontrado</h3>
+                        <p>Não há clientes nesta lista.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            clientes.forEach(cliente => {
+                const dataNasc = cliente.data_nascimento ? formatarData(cliente.data_nascimento) : 'Não informada';
+                const nomeEmpresa = dadosEmpresa.nome_empresa || 'nossa empresa';
+                const mensagem = document.getElementById('mensagemPadrao').value
+                    .replace('{empresa}', nomeEmpresa)
+                    .replace('{cliente}', cliente.nome);
+
+                html += `
+                    <div class="aniversario-card">
+                        <div class="nome">${cliente.nome}</div>
+                        <div class="data">🎂 ${dataNasc}</div>
+                        <div class="contato">
+                            <i class="fas fa-phone"></i> ${cliente.telefone || 'Não informado'} <br>
+                            <i class="fas fa-envelope"></i> ${cliente.email}
+                        </div>
+                        <a href="https://wa.me/${cliente.telefone?.replace(/\D/g, '') || ''}?text=${encodeURIComponent(mensagem)}" 
+                           target="_blank" 
+                           class="btn-parabens">
+                            <i class="fab fa-whatsapp"></i> Enviar Parabéns
+                        </a>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function enviarParaTodos() {
+            if (aniversariantesAtuais.length === 0) {
+                alert('Nenhum aniversariante na lista atual');
+                return;
+            }
+
+            const nomeEmpresa = dadosEmpresa.nome_empresa || 'nossa empresa';
+            const mensagemBase = document.getElementById('mensagemPadrao').value;
+
+            aniversariantesAtuais.forEach(cliente => {
+                if (cliente.telefone) {
+                    const mensagem = mensagemBase
+                        .replace('{empresa}', nomeEmpresa)
+                        .replace('{cliente}', cliente.nome);
+                    
+                    const numero = cliente.telefone.replace(/\D/g, '');
+                    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, '_blank');
+                }
+            });
+
+            alert(`✅ Mensagens abertas para ${aniversariantesAtuais.length} clientes!`);
+        }
+
+        async function logout() {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login.html';
+        }
+
+        // Carregar dados iniciais
+        carregarDadosUsuario();
+        carregarEmpresa();
+        carregarStats();
+        filtrar('hoje');
+    </script>
+</body>
+</html>

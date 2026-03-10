@@ -7,313 +7,53 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 40px;
-        }
-        
-        .header h1 {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-        
-        .header p {
-            font-size: 18px;
-            opacity: 0.9;
-        }
-        
-        .whatsapp-float {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #25d366;
-            color: white;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            text-align: center;
-            font-size: 30px;
-            line-height: 60px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            cursor: pointer;
-            transition: transform 0.3s;
-            z-index: 1000;
-        }
-        
-        .whatsapp-float:hover {
-            transform: scale(1.1);
-        }
-        
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            cursor: pointer;
-            transition: transform 0.3s;
-        }
-        
-        .card:hover {
-            transform: translateY(-10px);
-        }
-        
-        .card i {
-            font-size: 48px;
-            color: #667eea;
-            margin-bottom: 20px;
-        }
-        
-        .card h3 {
-            font-size: 24px;
-            margin-bottom: 10px;
-            color: #333;
-        }
-        
-        .card p {
-            color: #666;
-            margin-bottom: 20px;
-        }
-        
-        .btn-whatsapp {
-            background: #25d366;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            transition: transform 0.3s;
-        }
-        
-        .btn-whatsapp:hover {
-            transform: scale(1.05);
-        }
-        
-        .form-section {
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
-            margin-top: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        
-        .form-section h2 {
-            color: #333;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #666;
-            font-weight: 500;
-        }
-        
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-        
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .btn-submit {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: transform 0.3s;
-        }
-        
-        .btn-submit:hover {
-            transform: scale(1.02);
-        }
-        
-        .servicos-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin: 30px 0;
-        }
-        
-        .servico-card {
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 20px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .servico-card:hover {
-            border-color: #667eea;
-            transform: scale(1.02);
-        }
-        
-        .servico-card.selected {
-            border-color: #667eea;
-            background: #f0f4ff;
-        }
-        
-        .servico-card h4 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .servico-card .preco {
-            font-size: 20px;
-            font-weight: 600;
-            color: #28a745;
-            margin: 10px 0;
-        }
-        
-        .servico-card .duracao {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1001;
-        }
-        
-        .modal-content {
-            background: white;
-            width: 90%;
-            max-width: 500px;
-            margin: 50px auto;
-            padding: 30px;
-            border-radius: 15px;
-            position: relative;
-        }
-        
-        .close {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 28px;
-            cursor: pointer;
-            color: #999;
-        }
-        
-        .agendamento-item {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-left: 4px solid #667eea;
-        }
-        
-        .agendamento-item .status {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            margin: 10px 0;
-        }
-        
-        .status-pendente { background: #fff3cd; color: #856404; }
-        .status-confirmado { background: #d4edda; color: #155724; }
-        .status-cancelado { background: #f8d7da; color: #721c24; }
-        .status-concluido { background: #d1e7dd; color: #0f5132; }
-        
-        .btn-acao {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 10px;
-            font-size: 14px;
-        }
-        
-        .btn-wpp-acao {
-            background: #25d366;
-            color: white;
-        }
-        
-        .btn-cancel {
-            background: #dc3545;
-            color: white;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-        
-        .loading i {
-            font-size: 40px;
-            margin-bottom: 20px;
-            color: #667eea;
-        }
-        
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 32px;
-            }
-            
-            .cards {
-                grid-template-columns: 1fr;
-            }
-        }
+        /* mesmo estilo que você já tinha, mantém o original */
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Poppins',sans-serif; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh; padding:20px; }
+        .container { max-width:1200px; margin:0 auto; }
+        .header { text-align:center; color:white; margin-bottom:40px; }
+        .header h1 { font-size:48px; margin-bottom:10px; }
+        .header p { font-size:18px; opacity:0.9; }
+        .whatsapp-float { position:fixed; bottom:30px; right:30px; background:#25d366; color:white; width:60px; height:60px; border-radius:50%; text-align:center; font-size:30px; line-height:60px; box-shadow:0 5px 15px rgba(0,0,0,0.3); cursor:pointer; transition:transform 0.3s; z-index:1000; }
+        .whatsapp-float:hover { transform:scale(1.1); }
+        .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:30px; margin-bottom:40px; }
+        .card { background:white; border-radius:15px; padding:30px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.2); cursor:pointer; transition:transform 0.3s; }
+        .card:hover { transform:translateY(-10px); }
+        .card i { font-size:48px; color:#667eea; margin-bottom:20px; }
+        .card h3 { font-size:24px; margin-bottom:10px; color:#333; }
+        .card p { color:#666; margin-bottom:20px; }
+        .btn-whatsapp { background:#25d366; color:white; border:none; padding:12px 25px; border-radius:25px; font-size:16px; font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:10px; transition:transform 0.3s; }
+        .btn-whatsapp:hover { transform:scale(1.05); }
+        .form-section { background:white; border-radius:15px; padding:40px; margin-top:30px; box-shadow:0 10px 30px rgba(0,0,0,0.2); }
+        .form-section h2 { color:#333; margin-bottom:30px; text-align:center; }
+        .form-group { margin-bottom:20px; }
+        .form-group label { display:block; margin-bottom:5px; color:#666; font-weight:500; }
+        .form-group input, .form-group select, .form-group textarea { width:100%; padding:12px; border:2px solid #e0e0e0; border-radius:8px; font-size:14px; transition:border-color 0.3s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline:none; border-color:#667eea; }
+        .btn-submit { width:100%; padding:14px; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; border:none; border-radius:8px; font-size:16px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; transition:transform 0.3s; }
+        .btn-submit:hover { transform:scale(1.02); }
+        .servicos-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px; margin:30px 0; }
+        .servico-card { background:white; border:2px solid #e0e0e0; border-radius:10px; padding:20px; cursor:pointer; transition:all 0.3s; }
+        .servico-card:hover { border-color:#667eea; transform:scale(1.02); }
+        .servico-card.selected { border-color:#667eea; background:#f0f4ff; }
+        .servico-card h4 { color:#333; margin-bottom:10px; }
+        .servico-card .preco { font-size:20px; font-weight:600; color:#28a745; margin:10px 0; }
+        .servico-card .duracao { color:#666; font-size:14px; }
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1001; }
+        .modal-content { background:white; width:90%; max-width:500px; margin:50px auto; padding:30px; border-radius:15px; position:relative; }
+        .close { position:absolute; top:15px; right:20px; font-size:28px; cursor:pointer; color:#999; }
+        .agendamento-item { background:#f8f9fa; border-radius:10px; padding:20px; margin-bottom:15px; border-left:4px solid #667eea; }
+        .agendamento-item .status { display:inline-block; padding:5px 10px; border-radius:20px; font-size:12px; margin:10px 0; }
+        .status-pendente { background:#fff3cd; color:#856404; }
+        .status-confirmado { background:#d4edda; color:#155724; }
+        .status-cancelado { background:#f8d7da; color:#721c24; }
+        .status-concluido { background:#d1e7dd; color:#0f5132; }
+        .btn-acao { padding:8px 15px; border:none; border-radius:5px; cursor:pointer; margin-right:10px; font-size:14px; }
+        .btn-wpp-acao { background:#25d366; color:white; }
+        .btn-cancel { background:#dc3545; color:white; }
+        .loading { text-align:center; padding:40px; color:#666; }
+        .loading i { font-size:40px; margin-bottom:20px; color:#667eea; }
+        @media (max-width:768px) { .header h1 { font-size:32px; } .cards { grid-template-columns:1fr; } }
     </style>
 </head>
 <body>
@@ -322,199 +62,150 @@
             <h1>🏛️ AgendaPro</h1>
             <p>Agende seus serviços diretamente pelo WhatsApp</p>
         </div>
-        
+
         <div class="cards">
             <div class="card" onclick="mostrarFormAgendamento()">
                 <i class="fas fa-calendar-plus"></i>
                 <h3>Novo Agendamento</h3>
                 <p>Agende um serviço agora mesmo</p>
-                <button class="btn-whatsapp">
-                    <i class="fab fa-whatsapp"></i> Agendar via WhatsApp
-                </button>
+                <button class="btn-whatsapp"><i class="fab fa-whatsapp"></i> Agendar via WhatsApp</button>
             </div>
-            
             <div class="card" onclick="buscarMeusAgendamentos()">
                 <i class="fas fa-calendar-check"></i>
                 <h3>Meus Agendamentos</h3>
                 <p>Consulte ou cancele seus agendamentos</p>
-                <button class="btn-whatsapp">
-                    <i class="fab fa-whatsapp"></i> Consultar
-                </button>
+                <button class="btn-whatsapp"><i class="fab fa-whatsapp"></i> Consultar</button>
             </div>
-            
             <div class="card" onclick="contatarWhatsApp()">
                 <i class="fas fa-headset"></i>
                 <h3>Falar com Atendente</h3>
                 <p>Tire suas dúvidas pelo WhatsApp</p>
-                <button class="btn-whatsapp">
-                    <i class="fab fa-whatsapp"></i> Iniciar Chat
-                </button>
+                <button class="btn-whatsapp"><i class="fab fa-whatsapp"></i> Iniciar Chat</button>
             </div>
         </div>
-        
+
         <!-- Formulário de Agendamento -->
-        <div id="formAgendamento" class="form-section" style="display: none;">
+        <div id="formAgendamento" class="form-section" style="display:none;">
             <h2>📅 Novo Agendamento</h2>
-            
             <div class="servicos-grid" id="servicosGrid"></div>
-            
             <form id="agendamentoForm">
                 <input type="hidden" id="servicoSelecionado">
-                
+                <div class="form-group" id="colaboradoresContainer" style="display:none;">
+                    <label>Escolha o profissional:</label>
+                    <select id="colaborador"></select>
+                </div>
                 <div class="form-group">
                     <label>Seu Nome *</label>
                     <input type="text" id="clienteNome" required>
                 </div>
-                
                 <div class="form-group">
                     <label>Seu WhatsApp *</label>
-                    <input type="tel" id="clienteWhatsApp" placeholder="(11) 99999-9999" required>
+                    <input type="tel" id="clienteWhatsApp" required>
                 </div>
-                
                 <div class="form-group">
                     <label>Email</label>
                     <input type="email" id="clienteEmail">
                 </div>
-                
                 <div class="form-group">
                     <label>Data Preferencial *</label>
                     <input type="date" id="dataAgendamento" required>
                 </div>
-                
                 <div class="form-group">
                     <label>Horário Preferencial *</label>
                     <input type="time" id="horaAgendamento" required>
                 </div>
-                
+                <div class="form-group">
+                    <label>Tipo de agendamento:</label>
+                    <select id="tipoAgendamento" onchange="mostrarOpcoesRecorrencia()">
+                        <option value="unico">Único</option>
+                        <option value="recorrente">Recorrente (semanal)</option>
+                    </select>
+                </div>
+                <div id="recorrenciaContainer" style="display:none;">
+                    <div class="form-group">
+                        <label>Agendar até:</label>
+                        <input type="date" id="dataFimRecorrencia">
+                    </div>
+                </div>
                 <div class="form-group">
                     <label>Observações</label>
-                    <textarea id="observacoes" rows="3" placeholder="Alguma observação?"></textarea>
+                    <textarea id="observacoes" rows="3"></textarea>
                 </div>
-                
-                <button type="submit" class="btn-submit">
-                    <i class="fab fa-whatsapp"></i> Enviar para WhatsApp
-                </button>
+                <button type="submit" class="btn-submit"><i class="fab fa-whatsapp"></i> Enviar para WhatsApp</button>
             </form>
         </div>
-        
+
         <!-- Meus Agendamentos -->
-        <div id="meusAgendamentos" class="form-section" style="display: none;">
+        <div id="meusAgendamentos" class="form-section" style="display:none;">
             <h2>📋 Meus Agendamentos</h2>
-            
             <div class="form-group">
                 <label>Digite seu WhatsApp para consultar:</label>
-                <div style="display: flex; gap: 10px;">
-                    <input type="tel" id="whatsappConsulta" placeholder="(11) 99999-9999" style="flex: 1;">
-                    <button onclick="consultarAgendamentos()" class="btn-whatsapp">
-                        <i class="fas fa-search"></i> Consultar
-                    </button>
+                <div style="display:flex; gap:10px;">
+                    <input type="tel" id="whatsappConsulta" style="flex:1;">
+                    <button onclick="consultarAgendamentos()" class="btn-whatsapp"><i class="fas fa-search"></i> Consultar</button>
                 </div>
             </div>
-            
             <div id="resultadoAgendamentos"></div>
         </div>
     </div>
-    
-    <!-- Modal de Confirmação -->
-    <div id="modalConfirmacao" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="fecharModal()">&times;</span>
-            <div id="modalConteudo"></div>
-        </div>
-    </div>
-    
-    <!-- Botão Flutuante WhatsApp -->
-    <a href="https://wa.me/5511999999999?text=Olá!%20Gostaria%20de%20informações" target="_blank" class="whatsapp-float">
-        <i class="fab fa-whatsapp"></i>
-    </a>
-    
+
+    <a href="#" class="whatsapp-float" id="whatsappFloat" target="_blank"><i class="fab fa-whatsapp"></i></a>
+
     <script>
         let servicos = [];
+        let colaboradores = [];
         let clienteDados = {};
-        
-        // Carregar serviços
+
         async function carregarServicos() {
-            try {
-                const response = await fetch('/api/servicos');
-                servicos = await response.json();
-                
-                const grid = document.getElementById('servicosGrid');
-                grid.innerHTML = servicos.map(s => `
-                    <div class="servico-card" onclick="selecionarServico(${s.id})" id="servico-${s.id}">
-                        <h4>${s.nome}</h4>
-                        <p>${s.descricao || ''}</p>
-                        <div class="preco">R$ ${parseFloat(s.preco).toFixed(2)}</div>
-                        <div class="duracao"><i class="far fa-clock"></i> ${s.duracao} minutos</div>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('Erro ao carregar serviços:', error);
-            }
+            const r = await fetch('/api/servicos');
+            servicos = await r.json();
+            const grid = document.getElementById('servicosGrid');
+            grid.innerHTML = servicos.map(s => `
+                <div class="servico-card" onclick="selecionarServico(${s.id})" id="servico-${s.id}">
+                    <h4>${s.nome}</h4>
+                    <p>${s.descricao || ''}</p>
+                    <div class="preco">R$ ${parseFloat(s.preco).toFixed(2)}</div>
+                    <div class="duracao"><i class="far fa-clock"></i> ${s.duracao} minutos</div>
+                </div>
+            `).join('');
         }
-        
-        // Selecionar serviço
-        function selecionarServico(id) {
-            document.querySelectorAll('.servico-card').forEach(c => {
-                c.classList.remove('selected');
-            });
+
+        async function selecionarServico(id) {
+            document.querySelectorAll('.servico-card').forEach(c => c.classList.remove('selected'));
             document.getElementById(`servico-${id}`).classList.add('selected');
             document.getElementById('servicoSelecionado').value = id;
-        }
-        
-        // Mostrar formulário de agendamento
-        function mostrarFormAgendamento() {
-            document.getElementById('formAgendamento').style.display = 'block';
-            document.getElementById('meusAgendamentos').style.display = 'none';
-            
-            // Data mínima é hoje
-            const hoje = new Date().toISOString().split('T')[0];
-            document.getElementById('dataAgendamento').min = hoje;
-            
-            carregarServicos();
-        }
-        
-        // Buscar meus agendamentos
-        function buscarMeusAgendamentos() {
-            document.getElementById('formAgendamento').style.display = 'none';
-            document.getElementById('meusAgendamentos').style.display = 'block';
-            document.getElementById('resultadoAgendamentos').innerHTML = '';
-        }
-        
-        // Contatar WhatsApp
-        function contatarWhatsApp() {
-            window.open('https://wa.me/5511999999999?text=Olá!%20Preciso%20de%20ajuda', '_blank');
-        }
-        
-        // Salvar cliente via API
-        async function salvarCliente(nome, email, telefone) {
-            try {
-                const response = await fetch('/api/clientes', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        nome: nome,
-                        email: email || `${telefone}@cliente.whatsapp`,
-                        telefone: telefone
-                    })
-                });
-                const data = await response.json();
-                return data.id;
-            } catch (error) {
-                console.error('Erro ao salvar cliente:', error);
-                return null;
+            const r = await fetch(`/api/servico/${id}/colaboradores`);
+            const cols = await r.json();
+            colaboradores = cols;
+            const container = document.getElementById('colaboradoresContainer');
+            const select = document.getElementById('colaborador');
+            if (cols.length) {
+                container.style.display = 'block';
+                select.innerHTML = cols.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+            } else {
+                container.style.display = 'none';
             }
         }
-        
-        // Enviar agendamento via WhatsApp
+
+        function mostrarOpcoesRecorrencia() {
+            const tipo = document.getElementById('tipoAgendamento').value;
+            document.getElementById('recorrenciaContainer').style.display = tipo === 'recorrente' ? 'block' : 'none';
+        }
+
+        async function salvarCliente(nome, email, telefone) {
+            const r = await fetch('/api/clientes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, email: email || `${telefone}@cliente.whatsapp`, telefone })
+            });
+            const data = await r.json();
+            return data.id;
+        }
+
         document.getElementById('agendamentoForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
             const servicoId = document.getElementById('servicoSelecionado').value;
-            if (!servicoId) {
-                alert('Selecione um serviço!');
-                return;
-            }
-            
+            if (!servicoId) return alert('Selecione um serviço!');
             const servico = servicos.find(s => s.id == servicoId);
             const nome = document.getElementById('clienteNome').value;
             const whatsapp = document.getElementById('clienteWhatsApp').value;
@@ -522,241 +213,66 @@
             const data = document.getElementById('dataAgendamento').value;
             const hora = document.getElementById('horaAgendamento').value;
             const obs = document.getElementById('observacoes').value;
-            
-            // Mostrar loading
-            document.getElementById('modalConteudo').innerHTML = `
-                <div class="loading">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>Processando seu agendamento...</p>
-                </div>
-            `;
-            document.getElementById('modalConfirmacao').style.display = 'block';
-            
-            // Salvar cliente no sistema
+            const tipo = document.getElementById('tipoAgendamento').value;
+            const dataFim = document.getElementById('dataFimRecorrencia').value;
+            const colaboradorId = document.getElementById('colaborador')?.value || null;
+
             const clienteId = await salvarCliente(nome, email, whatsapp);
-            
-            if (clienteId) {
-                // Criar agendamento no sistema
-                try {
-                    await fetch('/api/agendamentos', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            cliente_id: clienteId,
-                            servico_id: servicoId,
-                            data_agendamento: data,
-                            hora_agendamento: hora,
-                            observacoes: obs
-                        })
-                    });
-                } catch (error) {
-                    console.error('Erro ao salvar agendamento:', error);
-                }
-            }
-            
-            // Formatar data
+            await fetch('/api/agendamentos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cliente_id: clienteId,
+                    servico_id: servicoId,
+                    colaborador_id: colaboradorId,
+                    data_agendamento: data,
+                    hora_agendamento: hora,
+                    observacoes: obs,
+                    tipo_agendamento: tipo,
+                    recorrencia: tipo === 'recorrente' ? 'semanal' : null,
+                    data_fim_recorrencia: dataFim || null
+                })
+            });
+
+            const r = await fetch('/api/configuracoes/whatsapp_empresa');
+            const config = await r.json();
+            const numeroEmpresa = config.valor || '5511999999999';
             const dataFormatada = new Date(data).toLocaleDateString('pt-BR');
-            
-            // Criar mensagem do WhatsApp
-            const mensagem = `🏛️ *NOVO AGENDAMENTO - AgendaPro*
-
-👤 *Cliente:* ${nome}
-📱 *WhatsApp:* ${whatsapp}
-💼 *Serviço:* ${servico.nome}
-💰 *Valor:* R$ ${parseFloat(servico.preco).toFixed(2)}
-📅 *Data:* ${dataFormatada}
-⏰ *Horário:* ${hora}
-📝 *Observações:* ${obs || 'Nenhuma'}
-
-✅ *Status:* Pendente
-📌 *Protocolo:* #${Date.now().toString().slice(-6)}
-
-Por favor, confirme este agendamento.`;
-            
-            // Codificar mensagem para URL
-            const mensagemCodificada = encodeURIComponent(mensagem);
-            
-            // Número do WhatsApp da empresa (SUBSTITUA PELO NÚMERO REAL)
-            const numeroEmpresa = '5511999999999';
-            
-            // Mostrar modal com opções
-            document.getElementById('modalConteudo').innerHTML = `
-                <h3 style="color: #28a745; margin-bottom: 20px;">✅ Quase lá!</h3>
-                <p style="margin-bottom: 20px;">Clique no botão abaixo para enviar o agendamento via WhatsApp:</p>
-                
-                <a href="https://wa.me/${numeroEmpresa}?text=${mensagemCodificada}" 
-                   target="_blank"
-                   style="display: block; background: #25d366; color: white; text-decoration: none; padding: 15px; border-radius: 8px; text-align: center; font-weight: 600; margin-bottom: 15px;">
-                    <i class="fab fa-whatsapp"></i> Enviar Agendamento
-                </a>
-                
-                <p style="font-size: 12px; color: #999; text-align: center;">
-                    Após enviar, aguarde a confirmação no WhatsApp.
-                </p>
-                
-                <button onclick="fecharModal()" style="width: 100%; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 5px; margin-top: 10px; cursor: pointer;">
-                    Fechar
-                </button>
-            `;
+            const msg = `🏛️ NOVO AGENDAMENTO\n\n👤 Cliente: ${nome}\n📱 WhatsApp: ${whatsapp}\n💼 Serviço: ${servico.nome}\n💰 Valor: R$ ${parseFloat(servico.preco).toFixed(2)}\n📅 Data: ${dataFormatada}\n⏰ Horário: ${hora}\n📝 Obs: ${obs || 'Nenhuma'}\n\n✅ Status: Pendente`;
+            window.open(`https://wa.me/${numeroEmpresa}?text=${encodeURIComponent(msg)}`, '_blank');
         });
-        
-        // Consultar agendamentos por WhatsApp
+
         async function consultarAgendamentos() {
             const whatsapp = document.getElementById('whatsappConsulta').value;
-            if (!whatsapp) {
-                alert('Digite seu WhatsApp!');
-                return;
-            }
-            
-            document.getElementById('resultadoAgendamentos').innerHTML = `
-                <div class="loading">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>Buscando seus agendamentos...</p>
-                </div>
-            `;
-            
-            try {
-                // Buscar cliente pelo WhatsApp
-                const response = await fetch('/api/clientes');
-                const clientes = await response.json();
-                
-                // Filtrar cliente pelo WhatsApp (simplificado - em produção faria query no backend)
-                const cliente = clientes.find(c => c.telefone === whatsapp);
-                
-                if (!cliente) {
-                    document.getElementById('resultadoAgendamentos').innerHTML = `
-                        <div style="text-align: center; padding: 40px;">
-                            <i class="fas fa-search" style="font-size: 48px; color: #999; margin-bottom: 20px;"></i>
-                            <p>Nenhum agendamento encontrado para este WhatsApp.</p>
-                            <button onclick="mostrarFormAgendamento()" class="btn-whatsapp" style="margin-top: 20px;">
-                                <i class="fas fa-calendar-plus"></i> Fazer novo agendamento
-                            </button>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                // Buscar agendamentos do cliente
-                const agendamentosResponse = await fetch('/api/agendamentos');
-                const todosAgendamentos = await agendamentosResponse.json();
-                const meusAgendamentos = todosAgendamentos.filter(a => a.cliente_id === cliente.id);
-                
-                if (meusAgendamentos.length === 0) {
-                    document.getElementById('resultadoAgendamentos').innerHTML = `
-                        <div style="text-align: center; padding: 40px;">
-                            <i class="fas fa-calendar-times" style="font-size: 48px; color: #999; margin-bottom: 20px;"></i>
-                            <p>Você não tem agendamentos.</p>
-                            <button onclick="mostrarFormAgendamento()" class="btn-whatsapp" style="margin-top: 20px;">
-                                <i class="fas fa-calendar-plus"></i> Agendar agora
-                            </button>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                // Exibir agendamentos
-                let html = '<h3 style="margin-bottom: 20px;">Seus agendamentos:</h3>';
-                
-                meusAgendamentos.sort((a, b) => new Date(b.data_agendamento) - new Date(a.data_agendamento));
-                
-                meusAgendamentos.forEach(a => {
-                    const dataFormatada = new Date(a.data_agendamento).toLocaleDateString('pt-BR');
-                    const podeCancelar = a.status === 'pendente' || a.status === 'confirmado';
-                    
-                    html += `
-                        <div class="agendamento-item">
-                            <div style="display: flex; justify-content: space-between; align-items: start;">
-                                <div>
-                                    <strong>${a.servico_nome || 'Serviço'}</strong>
-                                    <div style="font-size: 14px; color: #666; margin: 5px 0;">
-                                        <i class="far fa-calendar"></i> ${dataFormatada} às ${a.hora_agendamento}
-                                    </div>
-                                    <span class="status status-${a.status}">${a.status}</span>
-                                </div>
-                                <div>
-                                    ${podeCancelar ? `
-                                        <button class="btn-acao btn-cancel" onclick="cancelarAgendamento(${a.id}, '${whatsapp}')">
-                                            <i class="fas fa-times"></i> Cancelar
-                                        </button>
-                                    ` : ''}
-                                    <button class="btn-acao btn-wpp-acao" onclick="falarSobreAgendamento(${a.id})">
-                                        <i class="fab fa-whatsapp"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            ${a.observacoes ? `<p style="font-size: 12px; color: #999; margin-top: 10px;">📝 ${a.observacoes}</p>` : ''}
-                        </div>
-                    `;
-                });
-                
-                document.getElementById('resultadoAgendamentos').innerHTML = html;
-                
-            } catch (error) {
-                console.error('Erro ao consultar:', error);
-                document.getElementById('resultadoAgendamentos').innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #dc3545;">
-                        <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 20px;"></i>
-                        <p>Erro ao consultar agendamentos. Tente novamente.</p>
-                    </div>
-                `;
-            }
+            if (!whatsapp) return alert('Digite seu WhatsApp');
+            const r = await fetch(`/api/agendamentos/telefone/${whatsapp}`);
+            const lista = await r.json();
+            let html = '<h3>Seus agendamentos:</h3>';
+            if (!lista.length) html += '<p>Nenhum agendamento encontrado.</p>';
+            else lista.forEach(a => {
+                html += `<div class="agendamento-item"><strong>${a.servico_nome}</strong><br>${new Date(a.data_agendamento).toLocaleDateString('pt-BR')} às ${a.hora_agendamento}<br>Status: ${a.status}</div>`;
+            });
+            document.getElementById('resultadoAgendamentos').innerHTML = html;
         }
-        
-        // Cancelar agendamento via WhatsApp
-        async function cancelarAgendamento(id, whatsapp) {
-            if (!confirm('Tem certeza que deseja cancelar este agendamento?')) return;
-            
-            try {
-                // Atualizar status no sistema
-                await fetch(`/api/agendamentos/${id}/status`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: 'cancelado' })
-                });
-                
-                // Mensagem para WhatsApp
-                const mensagem = `Olá! Gostaria de cancelar meu agendamento *${id}*.
-Por favor, confirme o cancelamento.`;
-                
-                const numeroEmpresa = '5511999999999';
-                window.open(`https://wa.me/${numeroEmpresa}?text=${encodeURIComponent(mensagem)}`, '_blank');
-                
-                // Recarregar lista
-                setTimeout(() => consultarAgendamentos(), 1000);
-                
-            } catch (error) {
-                alert('Erro ao cancelar agendamento');
-            }
+
+        function mostrarFormAgendamento() {
+            document.getElementById('formAgendamento').style.display = 'block';
+            document.getElementById('meusAgendamentos').style.display = 'none';
+            document.getElementById('dataAgendamento').min = new Date().toISOString().split('T')[0];
         }
-        
-        // Falar sobre agendamento
-        function falarSobreAgendamento(id) {
-            const mensagem = `Olá! Tenho uma dúvida sobre meu agendamento *${id}*.`;
-            const numeroEmpresa = '5511999999999';
-            window.open(`https://wa.me/${numeroEmpresa}?text=${encodeURIComponent(mensagem)}`, '_blank');
+
+        function buscarMeusAgendamentos() {
+            document.getElementById('formAgendamento').style.display = 'none';
+            document.getElementById('meusAgendamentos').style.display = 'block';
         }
-        
-        // Fechar modal
-        function fecharModal() {
-            document.getElementById('modalConfirmacao').style.display = 'none';
+
+        async function contatarWhatsApp() {
+            const r = await fetch('/api/configuracoes/whatsapp_empresa');
+            const config = await r.json();
+            window.open(`https://wa.me/${config.valor || '5511999999999'}`, '_blank');
         }
-        
-        // Fechar modal ao clicar fora
-        window.onclick = function(event) {
-            const modal = document.getElementById('modalConfirmacao');
-            if (event.target === modal) {
-                fecharModal();
-            }
-        }
-        
-        // Inicializar
+
         carregarServicos();
     </script>
-<!-- Link para área do cliente -->
-<div style="position: fixed; bottom: 20px; left: 300px; background: white; padding: 10px 20px; border-radius: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
-    <a href="/cliente" style="color: #25d366; text-decoration: none; font-weight: 600;">
-        <i class="fab fa-whatsapp"></i> Área do Cliente - Agende via WhatsApp
-    </a>
-</div>
 </body>
 </html>
