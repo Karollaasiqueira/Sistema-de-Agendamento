@@ -1,386 +1,200 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const sqlite3 = require('sqlite3').verbose();
-const app = express();
-const PORT = process.env.PORT || 3000;
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dados da Empresa - AgendaPro</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .card-form {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .section-title {
+            margin: 30px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+            color: #333;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-calendar-check"></i>
+                <span>AgendaPro</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="/"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="/clientes"><i class="fas fa-users"></i> Clientes</a>
+                <a href="/agendamentos"><i class="fas fa-calendar"></i> Agendamentos</a>
+                <a href="/servicos"><i class="fas fa-cut"></i> Serviços</a>
+                <a href="/colaboradores"><i class="fas fa-user-md"></i> Colaboradores</a>
+                <a href="/configuracoes"><i class="fas fa-cog"></i> WhatsApp</a>
+                <a href="/configuracoes-avancadas"><i class="fas fa-sliders-h"></i> Avançado</a>
+                <a href="/empresa" class="active"><i class="fas fa-building"></i> Minha Empresa</a>
+            </nav>
+        </aside>
 
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use((req, res, next) => {
-    res.setHeader('ngrok-skip-browser-warning', 'true');
-    next();
-});
-app.use(express.static(path.join(__dirname, 'public')));
+        <main class="main-content">
+            <header class="header">
+                <h1>Dados da Empresa</h1>
+                <div class="user-info">
+                    <span id="userName">Carregando...</span>
+                    <i class="fas fa-user-circle"></i>
+                </div>
+            </header>
 
-const db = new sqlite3.Database(path.join(__dirname, 'data', 'agendamento.db'));
+            <div class="card-form">
+                <h2>Informações da Empresa</h2>
+                <p style="color:#666; margin-bottom:20px;">Preencha os dados da sua empresa para personalizar o sistema.</p>
 
-db.serialize(() => {
-    // Tabelas base
-    db.run(`CREATE TABLE IF NOT EXISTS clientes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        telefone TEXT,
-        endereco TEXT,
-        data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
+                <form id="empresaForm" onsubmit="salvarEmpresa(event)">
+                    <div class="form-group">
+                        <label>Nome da Empresa *</label>
+                        <input type="text" id="nome_empresa" required>
+                    </div>
 
-    db.run(`CREATE TABLE IF NOT EXISTS servicos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL,
-        descricao TEXT,
-        preco DECIMAL(10,2),
-        duracao INTEGER,
-        ativo BOOLEAN DEFAULT 1
-    )`);
+                    <div class="row">
+                        <div class="form-group">
+                            <label>CNPJ</label>
+                            <input type="text" id="cnpj">
+                        </div>
+                        <div class="form-group">
+                            <label>Inscrição Estadual</label>
+                            <input type="text" id="inscricao_estadual">
+                        </div>
+                    </div>
 
-    db.run(`CREATE TABLE IF NOT EXISTS colaboradores (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL,
-        especialidade TEXT,
-        telefone TEXT,
-        email TEXT,
-        ativo BOOLEAN DEFAULT 1,
-        foto TEXT,
-        descricao TEXT,
-        data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
+                    <div class="form-group">
+                        <label>Atividade Principal</label>
+                        <input type="text" id="atividade">
+                    </div>
 
-    db.run(`CREATE TABLE IF NOT EXISTS colaborador_servico (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        colaborador_id INTEGER,
-        servico_id INTEGER,
-        FOREIGN KEY (colaborador_id) REFERENCES colaboradores(id),
-        FOREIGN KEY (servico_id) REFERENCES servicos(id),
-        UNIQUE(colaborador_id, servico_id)
-    )`);
+                    <h3 class="section-title">Endereço</h3>
 
-    db.run(`CREATE TABLE IF NOT EXISTS configuracoes_avancadas (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        chave TEXT UNIQUE NOT NULL,
-        valor TEXT NOT NULL,
-        descricao TEXT
-    )`);
+                    <div class="form-group">
+                        <label>Endereço</label>
+                        <input type="text" id="endereco">
+                    </div>
 
-    db.run(`CREATE TABLE IF NOT EXISTS agendamentos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        cliente_id INTEGER,
-        servico_id INTEGER,
-        colaborador_id INTEGER,
-        data_agendamento DATE,
-        hora_agendamento TIME,
-        status TEXT DEFAULT 'pendente',
-        tipo_agendamento TEXT DEFAULT 'unico',
-        recorrencia TEXT,
-        data_fim_recorrencia DATE,
-        agendamento_pai_id INTEGER,
-        cancelado_em DATETIME,
-        motivo_cancelamento TEXT,
-        cancelado_por TEXT,
-        cancelamento_com_custo BOOLEAN DEFAULT 0,
-        observacoes TEXT,
-        data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (cliente_id) REFERENCES clientes(id),
-        FOREIGN KEY (servico_id) REFERENCES servicos(id),
-        FOREIGN KEY (colaborador_id) REFERENCES colaboradores(id)
-    )`);
+                    <div class="row">
+                        <div class="form-group">
+                            <label>Cidade</label>
+                            <input type="text" id="cidade">
+                        </div>
+                        <div class="form-group">
+                            <label>Estado</label>
+                            <input type="text" id="estado" maxlength="2">
+                        </div>
+                        <div class="form-group">
+                            <label>CEP</label>
+                            <input type="text" id="cep">
+                        </div>
+                    </div>
 
-    // Configurações padrão
-    const configs = [
-        ['notificacao_lembrete_horas', '24', 'Horas antes do agendamento para enviar lembrete'],
-        ['cancelamento_sem_custo_horas', '2', 'Horas antes que o cliente pode cancelar sem custo'],
-        ['notificar_cliente_lembrete', 'sim', 'Enviar lembrete para o cliente'],
-        ['notificar_empresa_cancelamento', 'sim', 'Notificar empresa quando cliente cancelar'],
-        ['permitir_recorrente', 'sim', 'Permitir agendamentos recorrentes'],
-        ['whatsapp_empresa', '5511999999999', 'Número de WhatsApp da empresa']
-    ];
+                    <h3 class="section-title">Contato</h3>
 
-    configs.forEach(([chave, valor, descricao]) => {
-        db.get('SELECT COUNT(*) as count FROM configuracoes_avancadas WHERE chave = ?', [chave], (err, row) => {
-            if (row.count === 0) {
-                db.run('INSERT INTO configuracoes_avancadas (chave, valor, descricao) VALUES (?, ?, ?)', [chave, valor, descricao]);
+                    <div class="row">
+                        <div class="form-group">
+                            <label>Telefone</label>
+                            <input type="text" id="telefone">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="email">
+                        </div>
+                        <div class="form-group">
+                            <label>Site</label>
+                            <input type="url" id="site">
+                        </div>
+                    </div>
+
+                    <h3 class="section-title">Personalização</h3>
+
+                    <div class="row">
+                        <div class="form-group">
+                            <label>Cor Primária</label>
+                            <input type="color" id="cor_primaria" value="#667eea">
+                        </div>
+                        <div class="form-group">
+                            <label>Cor Secundária</label>
+                            <input type="color" id="cor_secundaria" value="#764ba2">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Descrição da Empresa</label>
+                        <textarea id="descricao" rows="4"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-save"></i> Salvar Alterações
+                    </button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function carregarDadosUsuario() {
+            const response = await fetch('/api/auth/me');
+            const usuario = await response.json();
+            document.getElementById('userName').textContent = usuario.nome || 'Usuário';
+        }
+
+        async function carregarEmpresa() {
+            const response = await fetch('/api/empresa');
+            const empresa = await response.json();
+            
+            for (let [key, value] of Object.entries(empresa)) {
+                const campo = document.getElementById(key);
+                if (campo) campo.value = value || '';
             }
-        });
-    });
-
-    // Serviços padrão
-    db.get('SELECT COUNT(*) as count FROM servicos', [], (err, row) => {
-        if (row.count === 0) {
-            const servicos = [
-                ['Consulta Simples', 'Consulta básica', 100.00, 30],
-                ['Consulta Completa', 'Consulta com exames', 200.00, 60],
-                ['Procedimento', 'Procedimento simples', 300.00, 90],
-                ['Retorno', 'Consulta de retorno', 80.00, 20]
-            ];
-            servicos.forEach(s => db.run('INSERT INTO servicos (nome, descricao, preco, duracao) VALUES (?, ?, ?, ?)', s));
         }
-    });
 
-    // Colaboradores de exemplo
-    db.get('SELECT COUNT(*) as count FROM colaboradores', [], (err, row) => {
-        if (row.count === 0) {
-            const cols = [
-                ['Ana Silva', 'Massoterapeuta', '11988887777', 'ana@exemplo.com', 'Especialista em massagem relaxante'],
-                ['Carlos Santos', 'Quiroprata', '11977776666', 'carlos@exemplo.com', 'Quiroprata com 10 anos de experiência'],
-                ['Mariana Costa', 'Esteticista', '11966665555', 'mariana@exemplo.com', 'Especialista em limpeza de pele']
-            ];
-            cols.forEach(c => db.run('INSERT INTO colaboradores (nome, especialidade, telefone, email, descricao) VALUES (?, ?, ?, ?, ?)', c));
+        async function salvarEmpresa(event) {
+            event.preventDefault();
+
+            const dados = {
+                nome_empresa: document.getElementById('nome_empresa').value,
+                cnpj: document.getElementById('cnpj').value,
+                inscricao_estadual: document.getElementById('inscricao_estadual').value,
+                atividade: document.getElementById('atividade').value,
+                endereco: document.getElementById('endereco').value,
+                cidade: document.getElementById('cidade').value,
+                estado: document.getElementById('estado').value,
+                cep: document.getElementById('cep').value,
+                telefone: document.getElementById('telefone').value,
+                email: document.getElementById('email').value,
+                site: document.getElementById('site').value,
+                cor_primaria: document.getElementById('cor_primaria').value,
+                cor_secundaria: document.getElementById('cor_secundaria').value,
+                descricao: document.getElementById('descricao').value
+            };
+
+            const response = await fetch('/api/empresa', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados)
+            });
+
+            const result = await response.json();
+            alert(result.mensagem || '✅ Dados salvos!');
         }
-    });
 
-    // Vínculos exemplo
-    db.get('SELECT COUNT(*) as count FROM colaborador_servico', [], (err, row) => {
-        if (row.count === 0) {
-            const vinculos = [[1,1], [1,2], [2,3], [3,4]];
-            vinculos.forEach(v => db.run('INSERT OR IGNORE INTO colaborador_servico (colaborador_id, servico_id) VALUES (?, ?)', v));
-        }
-    });
-});
-
-// ==================== CONFIGURAÇÕES ====================
-app.get('/api/configuracoes/:chave', (req, res) => {
-    db.get('SELECT valor FROM configuracoes_avancadas WHERE chave = ?', [req.params.chave], (err, row) => {
-        if (err) return res.status(500).json({ erro: err.message });
-        res.json(row || { valor: '' });
-    });
-});
-
-app.post('/api/configuracoes', (req, res) => {
-    const { chave, valor } = req.body;
-    db.run('UPDATE configuracoes_avancadas SET valor = ? WHERE chave = ?', [valor, chave], function(err) {
-        if (err) return res.status(500).json({ erro: err.message });
-        res.json({ mensagem: '✅ Configuração salva!' });
-    });
-});
-
-// ==================== CLIENTES ====================
-app.get('/api/clientes', (req, res) => {
-    db.all('SELECT * FROM clientes ORDER BY nome', [], (err, rows) => {
-        if (err) return res.status(500).json({ erro: err.message });
-        res.json(rows);
-    });
-});
-
-app.post('/api/clientes', (req, res) => {
-    const { nome, email, telefone, endereco } = req.body;
-    if (!nome || !email) return res.status(400).json({ erro: 'Nome e email obrigatórios' });
-    db.run('INSERT INTO clientes (nome, email, telefone, endereco) VALUES (?, ?, ?, ?)',
-        [nome, email, telefone, endereco], function(err) {
-            if (err) return res.status(400).json({ erro: err.message });
-            res.json({ mensagem: '✅ Cliente cadastrado!', id: this.lastID });
-        });
-});
-
-app.put('/api/clientes/:id', (req, res) => {
-    const { nome, email, telefone, endereco } = req.body;
-    db.run('UPDATE clientes SET nome = ?, email = ?, telefone = ?, endereco = ? WHERE id = ?',
-        [nome, email, telefone, endereco, req.params.id], function(err) {
-            if (err) return res.status(400).json({ erro: err.message });
-            if (this.changes === 0) return res.status(404).json({ erro: 'Cliente não encontrado' });
-            res.json({ mensagem: '✅ Cliente atualizado!' });
-        });
-});
-
-app.delete('/api/clientes/:id', (req, res) => {
-    db.run('DELETE FROM clientes WHERE id = ?', [req.params.id], function(err) {
-        if (err) return res.status(500).json({ erro: err.message });
-        if (this.changes === 0) return res.status(404).json({ erro: 'Cliente não encontrado' });
-        res.json({ mensagem: '✅ Cliente deletado!' });
-    });
-});
-
-// ==================== SERVIÇOS ====================
-app.get('/api/servicos', (req, res) => {
-    db.all('SELECT * FROM servicos WHERE ativo = 1 ORDER BY nome', [], (err, rows) => {
-        if (err) return res.status(500).json({ erro: err.message });
-        res.json(rows);
-    });
-});
-
-app.post('/api/servicos', (req, res) => {
-    const { nome, descricao, preco, duracao } = req.body;
-    if (!nome) return res.status(400).json({ erro: 'Nome obrigatório' });
-    db.run('INSERT INTO servicos (nome, descricao, preco, duracao) VALUES (?, ?, ?, ?)',
-        [nome, descricao, preco, duracao], function(err) {
-            if (err) return res.status(400).json({ erro: err.message });
-            res.json({ mensagem: '✅ Serviço cadastrado!', id: this.lastID });
-        });
-});
-
-app.put('/api/servicos/:id', (req, res) => {
-    const { nome, descricao, preco, duracao } = req.body;
-    db.run('UPDATE servicos SET nome = ?, descricao = ?, preco = ?, duracao = ? WHERE id = ?',
-        [nome, descricao, preco, duracao, req.params.id], function(err) {
-            if (err) return res.status(400).json({ erro: err.message });
-            if (this.changes === 0) return res.status(404).json({ erro: 'Serviço não encontrado' });
-            res.json({ mensagem: '✅ Serviço atualizado!' });
-        });
-});
-
-app.put('/api/servicos/:id/toggle', (req, res) => {
-    db.run('UPDATE servicos SET ativo = NOT ativo WHERE id = ?', [req.params.id], function(err) {
-        if (err) return res.status(500).json({ erro: err.message });
-        if (this.changes === 0) return res.status(404).json({ erro: 'Serviço não encontrado' });
-        res.json({ mensagem: '✅ Status do serviço alterado!' });
-    });
-});
-
-// ==================== COLABORADORES ====================
-app.get('/api/colaboradores', (req, res) => {
-    db.all('SELECT * FROM colaboradores WHERE ativo = 1 ORDER BY nome', [], (err, rows) => {
-        if (err) return res.status(500).json({ erro: err.message });
-        res.json(rows);
-    });
-});
-
-app.post('/api/colaboradores', (req, res) => {
-    const { nome, especialidade, telefone, email, descricao } = req.body;
-    db.run('INSERT INTO colaboradores (nome, especialidade, telefone, email, descricao) VALUES (?, ?, ?, ?, ?)',
-        [nome, especialidade, telefone, email, descricao], function(err) {
-            if (err) return res.status(400).json({ erro: err.message });
-            res.json({ id: this.lastID, mensagem: '✅ Colaborador cadastrado!' });
-        });
-});
-
-app.post('/api/colaborador-servico', (req, res) => {
-    const { colaborador_id, servico_id } = req.body;
-    db.run('INSERT OR IGNORE INTO colaborador_servico (colaborador_id, servico_id) VALUES (?, ?)',
-        [colaborador_id, servico_id], function(err) {
-            if (err) return res.status(400).json({ erro: err.message });
-            res.json({ mensagem: '✅ Serviço vinculado ao colaborador!' });
-        });
-});
-
-app.get('/api/servico/:id/colaboradores', (req, res) => {
-    db.all(`
-        SELECT c.* FROM colaboradores c
-        JOIN colaborador_servico cs ON c.id = cs.colaborador_id
-        WHERE cs.servico_id = ? AND c.ativo = 1
-    `, [req.params.id], (err, rows) => {
-        if (err) return res.status(500).json({ erro: err.message });
-        res.json(rows);
-    });
-});
-
-// ==================== AGENDAMENTOS ====================
-app.get('/api/agendamentos', (req, res) => {
-    const sql = `
-        SELECT a.*, c.nome as cliente_nome, c.telefone, s.nome as servico_nome, s.preco, col.nome as colaborador_nome
-        FROM agendamentos a
-        LEFT JOIN clientes c ON a.cliente_id = c.id
-        LEFT JOIN servicos s ON a.servico_id = s.id
-        LEFT JOIN colaboradores col ON a.colaborador_id = col.id
-        ORDER BY a.data_agendamento DESC, a.hora_agendamento DESC
-    `;
-    db.all(sql, [], (err, rows) => {
-        if (err) return res.status(500).json({ erro: err.message });
-        res.json(rows);
-    });
-});
-
-app.post('/api/agendamentos', (req, res) => {
-    const { cliente_id, servico_id, colaborador_id, data_agendamento, hora_agendamento, observacoes, tipo_agendamento, recorrencia, data_fim_recorrencia } = req.body;
-    if (!cliente_id || !servico_id || !data_agendamento || !hora_agendamento) {
-        return res.status(400).json({ erro: 'Campos obrigatórios faltando' });
-    }
-
-    db.run(
-        `INSERT INTO agendamentos 
-         (cliente_id, servico_id, colaborador_id, data_agendamento, hora_agendamento, observacoes, tipo_agendamento, recorrencia, data_fim_recorrencia) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [cliente_id, servico_id, colaborador_id, data_agendamento, hora_agendamento, observacoes, tipo_agendamento || 'unico', recorrencia, data_fim_recorrencia],
-        function(err) {
-            if (err) return res.status(400).json({ erro: err.message });
-            res.json({ mensagem: '✅ Agendamento realizado!', id: this.lastID });
-        }
-    );
-});
-
-app.put('/api/agendamentos/:id/cancelar', (req, res) => {
-    const { motivo, cancelado_por } = req.body;
-    const id = req.params.id;
-
-    db.get('SELECT valor FROM configuracoes_avancadas WHERE chave = ?', ['cancelamento_sem_custo_horas'], (err, config) => {
-        const horasLimite = config ? parseInt(config.valor) : 2;
-        db.get('SELECT * FROM agendamentos WHERE id = ?', [id], (err, agendamento) => {
-            if (!agendamento) return res.status(404).json({ erro: 'Agendamento não encontrado' });
-            const dataAgendamento = new Date(agendamento.data_agendamento + 'T' + agendamento.hora_agendamento);
-            const agora = new Date();
-            const diffHoras = (dataAgendamento - agora) / (1000 * 60 * 60);
-            const temCusto = cancelado_por === 'cliente' && diffHoras < horasLimite;
-
-            db.run(
-                `UPDATE agendamentos SET status = 'cancelado', cancelado_em = CURRENT_TIMESTAMP, motivo_cancelamento = ?, cancelado_por = ?, cancelamento_com_custo = ? WHERE id = ?`,
-                [motivo, cancelado_por, temCusto ? 1 : 0, id],
-                function(err) {
-                    if (err) return res.status(500).json({ erro: err.message });
-                    res.json({
-                        mensagem: '✅ Agendamento cancelado!',
-                        tem_custo: temCusto,
-                        aviso: temCusto ? 'Cancelamento fora do prazo, pode gerar custo.' : 'Cancelamento dentro do prazo.'
-                    });
-                }
-            );
-        });
-    });
-});
-
-app.get('/api/agendamentos/telefone/:telefone', (req, res) => {
-    const sql = `
-        SELECT a.*, s.nome as servico_nome, s.preco, col.nome as colaborador_nome
-        FROM agendamentos a
-        LEFT JOIN servicos s ON a.servico_id = s.id
-        LEFT JOIN colaboradores col ON a.colaborador_id = col.id
-        WHERE a.cliente_id IN (SELECT id FROM clientes WHERE telefone = ?)
-        ORDER BY a.data_agendamento DESC
-    `;
-    db.all(sql, [req.params.telefone], (err, rows) => {
-        if (err) return res.status(500).json({ erro: err.message });
-        res.json(rows);
-    });
-});
-
-// ==================== DASHBOARD ====================
-app.get('/api/dashboard', (req, res) => {
-    const hoje = new Date().toISOString().split('T')[0];
-    db.get(`
-        SELECT
-            (SELECT COUNT(*) FROM clientes) as total_clientes,
-            (SELECT COUNT(*) FROM servicos WHERE ativo = 1) as total_servicos,
-            (SELECT COUNT(*) FROM colaboradores WHERE ativo = 1) as total_colaboradores,
-            (SELECT COUNT(*) FROM agendamentos WHERE data_agendamento = ?) as agendamentos_hoje,
-            (SELECT COUNT(*) FROM agendamentos WHERE status = 'pendente') as agendamentos_pendentes
-    `, [hoje], (err, row) => {
-        if (err) return res.status(500).json({ erro: err.message });
-        res.json(row);
-    });
-});
-
-// ==================== PÁGINAS ====================
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-app.get('/clientes', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'clientes.html')));
-app.get('/agendamentos', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'agendamentos.html')));
-app.get('/servicos', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'servicos.html')));
-app.get('/colaboradores', (req, res) => res.sendFile(path.join(__dirname, 'public', 'pages', 'colaboradores.html')));
-app.get('/configuracoes', (req, res) => res.sendFile(path.join(__dirname, 'public', 'configuracoes.html')));
-app.get('/configuracoes-avancadas', (req, res) => res.sendFile(path.join(__dirname, 'public', 'configuracoes_avancadas.html')));
-
-app.listen(PORT, () => {
-    console.log(`
-    ╔══════════════════════════════════════════╗
-    ║   🏛️  SISTEMA DE AGENDAMENTO v3.0        ║
-    ║                                          ║
-    ║  🚀 Servidor: http://localhost:${PORT}     ║
-    ║  👥 Clientes: http://localhost:${PORT}/clientes ║
-    ║  📅 Agendamentos: http://localhost:${PORT}/agendamentos ║
-    ║  💼 Serviços: http://localhost:${PORT}/servicos ║
-    ║  🧑‍🤝‍🧑 Colaboradores: http://localhost:${PORT}/colaboradores ║
-    ║  ⚙️ Config: http://localhost:${PORT}/configuracoes ║
-    ║  🔧 Avançado: http://localhost:${PORT}/configuracoes-avancadas ║
-    ║                                          ║
-    ║  ✅ Sistema completo pronto!             ║
-    ╚══════════════════════════════════════════╝
-    `);
-});
+        carregarDadosUsuario();
+        carregarEmpresa();
+    </script>
+</body>
+</html>
