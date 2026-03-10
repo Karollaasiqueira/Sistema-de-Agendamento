@@ -3,12 +3,19 @@ const cors = require('cors');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Middleware para remover aviso do ngrok (opcional)
+app.use((req, res, next) => {
+    res.setHeader('ngrok-skip-browser-warning', 'true');
+    next();
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Banco de Dados
@@ -56,6 +63,26 @@ db.serialize(() => {
         )
     `);
 
+    // 🔥 NOVA TABELA: Configurações (para WhatsApp do gestor)
+    db.run(`
+        CREATE TABLE IF NOT EXISTS configuracoes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            chave TEXT UNIQUE NOT NULL,
+            valor TEXT NOT NULL
+        )
+    `);
+
+    // Inserir configuração padrão do WhatsApp se não existir
+    db.get("SELECT COUNT(*) as count FROM configuracoes WHERE chave = 'whatsapp_empresa'", (err, row) => {
+        if (row.count === 0) {
+            db.run(
+                'INSERT INTO configuracoes (chave, valor) VALUES (?, ?)',
+                ['whatsapp_empresa', '5511999999999'] // Número padrão (mude depois)
+            );
+            console.log('✅ Configuração padrão do WhatsApp criada');
+        }
+    });
+
     // Inserir serviços padrão se não existirem
     db.get("SELECT COUNT(*) as count FROM servicos", (err, row) => {
         if (row.count === 0) {
@@ -79,8 +106,50 @@ db.serialize(() => {
 
 console.log('✅ Banco de dados conectado');
 
-// Rotas da API
-// Clientes
+// ============================================
+// ROTAS DA API
+// ============================================
+
+// ----------------------------
+// CONFIGURAÇÕES (WhatsApp)
+// ----------------------------
+
+// Buscar configuração por chave
+app.get('/api/configuracoes/:chave', (req, res) => {
+    db.get(
+        'SELECT valor FROM configuracoes WHERE chave = ?',
+        [req.params.chave],
+        (err, row) => {
+            if (err) {
+                res.status(500).json({ erro: err.message });
+                return;
+            }
+            res.json(row || { valor: '' });
+        }
+    );
+});
+
+// Salvar configuração
+app.post('/api/configuracoes', (req, res) => {
+    const { chave, valor } = req.body;
+    
+    db.run(
+        'UPDATE configuracoes SET valor = ? WHERE chave = ?',
+        [valor, chave],
+        function(err) {
+            if (err) {
+                res.status(500).json({ erro: err.message });
+                return;
+            }
+            res.json({ mensagem: '✅ Configuração salva!' });
+        }
+    );
+});
+
+// ----------------------------
+// CLIENTES
+// ----------------------------
+
 app.get('/api/clientes', (req, res) => {
     db.all('SELECT * FROM clientes ORDER BY nome', [], (err, rows) => {
         if (err) {
@@ -148,7 +217,10 @@ app.delete('/api/clientes/:id', (req, res) => {
     });
 });
 
-// Serviços
+// ----------------------------
+// SERVIÇOS
+// ----------------------------
+
 app.get('/api/servicos', (req, res) => {
     db.all('SELECT * FROM servicos WHERE ativo = 1 ORDER BY nome', [], (err, rows) => {
         if (err) {
@@ -220,10 +292,13 @@ app.put('/api/servicos/:id/toggle', (req, res) => {
     );
 });
 
-// Agendamentos
+// ----------------------------
+// AGENDAMENTOS
+// ----------------------------
+
 app.get('/api/agendamentos', (req, res) => {
     const sql = `
-        SELECT a.*, c.nome as cliente_nome, s.nome as servico_nome, s.preco 
+        SELECT a.*, c.nome as cliente_nome, c.telefone, s.nome as servico_nome, s.preco 
         FROM agendamentos a
         LEFT JOIN clientes c ON a.cliente_id = c.id
         LEFT JOIN servicos s ON a.servico_id = s.id
@@ -310,14 +385,36 @@ app.put('/api/agendamentos/:id/status', (req, res) => {
     );
 });
 
-// Dashboard
+// Buscar agendamentos por telefone do cliente
+app.get('/api/agendamentos/telefone/:telefone', (req, res) => {
+    const sql = `
+        SELECT a.*, s.nome as servico_nome, s.preco 
+        FROM agendamentos a
+        LEFT JOIN servicos s ON a.servico_id = s.id
+        WHERE a.cliente_id IN (SELECT id FROM clientes WHERE telefone = ?)
+        ORDER BY a.data_agendamento DESC
+    `;
+    
+    db.all(sql, [req.params.telefone], (err, rows) => {
+        if (err) {
+            res.status(500).json({ erro: err.message });
+            return;
+        }
+        res.json(rows);
+    });
+});
+
+// ----------------------------
+// DASHBOARD
+// ----------------------------
+
 app.get('/api/dashboard', (req, res) => {
     const hoje = new Date().toISOString().split('T')[0];
     
     db.get(`
         SELECT 
             (SELECT COUNT(*) FROM clientes) as total_clientes,
-            (SELECT COUNT(*) FROM servicos) as total_servicos,
+            (SELECT COUNT(*) FROM servicos WHERE ativo = 1) as total_servicos,
             (SELECT COUNT(*) FROM agendamentos WHERE data_agendamento = ?) as agendamentos_hoje,
             (SELECT COUNT(*) FROM agendamentos WHERE status = 'pendente') as agendamentos_pendentes
     `, [hoje], (err, row) => {
@@ -329,7 +426,10 @@ app.get('/api/dashboard', (req, res) => {
     });
 });
 
-// Páginas
+// ----------------------------
+// ROTAS DE PÁGINAS
+// ----------------------------
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -346,7 +446,14 @@ app.get('/servicos', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'pages', 'servicos.html'));
 });
 
-// Iniciar servidor
+app.get('/configuracoes', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'configuracoes.html'));
+});
+
+// ============================================
+// INICIAR SERVIDOR
+// ============================================
+
 app.listen(PORT, () => {
     console.log(`
     ╔══════════════════════════════════════════╗
@@ -357,6 +464,7 @@ app.listen(PORT, () => {
     ║  👥 Clientes: http://localhost:${PORT}/clientes ║
     ║  📅 Agendamentos: http://localhost:${PORT}/agendamentos ║
     ║  💼 Serviços: http://localhost:${PORT}/servicos ║
+    ║  ⚙️ Config: http://localhost:${PORT}/configuracoes ║
     ║                                          ║
     ║  ✅ Sistema pronto para o cliente!       ║
     ╚══════════════════════════════════════════╝
