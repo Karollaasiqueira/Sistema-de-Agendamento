@@ -10,12 +10,18 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ==================== MIDDLEWARES ====================
+// ==================== MIDDLEWARES GLOBAIS ====================
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
     res.setHeader('ngrok-skip-browser-warning', 'true');
+    next();
+});
+
+// Garantir que todas as respostas de API sejam JSON
+app.use('/api/*', (req, res, next) => {
+    res.setHeader('Content-Type', 'application/json');
     next();
 });
 
@@ -30,7 +36,6 @@ app.use(session({
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ==================== BANCO DE DADOS ====================
-// Garantir que a pasta data existe
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
@@ -49,7 +54,6 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 // ==================== CRIAÇÃO DAS TABELAS ====================
 db.serialize(() => {
-    // Tabela de usuários (gestores)
     db.run(`CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
@@ -60,11 +64,8 @@ db.serialize(() => {
         ativo BOOLEAN DEFAULT 1,
         tipo TEXT DEFAULT 'gestor',
         data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`, (err) => {
-        if (err) console.error('❌ Erro ao criar usuarios:', err.message);
-    });
+    )`);
 
-    // Tabela de empresas
     db.run(`CREATE TABLE IF NOT EXISTS empresas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER UNIQUE,
@@ -85,11 +86,8 @@ db.serialize(() => {
         descricao TEXT,
         data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-    )`, (err) => {
-        if (err) console.error('❌ Erro ao criar empresas:', err.message);
-    });
+    )`);
 
-    // Tabela de clientes com data de nascimento
     db.run(`CREATE TABLE IF NOT EXISTS clientes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER,
@@ -100,11 +98,8 @@ db.serialize(() => {
         endereco TEXT,
         data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-    )`, (err) => {
-        if (err) console.error('❌ Erro ao criar clientes:', err.message);
-    });
+    )`);
 
-    // Tabela de serviços
     db.run(`CREATE TABLE IF NOT EXISTS servicos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER,
@@ -114,11 +109,8 @@ db.serialize(() => {
         duracao INTEGER,
         ativo BOOLEAN DEFAULT 1,
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-    )`, (err) => {
-        if (err) console.error('❌ Erro ao criar servicos:', err.message);
-    });
+    )`);
 
-    // Tabela de colaboradores
     db.run(`CREATE TABLE IF NOT EXISTS colaboradores (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER,
@@ -131,11 +123,8 @@ db.serialize(() => {
         descricao TEXT,
         data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-    )`, (err) => {
-        if (err) console.error('❌ Erro ao criar colaboradores:', err.message);
-    });
+    )`);
 
-    // Tabela de vínculo colaborador-serviço
     db.run(`CREATE TABLE IF NOT EXISTS colaborador_servico (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER,
@@ -145,11 +134,8 @@ db.serialize(() => {
         FOREIGN KEY (colaborador_id) REFERENCES colaboradores(id),
         FOREIGN KEY (servico_id) REFERENCES servicos(id),
         UNIQUE(colaborador_id, servico_id)
-    )`, (err) => {
-        if (err) console.error('❌ Erro ao criar colaborador_servico:', err.message);
-    });
+    )`);
 
-    // Tabela de agendamentos
     db.run(`CREATE TABLE IF NOT EXISTS agendamentos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER,
@@ -173,11 +159,8 @@ db.serialize(() => {
         FOREIGN KEY (cliente_id) REFERENCES clientes(id),
         FOREIGN KEY (servico_id) REFERENCES servicos(id),
         FOREIGN KEY (colaborador_id) REFERENCES colaboradores(id)
-    )`, (err) => {
-        if (err) console.error('❌ Erro ao criar agendamentos:', err.message);
-    });
+    )`);
 
-    // Tabela de configurações avançadas
     db.run(`CREATE TABLE IF NOT EXISTS configuracoes_avancadas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER,
@@ -186,31 +169,17 @@ db.serialize(() => {
         descricao TEXT,
         UNIQUE(usuario_id, chave),
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-    )`, (err) => {
-        if (err) console.error('❌ Erro ao criar configuracoes_avancadas:', err.message);
-    });
-
-    // ==================== DADOS INICIAIS ====================
+    )`);
 
     // Inserir usuário admin padrão
     db.get("SELECT COUNT(*) as count FROM usuarios WHERE email = 'admin@agendapro.com'", [], (err, row) => {
-        if (err) {
-            console.error('❌ Erro ao verificar admin:', err.message);
-            return;
-        }
-        if (row.count === 0) {
+        if (!err && row.count === 0) {
             const senhaHash = bcrypt.hashSync('admin123', 10);
             db.run(
                 'INSERT INTO usuarios (nome, email, senha, tipo) VALUES (?, ?, ?, ?)',
-                ['Administrador', 'admin@agendapro.com', senhaHash, 'admin'],
-                function(err) {
-                    if (err) {
-                        console.error('❌ Erro ao criar admin:', err.message);
-                    } else {
-                        console.log('✅ Usuário admin criado: admin@agendapro.com / admin123');
-                    }
-                }
+                ['Administrador', 'admin@agendapro.com', senhaHash, 'admin']
             );
+            console.log('✅ Usuário admin criado: admin@agendapro.com / admin123');
         }
     });
 
@@ -264,14 +233,13 @@ db.serialize(() => {
     });
 });
 
-// ==================== ROTA DE DIAGNÓSTICO ====================
+// ==================== ROTA DE DIAGNÓSTICO (PÚBLICA) ====================
 app.get('/api/diagnostico', (req, res) => {
     db.all("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name", [], (err, tables) => {
         if (err) {
             return res.status(500).json({ erro: err.message });
         }
         
-        // Contar registros em cada tabela
         const promessas = tables.map(t => {
             return new Promise((resolve) => {
                 db.get(`SELECT COUNT(*) as count FROM ${t.name}`, [], (err, row) => {
@@ -290,21 +258,6 @@ app.get('/api/diagnostico', (req, res) => {
         });
     });
 });
-
-// ==================== MIDDLEWARE DE AUTENTICAÇÃO ====================
-function verificarAutenticacao(req, res, next) {
-    if (req.session && req.session.usuarioId) {
-        req.usuarioId = req.session.usuarioId;
-        req.usuarioTipo = req.session.usuarioTipo;
-        next();
-    } else {
-        if (req.path.startsWith('/api/')) {
-            res.status(401).json({ erro: 'Não autenticado' });
-        } else {
-            res.redirect('/login.html');
-        }
-    }
-}
 
 // ==================== ROTAS PÚBLICAS ====================
 app.get('/login.html', (req, res) => {
@@ -370,7 +323,9 @@ app.post('/api/auth/cadastro', (req, res) => {
 app.post('/api/auth/login', (req, res) => {
     const { email, senha } = req.body;
 
-    if (!email || !senha) return res.status(400).json({ erro: 'Email e senha obrigatórios' });
+    if (!email || !senha) {
+        return res.status(400).json({ erro: 'Email e senha obrigatórios' });
+    }
 
     db.get('SELECT * FROM usuarios WHERE email = ? AND ativo = 1', [email], (err, usuario) => {
         if (err) return res.status(500).json({ erro: err.message });
@@ -412,7 +367,22 @@ app.get('/api/auth/me', (req, res) => {
     });
 });
 
-// ==================== ROTAS PROTEGIDAS ====================
+// ==================== MIDDLEWARE DE AUTENTICAÇÃO ====================
+function verificarAutenticacao(req, res, next) {
+    if (req.session && req.session.usuarioId) {
+        req.usuarioId = req.session.usuarioId;
+        req.usuarioTipo = req.session.usuarioTipo;
+        next();
+    } else {
+        if (req.path.startsWith('/api/')) {
+            return res.status(401).json({ erro: 'Não autenticado' });
+        } else {
+            return res.redirect('/login.html');
+        }
+    }
+}
+
+// ==================== APLICAR AUTENTICAÇÃO NAS ROTAS DE API ====================
 app.use('/api/clientes', verificarAutenticacao);
 app.use('/api/servicos', verificarAutenticacao);
 app.use('/api/colaboradores', verificarAutenticacao);
@@ -422,7 +392,7 @@ app.use('/api/dashboard', verificarAutenticacao);
 app.use('/api/aniversariantes', verificarAutenticacao);
 app.use('/api/empresa', verificarAutenticacao);
 
-// ==================== ROTAS DE CLIENTES ====================
+// ==================== ROTAS DE API PROTEGIDAS ====================
 app.get('/api/clientes', (req, res) => {
     db.all('SELECT * FROM clientes WHERE usuario_id = ? ORDER BY nome', [req.session.usuarioId], (err, rows) => {
         if (err) {
@@ -435,7 +405,9 @@ app.get('/api/clientes', (req, res) => {
 
 app.post('/api/clientes', (req, res) => {
     const { nome, email, telefone, data_nascimento, endereco } = req.body;
-    if (!nome || !email) return res.status(400).json({ erro: 'Nome e email obrigatórios' });
+    if (!nome || !email) {
+        return res.status(400).json({ erro: 'Nome e email obrigatórios' });
+    }
     
     db.run(
         'INSERT INTO clientes (usuario_id, nome, email, telefone, data_nascimento, endereco) VALUES (?, ?, ?, ?, ?, ?)',
@@ -450,48 +422,21 @@ app.post('/api/clientes', (req, res) => {
     );
 });
 
-app.put('/api/clientes/:id', (req, res) => {
-    const { nome, email, telefone, data_nascimento, endereco } = req.body;
-    db.run(
-        'UPDATE clientes SET nome = ?, email = ?, telefone = ?, data_nascimento = ?, endereco = ? WHERE id = ? AND usuario_id = ?',
-        [nome, email, telefone, data_nascimento, endereco, req.params.id, req.session.usuarioId],
-        function(err) {
-            if (err) {
-                console.error('❌ Erro ao atualizar cliente:', err.message);
-                return res.status(400).json({ erro: err.message });
-            }
-            if (this.changes === 0) return res.status(404).json({ erro: 'Cliente não encontrado' });
-            res.json({ mensagem: '✅ Cliente atualizado!' });
-        }
-    );
-});
-
-app.delete('/api/clientes/:id', (req, res) => {
-    db.run('DELETE FROM clientes WHERE id = ? AND usuario_id = ?', [req.params.id, req.session.usuarioId], function(err) {
-        if (err) {
-            console.error('❌ Erro ao deletar cliente:', err.message);
-            return res.status(500).json({ erro: err.message });
-        }
-        if (this.changes === 0) return res.status(404).json({ erro: 'Cliente não encontrado' });
-        res.json({ mensagem: '✅ Cliente deletado!' });
-    });
-});
-
-// ==================== ROTAS DE SERVIÇOS ====================
 app.get('/api/servicos', (req, res) => {
     db.all('SELECT * FROM servicos WHERE usuario_id = ? AND ativo = 1 ORDER BY nome', [req.session.usuarioId], (err, rows) => {
         if (err) {
             console.error('❌ Erro em /api/servicos:', err.message);
             return res.status(500).json({ erro: err.message });
         }
-        // GARANTIR que sempre retorne um array
         res.json(rows || []);
     });
 });
 
 app.post('/api/servicos', (req, res) => {
     const { nome, descricao, preco, duracao } = req.body;
-    if (!nome) return res.status(400).json({ erro: 'Nome obrigatório' });
+    if (!nome) {
+        return res.status(400).json({ erro: 'Nome obrigatório' });
+    }
     
     db.run(
         'INSERT INTO servicos (usuario_id, nome, descricao, preco, duracao) VALUES (?, ?, ?, ?, ?)',
@@ -506,7 +451,6 @@ app.post('/api/servicos', (req, res) => {
     );
 });
 
-// ==================== ROTAS DE COLABORADORES ====================
 app.get('/api/colaboradores', (req, res) => {
     db.all('SELECT * FROM colaboradores WHERE usuario_id = ? AND ativo = 1 ORDER BY nome', [req.session.usuarioId], (err, rows) => {
         if (err) {
@@ -516,9 +460,12 @@ app.get('/api/colaboradores', (req, res) => {
         res.json(rows || []);
     });
 });
+
 app.post('/api/colaboradores', (req, res) => {
     const { nome, especialidade, telefone, email, descricao } = req.body;
-    if (!nome) return res.status(400).json({ erro: 'Nome obrigatório' });
+    if (!nome) {
+        return res.status(400).json({ erro: 'Nome obrigatório' });
+    }
     
     db.run(
         'INSERT INTO colaboradores (usuario_id, nome, especialidade, telefone, email, descricao) VALUES (?, ?, ?, ?, ?, ?)',
@@ -533,7 +480,6 @@ app.post('/api/colaboradores', (req, res) => {
     );
 });
 
-// ==================== ROTAS DE AGENDAMENTOS ====================
 app.get('/api/agendamentos', (req, res) => {
     const sql = `
         SELECT a.*, c.nome as cliente_nome, c.telefone, c.data_nascimento,
@@ -554,88 +500,6 @@ app.get('/api/agendamentos', (req, res) => {
     });
 });
 
-app.post('/api/agendamentos', (req, res) => {
-    const { cliente_id, servico_id, colaborador_id, data_agendamento, hora_agendamento, observacoes, tipo_agendamento, recorrencia, data_fim_recorrencia } = req.body;
-    
-    if (!cliente_id || !servico_id || !data_agendamento || !hora_agendamento) {
-        return res.status(400).json({ erro: 'Campos obrigatórios faltando' });
-    }
-
-    db.run(
-        `INSERT INTO agendamentos 
-         (usuario_id, cliente_id, servico_id, colaborador_id, data_agendamento, hora_agendamento, observacoes, tipo_agendamento, recorrencia, data_fim_recorrencia) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [req.session.usuarioId, cliente_id, servico_id, colaborador_id, data_agendamento, hora_agendamento, observacoes, tipo_agendamento || 'unico', recorrencia, data_fim_recorrencia],
-        function(err) {
-            if (err) {
-                console.error('❌ Erro ao criar agendamento:', err.message);
-                return res.status(400).json({ erro: err.message });
-            }
-            res.json({ mensagem: '✅ Agendamento realizado!', id: this.lastID });
-        }
-    );
-});
-
-// ==================== ROTAS DE ANIVERSARIANTES ====================
-app.get('/api/aniversariantes/hoje', (req, res) => {
-    const hoje = new Date();
-    const dia = hoje.getDate().toString().padStart(2, '0');
-    const mes = (hoje.getMonth() + 1).toString().padStart(2, '0');
-
-    db.all(
-        `SELECT * FROM clientes 
-         WHERE usuario_id = ? 
-         AND data_nascimento IS NOT NULL 
-         AND strftime('%m-%d', data_nascimento) = ? 
-         ORDER BY nome`,
-        [req.session.usuarioId, `${mes}-${dia}`],
-        (err, rows) => {
-            if (err) {
-                console.error('❌ Erro em /api/aniversariantes/hoje:', err.message);
-                return res.status(500).json({ erro: err.message });
-            }
-            res.json(rows || []);
-        }
-    );
-});
-
-// ==================== ROTAS DE CONFIGURAÇÕES ====================
-app.get('/api/configuracoes/:chave', (req, res) => {
-    db.get(
-        'SELECT valor FROM configuracoes_avancadas WHERE usuario_id = ? AND chave = ?',
-        [req.session.usuarioId, req.params.chave],
-        (err, row) => {
-            if (err) {
-                console.error('❌ Erro ao buscar configuração:', err.message);
-                return res.status(500).json({ erro: err.message });
-            }
-            res.json(row || { valor: '' });
-        }
-    );
-});
-
-app.post('/api/configuracoes', (req, res) => {
-    const { chave, valor } = req.body;
-    db.run(
-        'UPDATE configuracoes_avancadas SET valor = ? WHERE usuario_id = ? AND chave = ?',
-        [valor, req.session.usuarioId, chave],
-        function(err) {
-            if (err) {
-                console.error('❌ Erro ao salvar configuração:', err.message);
-                return res.status(500).json({ erro: err.message });
-            }
-            if (this.changes === 0) {
-                db.run(
-                    'INSERT INTO configuracoes_avancadas (usuario_id, chave, valor) VALUES (?, ?, ?)',
-                    [req.session.usuarioId, chave, valor]
-                );
-            }
-            res.json({ mensagem: '✅ Configuração salva!' });
-        }
-    );
-});
-
-// ==================== ROTAS DE DASHBOARD ====================
 app.get('/api/dashboard', (req, res) => {
     const hoje = new Date().toISOString().split('T')[0];
     const dia = new Date().getDate().toString().padStart(2, '0');
@@ -666,17 +530,6 @@ app.get('/api/dashboard', (req, res) => {
             agendamentos_pendentes: 0,
             aniversariantes_hoje: 0
         });
-    });
-});
-
-// ==================== ROTAS DE EMPRESA ====================
-app.get('/api/empresa', (req, res) => {
-    db.get('SELECT * FROM empresas WHERE usuario_id = ?', [req.session.usuarioId], (err, row) => {
-        if (err) {
-            console.error('❌ Erro em /api/empresa:', err.message);
-            return res.status(500).json({ erro: err.message });
-        }
-        res.json(row || {});
     });
 });
 
@@ -717,6 +570,16 @@ app.get('/aniversariantes', verificarAutenticacao, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'aniversariantes.html'));
 });
 
+// ==================== TRATAMENTO DE ERRO GLOBAL ====================
+app.use((err, req, res, next) => {
+    console.error('❌ Erro global:', err);
+    if (req.path.startsWith('/api/')) {
+        res.status(500).json({ erro: 'Erro interno do servidor' });
+    } else {
+        res.status(500).send('Erro interno do servidor');
+    }
+});
+
 // ==================== INICIAR SERVIDOR ====================
 app.listen(PORT, () => {
     console.log(`
@@ -725,7 +588,6 @@ app.listen(PORT, () => {
     ║                                          ║
     ║  🚀 Servidor: http://localhost:${PORT}     ║
     ║  🔐 Login: http://localhost:${PORT}/login.html ║
-    ║  🎂 Aniversariantes: ✓ Ativo             ║
     ║  📊 Diagnóstico: /api/diagnostico        ║
     ║                                          ║
     ║  ✅ Sistema completo com autenticação!   ║
