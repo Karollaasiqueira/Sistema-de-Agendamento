@@ -1,4 +1,5 @@
 if (process.env.NODE_ENV !== 'production') require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -41,7 +42,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
     : (NODE_ENV === 'production' ? [] : ['http://localhost:3000']);
 
 app.use(cors({
-    origin: function(origin, callback) {
+    origin: function (origin, callback) {
         if (!origin || allowedOrigins.includes(origin) || NODE_ENV !== 'production') {
             callback(null, true);
         } else {
@@ -113,15 +114,17 @@ const db = new sqlite3.Database(dbPath, (err) => {
         process.exit(1);
     } else {
         console.log('✅ Conectado ao banco SQLite');
+        console.log('📁 Banco de dados:', dbPath);
     }
 });
 
-// Habilitar foreign keys e WAL mode para performance/segurança
-db.run('PRAGMA foreign_keys = ON');
+db.run('PRAGMA foreign_keys = OFF');
 db.run('PRAGMA journal_mode = WAL');
 
-// ==================== CRIAÇÃO DAS TABELAS ====================
+// ==================== CRIAÇÃO E MIGRAÇÃO DAS TABELAS ====================
 db.serialize(() => {
+
+    // Tabela usuarios
     db.run(`CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
@@ -136,6 +139,7 @@ db.serialize(() => {
         data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
+    // Tabela empresas
     db.run(`CREATE TABLE IF NOT EXISTS empresas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER UNIQUE,
@@ -154,22 +158,22 @@ db.serialize(() => {
         cor_primaria TEXT DEFAULT '#667eea',
         cor_secundaria TEXT DEFAULT '#764ba2',
         descricao TEXT,
-        data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+        data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
+    // Tabela clientes
     db.run(`CREATE TABLE IF NOT EXISTS clientes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario_id INTEGER NOT NULL,
+        usuario_id INTEGER,
         nome TEXT NOT NULL,
         email TEXT,
         telefone TEXT,
         data_nascimento DATE,
         endereco TEXT,
-        data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+        data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
+    // Tabela servicos
     db.run(`CREATE TABLE IF NOT EXISTS servicos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER,
@@ -177,10 +181,10 @@ db.serialize(() => {
         descricao TEXT,
         preco DECIMAL(10,2),
         duracao INTEGER,
-        ativo BOOLEAN DEFAULT 1,
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+        ativo BOOLEAN DEFAULT 1
     )`);
 
+    // Tabela colaboradores
     db.run(`CREATE TABLE IF NOT EXISTS colaboradores (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER,
@@ -191,24 +195,22 @@ db.serialize(() => {
         ativo BOOLEAN DEFAULT 1,
         foto TEXT,
         descricao TEXT,
-        data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+        data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
+    // Tabela colaborador_servico
     db.run(`CREATE TABLE IF NOT EXISTS colaborador_servico (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER,
         colaborador_id INTEGER,
         servico_id INTEGER,
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-        FOREIGN KEY (colaborador_id) REFERENCES colaboradores(id) ON DELETE CASCADE,
-        FOREIGN KEY (servico_id) REFERENCES servicos(id) ON DELETE CASCADE,
         UNIQUE(colaborador_id, servico_id)
     )`);
 
+    // Tabela agendamentos
     db.run(`CREATE TABLE IF NOT EXISTS agendamentos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario_id INTEGER NOT NULL,
+        usuario_id INTEGER,
         cliente_id INTEGER,
         servico_id INTEGER,
         colaborador_id INTEGER,
@@ -224,22 +226,38 @@ db.serialize(() => {
         cancelado_por TEXT,
         cancelamento_com_custo BOOLEAN DEFAULT 0,
         observacoes TEXT,
-        data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-        FOREIGN KEY (cliente_id) REFERENCES clientes(id),
-        FOREIGN KEY (servico_id) REFERENCES servicos(id),
-        FOREIGN KEY (colaborador_id) REFERENCES colaboradores(id)
+        data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
+    // Tabela configuracoes_avancadas
     db.run(`CREATE TABLE IF NOT EXISTS configuracoes_avancadas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER,
         chave TEXT NOT NULL,
         valor TEXT NOT NULL,
         descricao TEXT,
-        UNIQUE(usuario_id, chave),
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+        UNIQUE(usuario_id, chave)
     )`);
+
+    // ==================== MIGRAÇÃO SEGURA ====================
+    // Adiciona colunas que podem não existir no banco antigo
+    const migracoes = [
+        'ALTER TABLE clientes ADD COLUMN usuario_id INTEGER',
+        'ALTER TABLE clientes ADD COLUMN data_nascimento DATE',
+        'ALTER TABLE servicos ADD COLUMN usuario_id INTEGER',
+        'ALTER TABLE colaboradores ADD COLUMN usuario_id INTEGER',
+        'ALTER TABLE agendamentos ADD COLUMN usuario_id INTEGER',
+        'ALTER TABLE colaborador_servico ADD COLUMN usuario_id INTEGER',
+        'ALTER TABLE configuracoes_avancadas ADD COLUMN usuario_id INTEGER'
+    ];
+
+    migracoes.forEach(sql => {
+        db.run(sql, [], (err) => {
+            if (err && err.message && !err.message.includes('duplicate column')) {
+                console.log('Migração OK (coluna já existe):', err.message);
+            }
+        });
+    });
 
     // Índices para performance
     db.run(`CREATE INDEX IF NOT EXISTS idx_agendamentos_usuario ON agendamentos(usuario_id)`);
@@ -249,17 +267,20 @@ db.serialize(() => {
 
     // Inserir usuário admin padrão apenas se não existir
     db.get("SELECT COUNT(*) as count FROM usuarios WHERE email = 'admin@agendapro.com'", [], (err, row) => {
-        if (!err && row.count === 0) {
+        if (!err && row && row.count === 0) {
             const senhaAdmin = process.env.ADMIN_PASSWORD || 'admin123';
             const senhaHash = bcrypt.hashSync(senhaAdmin, 12);
             db.run(
                 'INSERT INTO usuarios (nome, email, senha, tipo) VALUES (?, ?, ?, ?)',
-                ['Administrador', 'admin@agendapro.com', senhaHash, 'admin']
+                ['Administrador', 'admin@agendapro.com', senhaHash, 'admin'],
+                (err) => {
+                    if (!err) console.log('✅ Usuário admin criado');
+                }
             );
-            console.log('✅ Usuário admin criado');
         }
     });
 
+    // Configs padrão globais
     const configsPadrao = [
         ['notificacao_lembrete_horas', '24'],
         ['cancelamento_sem_custo_horas', '2'],
@@ -270,39 +291,12 @@ db.serialize(() => {
     ];
 
     configsPadrao.forEach(([chave, valor]) => {
-        db.get("SELECT COUNT(*) as count FROM configuracoes_avancadas WHERE chave = ? AND usuario_id IS NULL", [chave], (err, row) => {
-            if (!err && row && row.count === 0) {
-                db.run('INSERT OR IGNORE INTO configuracoes_avancadas (chave, valor) VALUES (?, ?)', [chave, valor]);
-            }
-        });
+        db.run(
+            'INSERT OR IGNORE INTO configuracoes_avancadas (chave, valor) VALUES (?, ?)',
+            [chave, valor]
+        );
     });
 
-    db.get("SELECT COUNT(*) as count FROM servicos", [], (err, row) => {
-        if (!err && row.count === 0) {
-            const servicos = [
-                ['Consulta Simples', 'Consulta básica', 100.00, 30],
-                ['Consulta Completa', 'Consulta com exames', 200.00, 60],
-                ['Procedimento', 'Procedimento simples', 300.00, 90],
-                ['Retorno', 'Consulta de retorno', 80.00, 20]
-            ];
-            servicos.forEach(s => {
-                db.run('INSERT INTO servicos (nome, descricao, preco, duracao) VALUES (?, ?, ?, ?)', s);
-            });
-        }
-    });
-
-    db.get("SELECT COUNT(*) as count FROM colaboradores", [], (err, row) => {
-        if (!err && row.count === 0) {
-            const cols = [
-                ['Ana Silva', 'Massoterapeuta', '11988887777', 'ana@exemplo.com', 'Especialista em massagem relaxante'],
-                ['Carlos Santos', 'Quiroprata', '11977776666', 'carlos@exemplo.com', 'Quiroprata com 10 anos de experiência'],
-                ['Mariana Costa', 'Esteticista', '11966665555', 'mariana@exemplo.com', 'Especialista em limpeza de pele']
-            ];
-            cols.forEach(c => {
-                db.run('INSERT INTO colaboradores (nome, especialidade, telefone, email, descricao) VALUES (?, ?, ?, ?, ?)', c);
-            });
-        }
-    });
 });
 
 // ==================== HELPERS ====================
@@ -371,11 +365,9 @@ app.post('/api/auth/cadastro', limiterCadastro, (req, res) => {
     if (!nome || !email || !senha || !nome_empresa) {
         return res.status(400).json({ erro: 'Campos obrigatórios faltando' });
     }
-
     if (!validarEmail(email)) {
         return res.status(400).json({ erro: 'Email inválido' });
     }
-
     if (senha.length < 8) {
         return res.status(400).json({ erro: 'Senha deve ter no mínimo 8 caracteres' });
     }
@@ -389,13 +381,13 @@ app.post('/api/auth/cadastro', limiterCadastro, (req, res) => {
         db.run(
             'INSERT INTO usuarios (nome, email, senha, telefone, tipo) VALUES (?, ?, ?, ?, ?)',
             [nome, email, senhaHash, telefone, 'gestor'],
-            function(err) {
+            function (err) {
                 if (err) return res.status(500).json({ erro: 'Erro interno' });
                 const usuarioId = this.lastID;
                 db.run(
-                    `INSERT INTO empresas (usuario_id, nome_empresa, cnpj, atividade) VALUES (?, ?, ?, ?)`,
+                    'INSERT INTO empresas (usuario_id, nome_empresa, cnpj, atividade) VALUES (?, ?, ?, ?)',
                     [usuarioId, nome_empresa, cnpj, atividade],
-                    function(err) {
+                    function (err) {
                         if (err) return res.status(500).json({ erro: 'Erro interno' });
                         const configs = [
                             ['notificacao_lembrete_horas', '24'],
@@ -407,7 +399,7 @@ app.post('/api/auth/cadastro', limiterCadastro, (req, res) => {
                         ];
                         configs.forEach(([chave, valor]) => {
                             db.run(
-                                'INSERT INTO configuracoes_avancadas (usuario_id, chave, valor) VALUES (?, ?, ?)',
+                                'INSERT OR IGNORE INTO configuracoes_avancadas (usuario_id, chave, valor) VALUES (?, ?, ?)',
                                 [usuarioId, chave, valor]
                             );
                         });
@@ -426,20 +418,14 @@ app.post('/api/auth/login', limiterLogin, (req, res) => {
     if (!email || !senha) {
         return res.status(400).json({ erro: 'Email e senha obrigatórios' });
     }
-
     if (!validarEmail(email)) {
         return res.status(400).json({ erro: 'Email ou senha inválidos' });
     }
 
     db.get('SELECT * FROM usuarios WHERE email = ? AND ativo = 1', [email], (err, usuario) => {
         if (err) return res.status(500).json({ erro: 'Erro interno' });
+        if (!usuario) return res.status(401).json({ erro: 'Email ou senha inválidos' });
 
-        // Resposta genérica para não revelar se email existe
-        if (!usuario) {
-            return res.status(401).json({ erro: 'Email ou senha inválidos' });
-        }
-
-        // Verificar bloqueio por tentativas
         if (usuario.bloqueado_ate && new Date(usuario.bloqueado_ate) > new Date()) {
             return res.status(429).json({ erro: 'Conta temporariamente bloqueada. Tente novamente mais tarde.' });
         }
@@ -456,7 +442,6 @@ app.post('/api/auth/login', limiterLogin, (req, res) => {
             return res.status(401).json({ erro: 'Email ou senha inválidos' });
         }
 
-        // Login bem-sucedido: zerar tentativas
         db.run('UPDATE usuarios SET tentativas_login = 0, bloqueado_ate = NULL WHERE id = ?', [usuario.id]);
 
         req.session.regenerate((err) => {
@@ -495,7 +480,7 @@ app.get('/api/auth/me', verificarAutenticacao, (req, res) => {
     });
 });
 
-// ==================== APLICAR AUTENTICAÇÃO NAS ROTAS DE API ====================
+// ==================== APLICAR AUTENTICAÇÃO NAS ROTAS ====================
 app.use('/api/clientes', verificarAutenticacao);
 app.use('/api/servicos', verificarAutenticacao);
 app.use('/api/colaboradores', verificarAutenticacao);
@@ -505,9 +490,7 @@ app.use('/api/dashboard', verificarAutenticacao);
 app.use('/api/aniversariantes', verificarAutenticacao);
 app.use('/api/empresa', verificarAutenticacao);
 
-// ==================== ROTAS DE API PROTEGIDAS ====================
-
-// --- CLIENTES ---
+// ==================== CLIENTES ====================
 app.get('/api/clientes', (req, res) => {
     db.all('SELECT * FROM clientes WHERE usuario_id = ? ORDER BY nome', [req.usuarioId], (err, rows) => {
         if (err) return res.status(500).json({ erro: 'Erro interno' });
@@ -528,7 +511,7 @@ app.post('/api/clientes', (req, res) => {
     db.run(
         'INSERT INTO clientes (usuario_id, nome, email, telefone, data_nascimento, endereco) VALUES (?, ?, ?, ?, ?, ?)',
         [req.usuarioId, nome, email, telefone, data_nascimento, endereco],
-        function(err) {
+        function (err) {
             if (err) return res.status(400).json({ erro: 'Erro ao cadastrar cliente' });
             res.json({ mensagem: '✅ Cliente cadastrado!', id: this.lastID });
         }
@@ -546,11 +529,10 @@ app.put('/api/clientes/:id', (req, res) => {
     if (!nome) return res.status(400).json({ erro: 'Nome obrigatório' });
     if (email && !validarEmail(email)) return res.status(400).json({ erro: 'Email inválido' });
 
-    // Garante que o cliente pertence ao usuário logado (IDOR fix)
     db.run(
         'UPDATE clientes SET nome=?, email=?, telefone=?, data_nascimento=?, endereco=? WHERE id=? AND usuario_id=?',
         [nome, email, telefone, data_nascimento, endereco, id, req.usuarioId],
-        function(err) {
+        function (err) {
             if (err) return res.status(500).json({ erro: 'Erro interno' });
             if (this.changes === 0) return res.status(404).json({ erro: 'Cliente não encontrado' });
             res.json({ mensagem: '✅ Cliente atualizado!' });
@@ -560,14 +542,14 @@ app.put('/api/clientes/:id', (req, res) => {
 
 app.delete('/api/clientes/:id', (req, res) => {
     const { id } = req.params;
-    db.run('DELETE FROM clientes WHERE id = ? AND usuario_id = ?', [id, req.usuarioId], function(err) {
+    db.run('DELETE FROM clientes WHERE id = ? AND usuario_id = ?', [id, req.usuarioId], function (err) {
         if (err) return res.status(500).json({ erro: 'Erro interno' });
         if (this.changes === 0) return res.status(404).json({ erro: 'Cliente não encontrado' });
         res.json({ mensagem: '✅ Cliente removido!' });
     });
 });
 
-// --- SERVIÇOS ---
+// ==================== SERVIÇOS ====================
 app.get('/api/servicos', (req, res) => {
     db.all('SELECT * FROM servicos WHERE usuario_id = ? AND ativo = 1 ORDER BY nome', [req.usuarioId], (err, rows) => {
         if (err) return res.status(500).json({ erro: 'Erro interno' });
@@ -586,7 +568,7 @@ app.post('/api/servicos', (req, res) => {
     db.run(
         'INSERT INTO servicos (usuario_id, nome, descricao, preco, duracao) VALUES (?, ?, ?, ?, ?)',
         [req.usuarioId, nome, descricao, preco, duracao],
-        function(err) {
+        function (err) {
             if (err) return res.status(400).json({ erro: 'Erro ao cadastrar serviço' });
             res.json({ mensagem: '✅ Serviço cadastrado!', id: this.lastID });
         }
@@ -606,7 +588,7 @@ app.put('/api/servicos/:id', (req, res) => {
     db.run(
         'UPDATE servicos SET nome=?, descricao=?, preco=?, duracao=?, ativo=? WHERE id=? AND usuario_id=?',
         [nome, descricao, preco, duracao, ativo, id, req.usuarioId],
-        function(err) {
+        function (err) {
             if (err) return res.status(500).json({ erro: 'Erro interno' });
             if (this.changes === 0) return res.status(404).json({ erro: 'Serviço não encontrado' });
             res.json({ mensagem: '✅ Serviço atualizado!' });
@@ -616,14 +598,14 @@ app.put('/api/servicos/:id', (req, res) => {
 
 app.delete('/api/servicos/:id', (req, res) => {
     const { id } = req.params;
-    db.run('UPDATE servicos SET ativo = 0 WHERE id = ? AND usuario_id = ?', [id, req.usuarioId], function(err) {
+    db.run('UPDATE servicos SET ativo = 0 WHERE id = ? AND usuario_id = ?', [id, req.usuarioId], function (err) {
         if (err) return res.status(500).json({ erro: 'Erro interno' });
         if (this.changes === 0) return res.status(404).json({ erro: 'Serviço não encontrado' });
         res.json({ mensagem: '✅ Serviço desativado!' });
     });
 });
 
-// --- COLABORADORES ---
+// ==================== COLABORADORES ====================
 app.get('/api/colaboradores', (req, res) => {
     db.all('SELECT * FROM colaboradores WHERE usuario_id = ? AND ativo = 1 ORDER BY nome', [req.usuarioId], (err, rows) => {
         if (err) return res.status(500).json({ erro: 'Erro interno' });
@@ -644,7 +626,7 @@ app.post('/api/colaboradores', (req, res) => {
     db.run(
         'INSERT INTO colaboradores (usuario_id, nome, especialidade, telefone, email, descricao) VALUES (?, ?, ?, ?, ?, ?)',
         [req.usuarioId, nome, especialidade, telefone, email, descricao],
-        function(err) {
+        function (err) {
             if (err) return res.status(400).json({ erro: 'Erro ao cadastrar colaborador' });
             res.json({ id: this.lastID, mensagem: '✅ Colaborador cadastrado!' });
         }
@@ -665,7 +647,7 @@ app.put('/api/colaboradores/:id', (req, res) => {
     db.run(
         'UPDATE colaboradores SET nome=?, especialidade=?, telefone=?, email=?, descricao=? WHERE id=? AND usuario_id=?',
         [nome, especialidade, telefone, email, descricao, id, req.usuarioId],
-        function(err) {
+        function (err) {
             if (err) return res.status(500).json({ erro: 'Erro interno' });
             if (this.changes === 0) return res.status(404).json({ erro: 'Colaborador não encontrado' });
             res.json({ mensagem: '✅ Colaborador atualizado!' });
@@ -675,17 +657,17 @@ app.put('/api/colaboradores/:id', (req, res) => {
 
 app.delete('/api/colaboradores/:id', (req, res) => {
     const { id } = req.params;
-    db.run('UPDATE colaboradores SET ativo = 0 WHERE id = ? AND usuario_id = ?', [id, req.usuarioId], function(err) {
+    db.run('UPDATE colaboradores SET ativo = 0 WHERE id = ? AND usuario_id = ?', [id, req.usuarioId], function (err) {
         if (err) return res.status(500).json({ erro: 'Erro interno' });
         if (this.changes === 0) return res.status(404).json({ erro: 'Colaborador não encontrado' });
         res.json({ mensagem: '✅ Colaborador desativado!' });
     });
 });
 
-// --- AGENDAMENTOS ---
+// ==================== AGENDAMENTOS ====================
 app.get('/api/agendamentos', (req, res) => {
     const sql = `
-        SELECT a.*, c.nome as cliente_nome, c.telefone, c.data_nascimento,
+        SELECT a.*, c.nome as cliente_nome, c.telefone as cliente_telefone, c.data_nascimento,
                s.nome as servico_nome, s.preco, col.nome as colaborador_nome
         FROM agendamentos a
         LEFT JOIN clientes c ON a.cliente_id = c.id
@@ -712,7 +694,6 @@ app.post('/api/agendamentos', (req, res) => {
         return res.status(400).json({ erro: 'Campos obrigatórios faltando' });
     }
 
-    // Verificar que o cliente pertence ao usuário
     db.get('SELECT id FROM clientes WHERE id = ? AND usuario_id = ?', [cliente_id, req.usuarioId], (err, cliente) => {
         if (err) return res.status(500).json({ erro: 'Erro interno' });
         if (!cliente) return res.status(400).json({ erro: 'Cliente inválido' });
@@ -720,7 +701,7 @@ app.post('/api/agendamentos', (req, res) => {
         db.run(
             'INSERT INTO agendamentos (usuario_id, cliente_id, servico_id, colaborador_id, data_agendamento, hora_agendamento, observacoes) VALUES (?, ?, ?, ?, ?, ?, ?)',
             [req.usuarioId, cliente_id, servico_id, colaborador_id, data_agendamento, hora_agendamento, observacoes],
-            function(err) {
+            function (err) {
                 if (err) return res.status(400).json({ erro: 'Erro ao criar agendamento' });
                 res.json({ mensagem: '✅ Agendamento criado!', id: this.lastID });
             }
@@ -740,7 +721,7 @@ app.put('/api/agendamentos/:id', (req, res) => {
     db.run(
         'UPDATE agendamentos SET status=? WHERE id=? AND usuario_id=?',
         [status, id, req.usuarioId],
-        function(err) {
+        function (err) {
             if (err) return res.status(500).json({ erro: 'Erro interno' });
             if (this.changes === 0) return res.status(404).json({ erro: 'Agendamento não encontrado' });
             res.json({ mensagem: '✅ Agendamento atualizado!' });
@@ -748,7 +729,16 @@ app.put('/api/agendamentos/:id', (req, res) => {
     );
 });
 
-// --- DASHBOARD ---
+app.delete('/api/agendamentos/:id', (req, res) => {
+    const { id } = req.params;
+    db.run('DELETE FROM agendamentos WHERE id = ? AND usuario_id = ?', [id, req.usuarioId], function (err) {
+        if (err) return res.status(500).json({ erro: 'Erro interno' });
+        if (this.changes === 0) return res.status(404).json({ erro: 'Agendamento não encontrado' });
+        res.json({ mensagem: '✅ Agendamento removido!' });
+    });
+});
+
+// ==================== DASHBOARD ====================
 app.get('/api/dashboard', (req, res) => {
     const hoje = new Date().toISOString().split('T')[0];
     const dia = new Date().getDate().toString().padStart(2, '0');
@@ -775,7 +765,7 @@ app.get('/api/dashboard', (req, res) => {
     });
 });
 
-// --- ANIVERSARIANTES ---
+// ==================== ANIVERSARIANTES ====================
 app.get('/api/aniversariantes', (req, res) => {
     const mes = req.query.mes ? parseInt(req.query.mes) : (new Date().getMonth() + 1);
     if (mes < 1 || mes > 12) return res.status(400).json({ erro: 'Mês inválido' });
@@ -794,7 +784,7 @@ app.get('/api/aniversariantes', (req, res) => {
     );
 });
 
-// --- EMPRESA ---
+// ==================== EMPRESA ====================
 app.get('/api/empresa', (req, res) => {
     db.get('SELECT * FROM empresas WHERE usuario_id = ?', [req.usuarioId], (err, row) => {
         if (err) return res.status(500).json({ erro: 'Erro interno' });
@@ -803,7 +793,8 @@ app.get('/api/empresa', (req, res) => {
 });
 
 app.put('/api/empresa', (req, res) => {
-    const campos = ['nome_empresa','cnpj','inscricao_estadual','atividade','endereco','cidade','estado','cep','telefone','email','site','descricao','cor_primaria','cor_secundaria'];
+    const campos = ['nome_empresa', 'cnpj', 'inscricao_estadual', 'atividade', 'endereco',
+        'cidade', 'estado', 'cep', 'telefone', 'email', 'site', 'descricao', 'cor_primaria', 'cor_secundaria'];
     const values = campos.map(c => sanitizeString(req.body[c]));
 
     db.get('SELECT id FROM empresas WHERE usuario_id = ?', [req.usuarioId], (err, row) => {
@@ -811,14 +802,14 @@ app.put('/api/empresa', (req, res) => {
 
         if (row) {
             const sets = campos.map(c => `${c}=?`).join(', ');
-            db.run(`UPDATE empresas SET ${sets} WHERE usuario_id=?`, [...values, req.usuarioId], function(err) {
+            db.run(`UPDATE empresas SET ${sets} WHERE usuario_id=?`, [...values, req.usuarioId], function (err) {
                 if (err) return res.status(500).json({ erro: 'Erro interno' });
                 res.json({ mensagem: '✅ Empresa atualizada!' });
             });
         } else {
             const cols = campos.join(', ');
             const placeholders = campos.map(() => '?').join(', ');
-            db.run(`INSERT INTO empresas (usuario_id, ${cols}) VALUES (?, ${placeholders})`, [req.usuarioId, ...values], function(err) {
+            db.run(`INSERT INTO empresas (usuario_id, ${cols}) VALUES (?, ${placeholders})`, [req.usuarioId, ...values], function (err) {
                 if (err) return res.status(500).json({ erro: 'Erro interno' });
                 res.json({ mensagem: '✅ Empresa cadastrada!' });
             });
@@ -826,7 +817,7 @@ app.put('/api/empresa', (req, res) => {
     });
 });
 
-// --- CONFIGURAÇÕES ---
+// ==================== CONFIGURAÇÕES ====================
 app.get('/api/configuracoes', (req, res) => {
     db.all('SELECT chave, valor FROM configuracoes_avancadas WHERE usuario_id = ?', [req.usuarioId], (err, rows) => {
         if (err) return res.status(500).json({ erro: 'Erro interno' });
@@ -837,8 +828,8 @@ app.get('/api/configuracoes', (req, res) => {
 });
 
 app.put('/api/configuracoes', (req, res) => {
-    const chavesPermitidas = ['notificacao_lembrete_horas','cancelamento_sem_custo_horas',
-        'notificar_cliente_lembrete','notificar_empresa_cancelamento','permitir_recorrente','whatsapp_empresa'];
+    const chavesPermitidas = ['notificacao_lembrete_horas', 'cancelamento_sem_custo_horas',
+        'notificar_cliente_lembrete', 'notificar_empresa_cancelamento', 'permitir_recorrente', 'whatsapp_empresa'];
 
     const updates = [];
     chavesPermitidas.forEach(chave => {
@@ -850,16 +841,19 @@ app.put('/api/configuracoes', (req, res) => {
     if (updates.length === 0) return res.status(400).json({ erro: 'Nenhuma configuração válida enviada' });
 
     let pendentes = updates.length;
-    let erro = false;
+    let erroEnviado = false;
 
     updates.forEach(([valor, uid, chave]) => {
         db.run(
             'INSERT INTO configuracoes_avancadas (usuario_id, chave, valor) VALUES (?, ?, ?) ON CONFLICT(usuario_id, chave) DO UPDATE SET valor=excluded.valor',
             [uid, chave, valor],
-            function(err) {
-                if (err && !erro) { erro = true; return res.status(500).json({ erro: 'Erro interno' }); }
+            function (err) {
+                if (err && !erroEnviado) {
+                    erroEnviado = true;
+                    return res.status(500).json({ erro: 'Erro interno' });
+                }
                 pendentes--;
-                if (pendentes === 0 && !erro) res.json({ mensagem: '✅ Configurações salvas!' });
+                if (pendentes === 0 && !erroEnviado) res.json({ mensagem: '✅ Configurações salvas!' });
             }
         );
     });
@@ -891,14 +885,13 @@ Object.entries(paginasProtegidas).forEach(([rota, arquivo]) => {
     });
 });
 
-// ==================== 404 PARA ROTAS DE API DESCONHECIDAS ====================
+// ==================== 404 PARA ROTAS DE API ====================
 app.use('/api/', (req, res) => {
     res.status(404).json({ erro: 'Endpoint não encontrado' });
 });
 
 // ==================== TRATAMENTO DE ERRO GLOBAL ====================
 app.use((err, req, res, next) => {
-    // Não vazar detalhes do erro em produção
     const mensagem = NODE_ENV === 'production' ? 'Erro interno do servidor' : err.message;
     if (req.path.startsWith('/api/')) {
         res.status(500).json({ erro: mensagem });
@@ -915,5 +908,13 @@ process.on('SIGTERM', () => {
 
 // ==================== INICIAR SERVIDOR ====================
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor rodando na porta ${PORT} [${NODE_ENV}]`);
+    console.log(`
+    ╔═══════════════════════════════════════════╗
+    ║      🏛️  SISTEMA DE AGENDAMENTO v5.0      ║
+    ║                                           ║
+    ║  🚀 Servidor: http://localhost:${PORT}      ║
+    ║  🔐 Login: http://localhost:${PORT}/login  ║
+    ║  ✅ Sistema completo com autenticação!    ║
+    ╚═══════════════════════════════════════════╝
+    `);
 });
