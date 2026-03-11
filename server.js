@@ -484,6 +484,7 @@ app.get('/api/servicos', (req, res) => {
             console.error('❌ Erro em /api/servicos:', err.message);
             return res.status(500).json({ erro: err.message });
         }
+        // GARANTIR que sempre retorne um array
         res.json(rows || []);
     });
 });
@@ -510,13 +511,11 @@ app.get('/api/colaboradores', (req, res) => {
     db.all('SELECT * FROM colaboradores WHERE usuario_id = ? AND ativo = 1 ORDER BY nome', [req.session.usuarioId], (err, rows) => {
         if (err) {
             console.error('❌ Erro em /api/colaboradores:', err.message);
-            return res.status(500).json({ erro: err.message, detalhe: 'Erro ao buscar colaboradores' });
+            return res.status(500).json({ erro: err.message });
         }
-        // Garantir que sempre retorne um array
         res.json(rows || []);
     });
 });
-
 app.post('/api/colaboradores', (req, res) => {
     const { nome, especialidade, telefone, email, descricao } = req.body;
     if (!nome) return res.status(400).json({ erro: 'Nome obrigatório' });
