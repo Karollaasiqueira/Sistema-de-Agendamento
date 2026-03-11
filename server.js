@@ -105,21 +105,7 @@ const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
 }
-// Reset do banco se solicitado
-if (process.env.RESET_DB === 'true') {
-    const oldDb = path.join(dataDir, 'agendamento.db');
-    if (fs.existsSync(oldDb)) {
-        fs.unlinkSync(oldDb);
-        console.log('🗑️ Banco resetado com sucesso!');
-    }
-}
-```
 
-Salve, feche e execute:
-```
-git add .
-git commit -m "fix: adicionar reset do banco para migracao"
-git push origin main
 const dbPath = path.join(dataDir, 'agendamento.db');
 
 const db = new sqlite3.Database(dbPath, (err) => {
