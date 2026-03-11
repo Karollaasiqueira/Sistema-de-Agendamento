@@ -1,920 +1,518 @@
+'use strict';
+
 if (process.env.NODE_ENV !== 'production') require('dotenv').config();
 
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const sqlite3 = require('sqlite3').verbose();
-const bcrypt = require('bcryptjs');
-const session = require('express-session');
+const express    = require('express');
+const cors       = require('cors');
+const path       = require('path');
+const sqlite3    = require('sqlite3').verbose();
+const session    = require('express-session');
 const SQLiteStore = require('connect-sqlite3')(session);
-const fs = require('fs');
-const rateLimit = require('express-rate-limit');
-const helmet = require('helmet');
+const fs         = require('fs');
+const rateLimit  = require('express-rate-limit');
+const helmet     = require('helmet');
+const passport   = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-const NODE_ENV = process.env.NODE_ENV || 'production';
-const SESSION_SECRET = process.env.SESSION_SECRET;
+const PORT               = process.env.PORT || 3000;
+const NODE_ENV           = process.env.NODE_ENV || 'production';
+const SESSION_SECRET     = process.env.SESSION_SECRET;
+const GOOGLE_CLIENT_ID   = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const BASE_URL           = (process.env.BASE_URL || 'https://sistema-agendamento-0vzz.onrender.com').replace(/\/$/, '');
 
-if (!SESSION_SECRET) {
-    console.error('❌ FATAL: SESSION_SECRET não definida nas variáveis de ambiente!');
+if (!SESSION_SECRET || SESSION_SECRET.length < 32) {
+    console.error('FATAL: SESSION_SECRET ausente ou fraco');
+    process.exit(1);
+}
+if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    console.error('FATAL: credenciais Google ausentes');
     process.exit(1);
 }
 
-// ==================== SEGURANÇA: HELMET ====================
+const app = express();
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
+
+// HELMET
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com", "fonts.googleapis.com"],
-            styleSrc: ["'self'", "'unsafe-inline'", "fonts.googleapis.com", "cdnjs.cloudflare.com"],
-            fontSrc: ["'self'", "fonts.gstatic.com", "cdnjs.cloudflare.com"],
-            imgSrc: ["'self'", "data:"],
+            scriptSrc:  ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com"],
+            styleSrc:   ["'self'", "'unsafe-inline'", "fonts.googleapis.com", "cdnjs.cloudflare.com"],
+            fontSrc:    ["'self'", "fonts.gstatic.com", "cdnjs.cloudflare.com"],
+            imgSrc:     ["'self'", "data:", "lh3.googleusercontent.com"],
             connectSrc: ["'self'"],
+            frameSrc:   ["'none'"],
+            objectSrc:  ["'none'"],
         },
     },
     crossOriginEmbedderPolicy: false,
+    hsts: { maxAge: 31536000, includeSubDomains: true },
+    frameguard: { action: 'deny' },
 }));
 
-// ==================== CORS RESTRITO ====================
+// CORS
 const allowedOrigins = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',')
-    : (NODE_ENV === 'production' ? [] : ['http://localhost:3000']);
+    ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+    : (NODE_ENV === 'production' ? [BASE_URL] : ['http://localhost:3000']);
 
 app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin) || NODE_ENV !== 'production') {
-            callback(null, true);
-        } else {
-            callback(new Error('CORS: origem não permitida'));
-        }
+    origin: (origin, cb) => {
+        if (!origin || allowedOrigins.includes(origin) || NODE_ENV !== 'production') return cb(null, true);
+        cb(new Error('CORS bloqueado'));
     },
-    credentials: true
+    credentials: true,
+    methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+    allowedHeaders: ['Content-Type'],
 }));
 
-// ==================== MIDDLEWARES GLOBAIS ====================
+// RATE LIMITING
+app.use(rateLimit({ windowMs: 15*60*1000, max: 150, standardHeaders: true, legacyHeaders: false }));
+app.use('/auth/', rateLimit({ windowMs: 15*60*1000, max: 20, standardHeaders: true, legacyHeaders: false }));
+app.use('/api/',  rateLimit({ windowMs: 60*1000,    max: 60,  standardHeaders: true, legacyHeaders: false }));
+
+// BODY
 app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(express.urlencoded({ extended: false, limit: '10kb' }));
 
-// ==================== RATE LIMITING ====================
-const limiterGeral = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 200,
-    message: { erro: 'Muitas requisições. Tente novamente em 15 minutos.' },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-
-const limiterLogin = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 10,
-    message: { erro: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-
-const limiterCadastro = rateLimit({
-    windowMs: 60 * 60 * 1000,
-    max: 5,
-    message: { erro: 'Limite de cadastros atingido. Tente novamente em 1 hora.' },
-    standardHeaders: true,
-    legacyHeaders: false,
-});
-
-app.use(limiterGeral);
-
-// ==================== SESSÃO SEGURA ====================
+// SESSAO
 app.use(session({
     store: new SQLiteStore({ db: 'sessions.db', dir: './data' }),
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     name: 'sid',
-    cookie: {
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
-        secure: NODE_ENV === 'production',
-        sameSite: 'strict'
-    }
+    rolling: true,
+    cookie: { maxAge: 8*60*60*1000, httpOnly: true, secure: NODE_ENV==='production', sameSite: 'lax' }
 }));
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(passport.initialize());
+app.use(passport.session());
 
-// ==================== BANCO DE DADOS ====================
+// BANCO
 const dataDir = path.join(__dirname, 'data');
-if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+if (process.env.RESET_DB === 'true') {
+    const f = path.join(dataDir, 'agendamento.db');
+    if (fs.existsSync(f)) { fs.unlinkSync(f); console.log('Banco resetado'); }
 }
 
 const dbPath = path.join(dataDir, 'agendamento.db');
-
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('❌ Erro ao conectar ao banco:', err.message);
-        process.exit(1);
-    } else {
-        console.log('✅ Conectado ao banco SQLite');
-        console.log('📁 Banco de dados:', dbPath);
-    }
+const db = new sqlite3.Database(dbPath, err => {
+    if (err) { console.error('Erro BD:', err.message); process.exit(1); }
+    console.log('Banco conectado:', dbPath);
 });
-
 db.run('PRAGMA foreign_keys = OFF');
 db.run('PRAGMA journal_mode = WAL');
 
-// ==================== CRIAÇÃO E MIGRAÇÃO DAS TABELAS ====================
 db.serialize(() => {
-
-    // Tabela usuarios
     db.run(`CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nome TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        senha TEXT NOT NULL,
-        telefone TEXT,
-        cargo TEXT,
-        ativo BOOLEAN DEFAULT 1,
-        tipo TEXT DEFAULT 'gestor',
-        tentativas_login INTEGER DEFAULT 0,
-        bloqueado_ate DATETIME,
-        data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
+        nome TEXT NOT NULL, email TEXT UNIQUE NOT NULL,
+        google_id TEXT UNIQUE, foto TEXT, ativo INTEGER DEFAULT 1,
+        tipo TEXT DEFAULT 'gestor', data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-
-    // Tabela empresas
     db.run(`CREATE TABLE IF NOT EXISTS empresas (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario_id INTEGER UNIQUE,
-        nome_empresa TEXT NOT NULL,
-        cnpj TEXT,
-        inscricao_estadual TEXT,
-        atividade TEXT,
-        endereco TEXT,
-        cidade TEXT,
-        estado TEXT,
-        cep TEXT,
-        telefone TEXT,
-        email TEXT,
-        site TEXT,
-        logo TEXT,
-        cor_primaria TEXT DEFAULT '#667eea',
-        cor_secundaria TEXT DEFAULT '#764ba2',
-        descricao TEXT,
-        data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
+        id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER UNIQUE,
+        nome_empresa TEXT NOT NULL, cnpj TEXT, inscricao_estadual TEXT, atividade TEXT,
+        endereco TEXT, cidade TEXT, estado TEXT, cep TEXT, telefone TEXT, email TEXT,
+        site TEXT, cor_primaria TEXT DEFAULT '#667eea', cor_secundaria TEXT DEFAULT '#764ba2',
+        descricao TEXT, data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-
-    // Tabela clientes
     db.run(`CREATE TABLE IF NOT EXISTS clientes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario_id INTEGER,
-        nome TEXT NOT NULL,
-        email TEXT,
-        telefone TEXT,
-        data_nascimento DATE,
-        endereco TEXT,
-        data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
+        id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER NOT NULL,
+        nome TEXT NOT NULL, email TEXT, telefone TEXT, data_nascimento DATE,
+        endereco TEXT, data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-
-    // Tabela servicos
     db.run(`CREATE TABLE IF NOT EXISTS servicos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario_id INTEGER,
-        nome TEXT NOT NULL,
-        descricao TEXT,
-        preco DECIMAL(10,2),
-        duracao INTEGER,
-        ativo BOOLEAN DEFAULT 1
+        id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER NOT NULL,
+        nome TEXT NOT NULL, descricao TEXT, preco REAL DEFAULT 0, duracao INTEGER DEFAULT 0, ativo INTEGER DEFAULT 1
     )`);
-
-    // Tabela colaboradores
     db.run(`CREATE TABLE IF NOT EXISTS colaboradores (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario_id INTEGER,
-        nome TEXT NOT NULL,
-        especialidade TEXT,
-        telefone TEXT,
-        email TEXT,
-        ativo BOOLEAN DEFAULT 1,
-        foto TEXT,
-        descricao TEXT,
-        data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
+        id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER NOT NULL,
+        nome TEXT NOT NULL, especialidade TEXT, telefone TEXT, email TEXT,
+        ativo INTEGER DEFAULT 1, descricao TEXT, data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-
-    // Tabela colaborador_servico
-    db.run(`CREATE TABLE IF NOT EXISTS colaborador_servico (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario_id INTEGER,
-        colaborador_id INTEGER,
-        servico_id INTEGER,
-        UNIQUE(colaborador_id, servico_id)
-    )`);
-
-    // Tabela agendamentos
     db.run(`CREATE TABLE IF NOT EXISTS agendamentos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario_id INTEGER,
-        cliente_id INTEGER,
-        servico_id INTEGER,
-        colaborador_id INTEGER,
-        data_agendamento DATE,
-        hora_agendamento TIME,
-        status TEXT DEFAULT 'pendente',
-        tipo_agendamento TEXT DEFAULT 'unico',
-        recorrencia TEXT,
-        data_fim_recorrencia DATE,
-        agendamento_pai_id INTEGER,
-        cancelado_em DATETIME,
-        motivo_cancelamento TEXT,
-        cancelado_por TEXT,
-        cancelamento_com_custo BOOLEAN DEFAULT 0,
-        observacoes TEXT,
+        id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER NOT NULL,
+        cliente_id INTEGER, servico_id INTEGER, colaborador_id INTEGER,
+        data_agendamento DATE NOT NULL, hora_agendamento TIME NOT NULL,
+        status TEXT DEFAULT 'pendente', observacoes TEXT,
         data_criacao DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-
-    // Tabela configuracoes_avancadas
-    db.run(`CREATE TABLE IF NOT EXISTS configuracoes_avancadas (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario_id INTEGER,
-        chave TEXT NOT NULL,
-        valor TEXT NOT NULL,
-        descricao TEXT,
-        UNIQUE(usuario_id, chave)
+    db.run(`CREATE TABLE IF NOT EXISTS configuracoes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER NOT NULL,
+        chave TEXT NOT NULL, valor TEXT NOT NULL, UNIQUE(usuario_id, chave)
+    )`);
+    db.run(`CREATE TABLE IF NOT EXISTS audit_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER,
+        acao TEXT NOT NULL, ip TEXT, criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // ==================== MIGRAÇÃO SEGURA ====================
-    // Adiciona colunas que podem não existir no banco antigo
-    const migracoes = [
-        'ALTER TABLE clientes ADD COLUMN usuario_id INTEGER',
-        'ALTER TABLE clientes ADD COLUMN data_nascimento DATE',
-        'ALTER TABLE servicos ADD COLUMN usuario_id INTEGER',
-        'ALTER TABLE colaboradores ADD COLUMN usuario_id INTEGER',
-        'ALTER TABLE agendamentos ADD COLUMN usuario_id INTEGER',
-        'ALTER TABLE colaborador_servico ADD COLUMN usuario_id INTEGER',
-        'ALTER TABLE configuracoes_avancadas ADD COLUMN usuario_id INTEGER'
-    ];
+    // Migracao segura
+    ['ALTER TABLE usuarios ADD COLUMN google_id TEXT',
+     'ALTER TABLE usuarios ADD COLUMN foto TEXT',
+     'ALTER TABLE clientes ADD COLUMN usuario_id INTEGER',
+     'ALTER TABLE clientes ADD COLUMN data_nascimento DATE',
+     'ALTER TABLE servicos ADD COLUMN usuario_id INTEGER',
+     'ALTER TABLE colaboradores ADD COLUMN usuario_id INTEGER',
+     'ALTER TABLE agendamentos ADD COLUMN usuario_id INTEGER',
+    ].forEach(sql => db.run(sql, [], err => {
+        if (err && !err.message.includes('duplicate column') && !err.message.includes('no such table'))
+            console.log('Migracao:', err.message);
+    }));
 
-    migracoes.forEach(sql => {
-        db.run(sql, [], (err) => {
-            if (err && err.message && !err.message.includes('duplicate column')) {
-                console.log('Migração OK (coluna já existe):', err.message);
-            }
+    db.run('CREATE INDEX IF NOT EXISTS idx_cli_usr  ON clientes(usuario_id)');
+    db.run('CREATE INDEX IF NOT EXISTS idx_svc_usr  ON servicos(usuario_id)');
+    db.run('CREATE INDEX IF NOT EXISTS idx_col_usr  ON colaboradores(usuario_id)');
+    db.run('CREATE INDEX IF NOT EXISTS idx_age_usr  ON agendamentos(usuario_id)');
+    db.run('CREATE INDEX IF NOT EXISTS idx_age_data ON agendamentos(data_agendamento)');
+    db.run('CREATE INDEX IF NOT EXISTS idx_usr_gid  ON usuarios(google_id)');
+    db.run('CREATE INDEX IF NOT EXISTS idx_usr_email ON usuarios(email)');
+});
+
+// PASSPORT
+passport.serializeUser((user, done) => done(null, user.id));
+passport.deserializeUser((id, done) => {
+    db.get('SELECT id,nome,email,foto,tipo,ativo FROM usuarios WHERE id=? AND ativo=1', [id], (err, u) => done(err, u||null));
+});
+passport.use(new GoogleStrategy({
+    clientID: GOOGLE_CLIENT_ID, clientSecret: GOOGLE_CLIENT_SECRET,
+    callbackURL: BASE_URL + '/auth/google/callback',
+}, (at, rt, profile, done) => {
+    const email = profile.emails?.[0]?.value;
+    const nome  = profile.displayName || 'Usuario';
+    const gid   = profile.id;
+    const foto  = profile.photos?.[0]?.value || null;
+    if (!email) return done(new Error('Email indisponivel'));
+
+    db.get('SELECT * FROM usuarios WHERE google_id=? OR email=?', [gid, email], (err, u) => {
+        if (err) return done(err);
+        if (u) { db.run('UPDATE usuarios SET google_id=?,foto=? WHERE id=?',[gid,foto,u.id]); return done(null,u); }
+        db.run('INSERT INTO usuarios (nome,email,google_id,foto,tipo) VALUES (?,?,?,?,?)',
+            [nome,email,gid,foto,'gestor'], function(err) {
+            if (err) return done(err);
+            const uid = this.lastID;
+            db.run('INSERT INTO empresas (usuario_id,nome_empresa) VALUES (?,?)',[uid,'Minha Empresa']);
+            [['lembrete_horas','24'],['cancelamento_horas','2'],['notif_cliente','sim'],
+             ['notif_empresa','sim'],['permitir_recorrente','sim'],['whatsapp','']
+            ].forEach(([c,v]) => db.run('INSERT OR IGNORE INTO configuracoes (usuario_id,chave,valor) VALUES (?,?,?)',[uid,c,v]));
+            db.get('SELECT * FROM usuarios WHERE id=?',[uid],(err,u)=>done(err,u));
         });
     });
+}));
 
-    // Índices para performance
-    db.run(`CREATE INDEX IF NOT EXISTS idx_agendamentos_usuario ON agendamentos(usuario_id)`);
-    db.run(`CREATE INDEX IF NOT EXISTS idx_agendamentos_data ON agendamentos(data_agendamento)`);
-    db.run(`CREATE INDEX IF NOT EXISTS idx_clientes_usuario ON clientes(usuario_id)`);
-    db.run(`CREATE INDEX IF NOT EXISTS idx_colaboradores_usuario ON colaboradores(usuario_id)`);
+app.use(express.static(path.join(__dirname, 'public'), { etag: true }));
 
-    // Inserir usuário admin padrão apenas se não existir
-    db.get("SELECT COUNT(*) as count FROM usuarios WHERE email = 'admin@agendapro.com'", [], (err, row) => {
-        if (!err && row && row.count === 0) {
-            const senhaAdmin = process.env.ADMIN_PASSWORD || 'admin123';
-            const senhaHash = bcrypt.hashSync(senhaAdmin, 12);
-            db.run(
-                'INSERT INTO usuarios (nome, email, senha, tipo) VALUES (?, ?, ?, ?)',
-                ['Administrador', 'admin@agendapro.com', senhaHash, 'admin'],
-                (err) => {
-                    if (!err) console.log('✅ Usuário admin criado');
-                }
-            );
-        }
-    });
+// HELPERS
+const sanitize = (s, n=500) => s==null ? null : String(s).trim().slice(0,n).replace(/[<>]/g,'');
+const isEmail  = e => /^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,}$/.test(String(e).toLowerCase());
+const isDate   = d => /^\d{4}-\d{2}-\d{2}$/.test(d) && !isNaN(Date.parse(d));
+const isHora   = h => /^\d{2}:\d{2}$/.test(h);
+const audit    = (uid, acao, req) => db.run('INSERT INTO audit_log (usuario_id,acao,ip) VALUES (?,?,?)',
+    [uid, acao, req.ip||'?']);
 
-    // Configs padrão globais
-    const configsPadrao = [
-        ['notificacao_lembrete_horas', '24'],
-        ['cancelamento_sem_custo_horas', '2'],
-        ['notificar_cliente_lembrete', 'sim'],
-        ['notificar_empresa_cancelamento', 'sim'],
-        ['permitir_recorrente', 'sim'],
-        ['whatsapp_empresa', '']
-    ];
+// AUTH MIDDLEWARE
+const auth      = (req,res,next) => req.isAuthenticated() ? next() : (req.path.startsWith('/api/') ? res.status(401).json({erro:'Nao autenticado'}) : res.redirect('/login.html'));
+const authAdmin = (req,res,next) => req.isAuthenticated() && req.user.tipo==='admin' ? next() : res.status(403).json({erro:'Acesso negado'});
 
-    configsPadrao.forEach(([chave, valor]) => {
-        db.run(
-            'INSERT OR IGNORE INTO configuracoes_avancadas (chave, valor) VALUES (?, ?)',
-            [chave, valor]
-        );
-    });
+// HEALTH
+app.get('/health', (_,res) => res.json({status:'ok'}));
 
-});
-
-// ==================== HELPERS ====================
-function sanitizeString(str) {
-    if (!str) return str;
-    return String(str).trim().slice(0, 500);
-}
-
-function validarEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(String(email).toLowerCase());
-}
-
-// ==================== MIDDLEWARE DE AUTENTICAÇÃO ====================
-function verificarAutenticacao(req, res, next) {
-    if (req.session && req.session.usuarioId) {
-        req.usuarioId = req.session.usuarioId;
-        req.usuarioTipo = req.session.usuarioTipo;
-        next();
-    } else {
-        if (req.path.startsWith('/api/')) {
-            return res.status(401).json({ erro: 'Não autenticado' });
-        } else {
-            return res.redirect('/login.html');
-        }
-    }
-}
-
-// ==================== ROTA DE DIAGNÓSTICO (PROTEGIDA) ====================
-app.get('/api/diagnostico', verificarAutenticacao, (req, res) => {
-    if (req.usuarioTipo !== 'admin') {
-        return res.status(403).json({ erro: 'Acesso restrito a administradores' });
-    }
-    db.all("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name", [], (err, tables) => {
-        if (err) return res.status(500).json({ erro: 'Erro interno' });
-        const promessas = tables.map(t => new Promise((resolve) => {
-            db.get(`SELECT COUNT(*) as count FROM ${t.name}`, [], (err, row) => {
-                resolve({ tabela: t.name, registros: row ? row.count : 0 });
-            });
-        }));
-        Promise.all(promessas).then((contagens) => {
-            res.json({ status: 'online', tabelas: contagens });
-        });
+// GOOGLE OAUTH
+app.get('/auth/google', passport.authenticate('google',{scope:['profile','email'],prompt:'select_account'}));
+app.get('/auth/google/callback',
+    passport.authenticate('google',{failureRedirect:'/login.html?erro=auth'}),
+    (req,res) => { audit(req.user.id,'LOGIN',req); res.redirect('/'); }
+);
+app.post('/auth/logout', auth, (req,res) => {
+    const uid = req.user?.id;
+    req.logout(err => {
+        req.session.destroy(()=>{ res.clearCookie('sid'); if(uid) audit(uid,'LOGOUT',req); res.json({mensagem:'Logout realizado'}); });
     });
 });
 
-// ==================== ROTAS PÚBLICAS ====================
-app.get('/login.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
+app.get('/login.html',(_,res,next)=>{ if(_.isAuthenticated()) return res.redirect('/'); next(); },
+    (req,res)=>res.sendFile(path.join(__dirname,'public','login.html')));
+app.get('/cliente',(_,res)=>res.sendFile(path.join(__dirname,'public','cliente','index.html')));
+app.get('/api/auth/me', auth, (req,res) => res.json({id:req.user.id,nome:req.user.nome,email:req.user.email,foto:req.user.foto,tipo:req.user.tipo}));
 
-app.get('/cliente', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'cliente', 'index.html'));
-});
-
-// ==================== ROTAS DE AUTENTICAÇÃO ====================
-app.post('/api/auth/cadastro', limiterCadastro, (req, res) => {
-    const nome = sanitizeString(req.body.nome);
-    const email = sanitizeString(req.body.email);
-    const senha = req.body.senha;
-    const telefone = sanitizeString(req.body.telefone);
-    const nome_empresa = sanitizeString(req.body.nome_empresa);
-    const cnpj = sanitizeString(req.body.cnpj);
-    const atividade = sanitizeString(req.body.atividade);
-
-    if (!nome || !email || !senha || !nome_empresa) {
-        return res.status(400).json({ erro: 'Campos obrigatórios faltando' });
-    }
-    if (!validarEmail(email)) {
-        return res.status(400).json({ erro: 'Email inválido' });
-    }
-    if (senha.length < 8) {
-        return res.status(400).json({ erro: 'Senha deve ter no mínimo 8 caracteres' });
-    }
-
-    db.get('SELECT id FROM usuarios WHERE email = ?', [email], (err, row) => {
-        if (err) return res.status(500).json({ erro: 'Erro interno' });
-        if (row) return res.status(400).json({ erro: 'Email já cadastrado' });
-
-        const senhaHash = bcrypt.hashSync(senha, 12);
-
-        db.run(
-            'INSERT INTO usuarios (nome, email, senha, telefone, tipo) VALUES (?, ?, ?, ?, ?)',
-            [nome, email, senhaHash, telefone, 'gestor'],
-            function (err) {
-                if (err) return res.status(500).json({ erro: 'Erro interno' });
-                const usuarioId = this.lastID;
-                db.run(
-                    'INSERT INTO empresas (usuario_id, nome_empresa, cnpj, atividade) VALUES (?, ?, ?, ?)',
-                    [usuarioId, nome_empresa, cnpj, atividade],
-                    function (err) {
-                        if (err) return res.status(500).json({ erro: 'Erro interno' });
-                        const configs = [
-                            ['notificacao_lembrete_horas', '24'],
-                            ['cancelamento_sem_custo_horas', '2'],
-                            ['notificar_cliente_lembrete', 'sim'],
-                            ['notificar_empresa_cancelamento', 'sim'],
-                            ['permitir_recorrente', 'sim'],
-                            ['whatsapp_empresa', '']
-                        ];
-                        configs.forEach(([chave, valor]) => {
-                            db.run(
-                                'INSERT OR IGNORE INTO configuracoes_avancadas (usuario_id, chave, valor) VALUES (?, ?, ?)',
-                                [usuarioId, chave, valor]
-                            );
-                        });
-                        res.json({ mensagem: '✅ Cadastro realizado com sucesso!' });
-                    }
-                );
-            }
-        );
+// DIAGNOSTICO ADMIN
+app.get('/api/diagnostico', authAdmin, (req,res) => {
+    db.all("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",[],(_,tables)=>{
+        Promise.all((tables||[]).map(t=>new Promise(r=>db.get(`SELECT COUNT(*) n FROM "${t.name}"`,[],(_,row)=>r({t:t.name,n:row?.n||0}))))).then(d=>res.json({ok:true,tabelas:d}));
     });
 });
 
-app.post('/api/auth/login', limiterLogin, (req, res) => {
-    const email = sanitizeString(req.body.email);
-    const senha = req.body.senha;
+// PROTEGER APIs
+['clientes','servicos','colaboradores','agendamentos','configuracoes','dashboard','aniversariantes','empresa']
+    .forEach(r => app.use('/api/'+r, auth));
 
-    if (!email || !senha) {
-        return res.status(400).json({ erro: 'Email e senha obrigatórios' });
-    }
-    if (!validarEmail(email)) {
-        return res.status(400).json({ erro: 'Email ou senha inválidos' });
-    }
-
-    db.get('SELECT * FROM usuarios WHERE email = ? AND ativo = 1', [email], (err, usuario) => {
-        if (err) return res.status(500).json({ erro: 'Erro interno' });
-        if (!usuario) return res.status(401).json({ erro: 'Email ou senha inválidos' });
-
-        if (usuario.bloqueado_ate && new Date(usuario.bloqueado_ate) > new Date()) {
-            return res.status(429).json({ erro: 'Conta temporariamente bloqueada. Tente novamente mais tarde.' });
-        }
-
-        if (!bcrypt.compareSync(senha, usuario.senha)) {
-            const novasTentativas = (usuario.tentativas_login || 0) + 1;
-            if (novasTentativas >= 5) {
-                const bloqueioAte = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-                db.run('UPDATE usuarios SET tentativas_login = ?, bloqueado_ate = ? WHERE id = ?',
-                    [novasTentativas, bloqueioAte, usuario.id]);
-                return res.status(429).json({ erro: 'Conta bloqueada por 15 minutos após muitas tentativas incorretas.' });
-            }
-            db.run('UPDATE usuarios SET tentativas_login = ? WHERE id = ?', [novasTentativas, usuario.id]);
-            return res.status(401).json({ erro: 'Email ou senha inválidos' });
-        }
-
-        db.run('UPDATE usuarios SET tentativas_login = 0, bloqueado_ate = NULL WHERE id = ?', [usuario.id]);
-
-        req.session.regenerate((err) => {
-            if (err) return res.status(500).json({ erro: 'Erro interno' });
-            req.session.usuarioId = usuario.id;
-            req.session.usuarioNome = usuario.nome;
-            req.session.usuarioEmail = usuario.email;
-            req.session.usuarioTipo = usuario.tipo;
-
-            res.json({
-                mensagem: '✅ Login realizado!',
-                usuario: {
-                    id: usuario.id,
-                    nome: usuario.nome,
-                    email: usuario.email,
-                    tipo: usuario.tipo
-                }
-            });
-        });
+// CLIENTES
+app.get('/api/clientes',(req,res)=>{
+    db.all('SELECT * FROM clientes WHERE usuario_id=? ORDER BY nome COLLATE NOCASE',[req.user.id],(err,rows)=>{
+        if(err) return res.status(500).json({erro:'Erro interno'}); res.json(rows||[]);
+    });
+});
+app.post('/api/clientes',(req,res)=>{
+    const nome=sanitize(req.body.nome), email=sanitize(req.body.email),
+          tel=sanitize(req.body.telefone,20), dn=sanitize(req.body.data_nascimento,10), end=sanitize(req.body.endereco);
+    if(!nome) return res.status(400).json({erro:'Nome obrigatorio'});
+    if(email&&!isEmail(email)) return res.status(400).json({erro:'Email invalido'});
+    if(dn&&!isDate(dn)) return res.status(400).json({erro:'Data invalida'});
+    db.run('INSERT INTO clientes (usuario_id,nome,email,telefone,data_nascimento,endereco) VALUES (?,?,?,?,?,?)',
+        [req.user.id,nome,email||null,tel||null,dn||null,end||null], function(err){
+        if(err) return res.status(500).json({erro:'Erro interno'});
+        audit(req.user.id,'CLIENTE_CRIADO:'+this.lastID,req);
+        res.status(201).json({mensagem:'Cliente cadastrado',id:this.lastID});
+    });
+});
+app.put('/api/clientes/:id',(req,res)=>{
+    const id=parseInt(req.params.id); if(!id||id<=0) return res.status(400).json({erro:'ID invalido'});
+    const nome=sanitize(req.body.nome), email=sanitize(req.body.email),
+          tel=sanitize(req.body.telefone,20), dn=sanitize(req.body.data_nascimento,10), end=sanitize(req.body.endereco);
+    if(!nome) return res.status(400).json({erro:'Nome obrigatorio'});
+    if(email&&!isEmail(email)) return res.status(400).json({erro:'Email invalido'});
+    db.run('UPDATE clientes SET nome=?,email=?,telefone=?,data_nascimento=?,endereco=? WHERE id=? AND usuario_id=?',
+        [nome,email||null,tel||null,dn||null,end||null,id,req.user.id], function(err){
+        if(err) return res.status(500).json({erro:'Erro interno'});
+        if(!this.changes) return res.status(404).json({erro:'Nao encontrado'});
+        res.json({mensagem:'Cliente atualizado'});
+    });
+});
+app.delete('/api/clientes/:id',(req,res)=>{
+    const id=parseInt(req.params.id); if(!id||id<=0) return res.status(400).json({erro:'ID invalido'});
+    db.run('DELETE FROM clientes WHERE id=? AND usuario_id=?',[id,req.user.id],function(err){
+        if(err) return res.status(500).json({erro:'Erro interno'});
+        if(!this.changes) return res.status(404).json({erro:'Nao encontrado'});
+        audit(req.user.id,'CLIENTE_REMOVIDO:'+id,req); res.json({mensagem:'Removido'});
     });
 });
 
-app.post('/api/auth/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) return res.status(500).json({ erro: 'Erro ao encerrar sessão' });
-        res.clearCookie('sid');
-        res.json({ mensagem: '✅ Logout realizado' });
+// SERVICOS
+app.get('/api/servicos',(req,res)=>{
+    db.all('SELECT * FROM servicos WHERE usuario_id=? AND ativo=1 ORDER BY nome COLLATE NOCASE',[req.user.id],(err,rows)=>{
+        if(err) return res.status(500).json({erro:'Erro interno'}); res.json(rows||[]);
+    });
+});
+app.post('/api/servicos',(req,res)=>{
+    const nome=sanitize(req.body.nome), desc=sanitize(req.body.descricao),
+          preco=Math.max(0,parseFloat(req.body.preco)||0), dur=Math.max(0,parseInt(req.body.duracao)||0);
+    if(!nome) return res.status(400).json({erro:'Nome obrigatorio'});
+    db.run('INSERT INTO servicos (usuario_id,nome,descricao,preco,duracao) VALUES (?,?,?,?,?)',
+        [req.user.id,nome,desc||null,preco,dur], function(err){
+        if(err) return res.status(500).json({erro:'Erro interno'});
+        res.status(201).json({mensagem:'Servico cadastrado',id:this.lastID});
+    });
+});
+app.put('/api/servicos/:id',(req,res)=>{
+    const id=parseInt(req.params.id); if(!id||id<=0) return res.status(400).json({erro:'ID invalido'});
+    const nome=sanitize(req.body.nome), desc=sanitize(req.body.descricao),
+          preco=Math.max(0,parseFloat(req.body.preco)||0), dur=Math.max(0,parseInt(req.body.duracao)||0),
+          ativo=(req.body.ativo===false||req.body.ativo===0)?0:1;
+    if(!nome) return res.status(400).json({erro:'Nome obrigatorio'});
+    db.run('UPDATE servicos SET nome=?,descricao=?,preco=?,duracao=?,ativo=? WHERE id=? AND usuario_id=?',
+        [nome,desc||null,preco,dur,ativo,id,req.user.id], function(err){
+        if(err) return res.status(500).json({erro:'Erro interno'});
+        if(!this.changes) return res.status(404).json({erro:'Nao encontrado'});
+        res.json({mensagem:'Servico atualizado'});
+    });
+});
+app.delete('/api/servicos/:id',(req,res)=>{
+    const id=parseInt(req.params.id); if(!id||id<=0) return res.status(400).json({erro:'ID invalido'});
+    db.run('UPDATE servicos SET ativo=0 WHERE id=? AND usuario_id=?',[id,req.user.id],function(err){
+        if(err) return res.status(500).json({erro:'Erro interno'});
+        if(!this.changes) return res.status(404).json({erro:'Nao encontrado'});
+        res.json({mensagem:'Desativado'});
     });
 });
 
-app.get('/api/auth/me', verificarAutenticacao, (req, res) => {
-    db.get('SELECT id, nome, email, tipo FROM usuarios WHERE id = ?', [req.session.usuarioId], (err, usuario) => {
-        if (err) return res.status(500).json({ erro: 'Erro interno' });
-        if (!usuario) return res.status(404).json({ erro: 'Usuário não encontrado' });
-        res.json(usuario);
+// COLABORADORES
+app.get('/api/colaboradores',(req,res)=>{
+    db.all('SELECT * FROM colaboradores WHERE usuario_id=? AND ativo=1 ORDER BY nome COLLATE NOCASE',[req.user.id],(err,rows)=>{
+        if(err) return res.status(500).json({erro:'Erro interno'}); res.json(rows||[]);
+    });
+});
+app.post('/api/colaboradores',(req,res)=>{
+    const nome=sanitize(req.body.nome), esp=sanitize(req.body.especialidade),
+          tel=sanitize(req.body.telefone,20), email=sanitize(req.body.email), desc=sanitize(req.body.descricao);
+    if(!nome) return res.status(400).json({erro:'Nome obrigatorio'});
+    if(email&&!isEmail(email)) return res.status(400).json({erro:'Email invalido'});
+    db.run('INSERT INTO colaboradores (usuario_id,nome,especialidade,telefone,email,descricao) VALUES (?,?,?,?,?,?)',
+        [req.user.id,nome,esp||null,tel||null,email||null,desc||null], function(err){
+        if(err) return res.status(500).json({erro:'Erro interno'});
+        res.status(201).json({mensagem:'Colaborador cadastrado',id:this.lastID});
+    });
+});
+app.put('/api/colaboradores/:id',(req,res)=>{
+    const id=parseInt(req.params.id); if(!id||id<=0) return res.status(400).json({erro:'ID invalido'});
+    const nome=sanitize(req.body.nome), esp=sanitize(req.body.especialidade),
+          tel=sanitize(req.body.telefone,20), email=sanitize(req.body.email), desc=sanitize(req.body.descricao);
+    if(!nome) return res.status(400).json({erro:'Nome obrigatorio'});
+    if(email&&!isEmail(email)) return res.status(400).json({erro:'Email invalido'});
+    db.run('UPDATE colaboradores SET nome=?,especialidade=?,telefone=?,email=?,descricao=? WHERE id=? AND usuario_id=?',
+        [nome,esp||null,tel||null,email||null,desc||null,id,req.user.id], function(err){
+        if(err) return res.status(500).json({erro:'Erro interno'});
+        if(!this.changes) return res.status(404).json({erro:'Nao encontrado'});
+        res.json({mensagem:'Colaborador atualizado'});
+    });
+});
+app.delete('/api/colaboradores/:id',(req,res)=>{
+    const id=parseInt(req.params.id); if(!id||id<=0) return res.status(400).json({erro:'ID invalido'});
+    db.run('UPDATE colaboradores SET ativo=0 WHERE id=? AND usuario_id=?',[id,req.user.id],function(err){
+        if(err) return res.status(500).json({erro:'Erro interno'});
+        if(!this.changes) return res.status(404).json({erro:'Nao encontrado'});
+        res.json({mensagem:'Desativado'});
     });
 });
 
-// ==================== APLICAR AUTENTICAÇÃO NAS ROTAS ====================
-app.use('/api/clientes', verificarAutenticacao);
-app.use('/api/servicos', verificarAutenticacao);
-app.use('/api/colaboradores', verificarAutenticacao);
-app.use('/api/agendamentos', verificarAutenticacao);
-app.use('/api/configuracoes', verificarAutenticacao);
-app.use('/api/dashboard', verificarAutenticacao);
-app.use('/api/aniversariantes', verificarAutenticacao);
-app.use('/api/empresa', verificarAutenticacao);
-
-// ==================== CLIENTES ====================
-app.get('/api/clientes', (req, res) => {
-    db.all('SELECT * FROM clientes WHERE usuario_id = ? ORDER BY nome', [req.usuarioId], (err, rows) => {
-        if (err) return res.status(500).json({ erro: 'Erro interno' });
-        res.json(rows || []);
-    });
-});
-
-app.post('/api/clientes', (req, res) => {
-    const nome = sanitizeString(req.body.nome);
-    const email = sanitizeString(req.body.email);
-    const telefone = sanitizeString(req.body.telefone);
-    const data_nascimento = sanitizeString(req.body.data_nascimento);
-    const endereco = sanitizeString(req.body.endereco);
-
-    if (!nome) return res.status(400).json({ erro: 'Nome obrigatório' });
-    if (email && !validarEmail(email)) return res.status(400).json({ erro: 'Email inválido' });
-
-    db.run(
-        'INSERT INTO clientes (usuario_id, nome, email, telefone, data_nascimento, endereco) VALUES (?, ?, ?, ?, ?, ?)',
-        [req.usuarioId, nome, email, telefone, data_nascimento, endereco],
-        function (err) {
-            if (err) return res.status(400).json({ erro: 'Erro ao cadastrar cliente' });
-            res.json({ mensagem: '✅ Cliente cadastrado!', id: this.lastID });
-        }
-    );
-});
-
-app.put('/api/clientes/:id', (req, res) => {
-    const { id } = req.params;
-    const nome = sanitizeString(req.body.nome);
-    const email = sanitizeString(req.body.email);
-    const telefone = sanitizeString(req.body.telefone);
-    const data_nascimento = sanitizeString(req.body.data_nascimento);
-    const endereco = sanitizeString(req.body.endereco);
-
-    if (!nome) return res.status(400).json({ erro: 'Nome obrigatório' });
-    if (email && !validarEmail(email)) return res.status(400).json({ erro: 'Email inválido' });
-
-    db.run(
-        'UPDATE clientes SET nome=?, email=?, telefone=?, data_nascimento=?, endereco=? WHERE id=? AND usuario_id=?',
-        [nome, email, telefone, data_nascimento, endereco, id, req.usuarioId],
-        function (err) {
-            if (err) return res.status(500).json({ erro: 'Erro interno' });
-            if (this.changes === 0) return res.status(404).json({ erro: 'Cliente não encontrado' });
-            res.json({ mensagem: '✅ Cliente atualizado!' });
-        }
-    );
-});
-
-app.delete('/api/clientes/:id', (req, res) => {
-    const { id } = req.params;
-    db.run('DELETE FROM clientes WHERE id = ? AND usuario_id = ?', [id, req.usuarioId], function (err) {
-        if (err) return res.status(500).json({ erro: 'Erro interno' });
-        if (this.changes === 0) return res.status(404).json({ erro: 'Cliente não encontrado' });
-        res.json({ mensagem: '✅ Cliente removido!' });
-    });
-});
-
-// ==================== SERVIÇOS ====================
-app.get('/api/servicos', (req, res) => {
-    db.all('SELECT * FROM servicos WHERE usuario_id = ? AND ativo = 1 ORDER BY nome', [req.usuarioId], (err, rows) => {
-        if (err) return res.status(500).json({ erro: 'Erro interno' });
-        res.json(rows || []);
-    });
-});
-
-app.post('/api/servicos', (req, res) => {
-    const nome = sanitizeString(req.body.nome);
-    const descricao = sanitizeString(req.body.descricao);
-    const preco = parseFloat(req.body.preco) || 0;
-    const duracao = parseInt(req.body.duracao) || 0;
-
-    if (!nome) return res.status(400).json({ erro: 'Nome obrigatório' });
-
-    db.run(
-        'INSERT INTO servicos (usuario_id, nome, descricao, preco, duracao) VALUES (?, ?, ?, ?, ?)',
-        [req.usuarioId, nome, descricao, preco, duracao],
-        function (err) {
-            if (err) return res.status(400).json({ erro: 'Erro ao cadastrar serviço' });
-            res.json({ mensagem: '✅ Serviço cadastrado!', id: this.lastID });
-        }
-    );
-});
-
-app.put('/api/servicos/:id', (req, res) => {
-    const { id } = req.params;
-    const nome = sanitizeString(req.body.nome);
-    const descricao = sanitizeString(req.body.descricao);
-    const preco = parseFloat(req.body.preco) || 0;
-    const duracao = parseInt(req.body.duracao) || 0;
-    const ativo = req.body.ativo !== undefined ? req.body.ativo : 1;
-
-    if (!nome) return res.status(400).json({ erro: 'Nome obrigatório' });
-
-    db.run(
-        'UPDATE servicos SET nome=?, descricao=?, preco=?, duracao=?, ativo=? WHERE id=? AND usuario_id=?',
-        [nome, descricao, preco, duracao, ativo, id, req.usuarioId],
-        function (err) {
-            if (err) return res.status(500).json({ erro: 'Erro interno' });
-            if (this.changes === 0) return res.status(404).json({ erro: 'Serviço não encontrado' });
-            res.json({ mensagem: '✅ Serviço atualizado!' });
-        }
-    );
-});
-
-app.delete('/api/servicos/:id', (req, res) => {
-    const { id } = req.params;
-    db.run('UPDATE servicos SET ativo = 0 WHERE id = ? AND usuario_id = ?', [id, req.usuarioId], function (err) {
-        if (err) return res.status(500).json({ erro: 'Erro interno' });
-        if (this.changes === 0) return res.status(404).json({ erro: 'Serviço não encontrado' });
-        res.json({ mensagem: '✅ Serviço desativado!' });
-    });
-});
-
-// ==================== COLABORADORES ====================
-app.get('/api/colaboradores', (req, res) => {
-    db.all('SELECT * FROM colaboradores WHERE usuario_id = ? AND ativo = 1 ORDER BY nome', [req.usuarioId], (err, rows) => {
-        if (err) return res.status(500).json({ erro: 'Erro interno' });
-        res.json(rows || []);
-    });
-});
-
-app.post('/api/colaboradores', (req, res) => {
-    const nome = sanitizeString(req.body.nome);
-    const especialidade = sanitizeString(req.body.especialidade);
-    const telefone = sanitizeString(req.body.telefone);
-    const email = sanitizeString(req.body.email);
-    const descricao = sanitizeString(req.body.descricao);
-
-    if (!nome) return res.status(400).json({ erro: 'Nome obrigatório' });
-    if (email && !validarEmail(email)) return res.status(400).json({ erro: 'Email inválido' });
-
-    db.run(
-        'INSERT INTO colaboradores (usuario_id, nome, especialidade, telefone, email, descricao) VALUES (?, ?, ?, ?, ?, ?)',
-        [req.usuarioId, nome, especialidade, telefone, email, descricao],
-        function (err) {
-            if (err) return res.status(400).json({ erro: 'Erro ao cadastrar colaborador' });
-            res.json({ id: this.lastID, mensagem: '✅ Colaborador cadastrado!' });
-        }
-    );
-});
-
-app.put('/api/colaboradores/:id', (req, res) => {
-    const { id } = req.params;
-    const nome = sanitizeString(req.body.nome);
-    const especialidade = sanitizeString(req.body.especialidade);
-    const telefone = sanitizeString(req.body.telefone);
-    const email = sanitizeString(req.body.email);
-    const descricao = sanitizeString(req.body.descricao);
-
-    if (!nome) return res.status(400).json({ erro: 'Nome obrigatório' });
-    if (email && !validarEmail(email)) return res.status(400).json({ erro: 'Email inválido' });
-
-    db.run(
-        'UPDATE colaboradores SET nome=?, especialidade=?, telefone=?, email=?, descricao=? WHERE id=? AND usuario_id=?',
-        [nome, especialidade, telefone, email, descricao, id, req.usuarioId],
-        function (err) {
-            if (err) return res.status(500).json({ erro: 'Erro interno' });
-            if (this.changes === 0) return res.status(404).json({ erro: 'Colaborador não encontrado' });
-            res.json({ mensagem: '✅ Colaborador atualizado!' });
-        }
-    );
-});
-
-app.delete('/api/colaboradores/:id', (req, res) => {
-    const { id } = req.params;
-    db.run('UPDATE colaboradores SET ativo = 0 WHERE id = ? AND usuario_id = ?', [id, req.usuarioId], function (err) {
-        if (err) return res.status(500).json({ erro: 'Erro interno' });
-        if (this.changes === 0) return res.status(404).json({ erro: 'Colaborador não encontrado' });
-        res.json({ mensagem: '✅ Colaborador desativado!' });
-    });
-});
-
-// ==================== AGENDAMENTOS ====================
-app.get('/api/agendamentos', (req, res) => {
-    const sql = `
-        SELECT a.*, c.nome as cliente_nome, c.telefone as cliente_telefone, c.data_nascimento,
-               s.nome as servico_nome, s.preco, col.nome as colaborador_nome
+// AGENDAMENTOS
+app.get('/api/agendamentos',(req,res)=>{
+    const {data_inicio,data_fim}=req.query;
+    let sql=`SELECT a.id,a.data_agendamento,a.hora_agendamento,a.status,a.observacoes,
+        c.nome AS cliente_nome,c.telefone AS cliente_telefone,
+        s.nome AS servico_nome,s.preco,col.nome AS colaborador_nome
         FROM agendamentos a
-        LEFT JOIN clientes c ON a.cliente_id = c.id
-        LEFT JOIN servicos s ON a.servico_id = s.id
-        LEFT JOIN colaboradores col ON a.colaborador_id = col.id
-        WHERE a.usuario_id = ?
-        ORDER BY a.data_agendamento DESC, a.hora_agendamento DESC
-    `;
-    db.all(sql, [req.usuarioId], (err, rows) => {
-        if (err) return res.status(500).json({ erro: 'Erro interno' });
-        res.json(rows || []);
-    });
+        LEFT JOIN clientes c ON a.cliente_id=c.id
+        LEFT JOIN servicos s ON a.servico_id=s.id
+        LEFT JOIN colaboradores col ON a.colaborador_id=col.id
+        WHERE a.usuario_id=?`;
+    const p=[req.user.id];
+    if(data_inicio&&isDate(data_inicio)){sql+=' AND a.data_agendamento>=?';p.push(data_inicio);}
+    if(data_fim&&isDate(data_fim)){sql+=' AND a.data_agendamento<=?';p.push(data_fim);}
+    sql+=' ORDER BY a.data_agendamento DESC,a.hora_agendamento DESC LIMIT 500';
+    db.all(sql,p,(err,rows)=>{if(err) return res.status(500).json({erro:'Erro interno'}); res.json(rows||[]);});
 });
-
-app.post('/api/agendamentos', (req, res) => {
-    const cliente_id = parseInt(req.body.cliente_id);
-    const servico_id = parseInt(req.body.servico_id);
-    const colaborador_id = req.body.colaborador_id ? parseInt(req.body.colaborador_id) : null;
-    const data_agendamento = sanitizeString(req.body.data_agendamento);
-    const hora_agendamento = sanitizeString(req.body.hora_agendamento);
-    const observacoes = sanitizeString(req.body.observacoes);
-
-    if (!cliente_id || !servico_id || !data_agendamento || !hora_agendamento) {
-        return res.status(400).json({ erro: 'Campos obrigatórios faltando' });
-    }
-
-    db.get('SELECT id FROM clientes WHERE id = ? AND usuario_id = ?', [cliente_id, req.usuarioId], (err, cliente) => {
-        if (err) return res.status(500).json({ erro: 'Erro interno' });
-        if (!cliente) return res.status(400).json({ erro: 'Cliente inválido' });
-
-        db.run(
-            'INSERT INTO agendamentos (usuario_id, cliente_id, servico_id, colaborador_id, data_agendamento, hora_agendamento, observacoes) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [req.usuarioId, cliente_id, servico_id, colaborador_id, data_agendamento, hora_agendamento, observacoes],
-            function (err) {
-                if (err) return res.status(400).json({ erro: 'Erro ao criar agendamento' });
-                res.json({ mensagem: '✅ Agendamento criado!', id: this.lastID });
-            }
-        );
-    });
-});
-
-app.put('/api/agendamentos/:id', (req, res) => {
-    const { id } = req.params;
-    const status = sanitizeString(req.body.status);
-    const statusValidos = ['pendente', 'confirmado', 'cancelado', 'concluido'];
-
-    if (status && !statusValidos.includes(status)) {
-        return res.status(400).json({ erro: 'Status inválido' });
-    }
-
-    db.run(
-        'UPDATE agendamentos SET status=? WHERE id=? AND usuario_id=?',
-        [status, id, req.usuarioId],
-        function (err) {
-            if (err) return res.status(500).json({ erro: 'Erro interno' });
-            if (this.changes === 0) return res.status(404).json({ erro: 'Agendamento não encontrado' });
-            res.json({ mensagem: '✅ Agendamento atualizado!' });
-        }
-    );
-});
-
-app.delete('/api/agendamentos/:id', (req, res) => {
-    const { id } = req.params;
-    db.run('DELETE FROM agendamentos WHERE id = ? AND usuario_id = ?', [id, req.usuarioId], function (err) {
-        if (err) return res.status(500).json({ erro: 'Erro interno' });
-        if (this.changes === 0) return res.status(404).json({ erro: 'Agendamento não encontrado' });
-        res.json({ mensagem: '✅ Agendamento removido!' });
-    });
-});
-
-// ==================== DASHBOARD ====================
-app.get('/api/dashboard', (req, res) => {
-    const hoje = new Date().toISOString().split('T')[0];
-    const dia = new Date().getDate().toString().padStart(2, '0');
-    const mes = (new Date().getMonth() + 1).toString().padStart(2, '0');
-
-    db.get(`
-        SELECT
-            (SELECT COUNT(*) FROM clientes WHERE usuario_id = ?) as total_clientes,
-            (SELECT COUNT(*) FROM servicos WHERE usuario_id = ? AND ativo = 1) as total_servicos,
-            (SELECT COUNT(*) FROM colaboradores WHERE usuario_id = ? AND ativo = 1) as total_colaboradores,
-            (SELECT COUNT(*) FROM agendamentos WHERE usuario_id = ? AND data_agendamento = ?) as agendamentos_hoje,
-            (SELECT COUNT(*) FROM agendamentos WHERE usuario_id = ? AND status = 'pendente') as agendamentos_pendentes,
-            (SELECT COUNT(*) FROM clientes WHERE usuario_id = ? AND data_nascimento IS NOT NULL AND strftime('%m-%d', data_nascimento) = ?) as aniversariantes_hoje
-    `, [
-        req.usuarioId, req.usuarioId, req.usuarioId,
-        req.usuarioId, hoje, req.usuarioId,
-        req.usuarioId, `${mes}-${dia}`
-    ], (err, row) => {
-        if (err) return res.status(500).json({ erro: 'Erro interno' });
-        res.json(row || {
-            total_clientes: 0, total_servicos: 0, total_colaboradores: 0,
-            agendamentos_hoje: 0, agendamentos_pendentes: 0, aniversariantes_hoje: 0
+app.post('/api/agendamentos',(req,res)=>{
+    const cid=parseInt(req.body.cliente_id), sid=parseInt(req.body.servico_id),
+          colid=req.body.colaborador_id?parseInt(req.body.colaborador_id):null,
+          data=sanitize(req.body.data_agendamento,10), hora=sanitize(req.body.hora_agendamento,5),
+          obs=sanitize(req.body.observacoes,1000);
+    if(!cid||cid<=0) return res.status(400).json({erro:'Cliente invalido'});
+    if(!sid||sid<=0) return res.status(400).json({erro:'Servico invalido'});
+    if(!data||!isDate(data)) return res.status(400).json({erro:'Data invalida'});
+    if(!hora||!isHora(hora)) return res.status(400).json({erro:'Hora invalida'});
+    db.get('SELECT id FROM clientes WHERE id=? AND usuario_id=?',[cid,req.user.id],(err,c)=>{
+        if(err||!c) return res.status(403).json({erro:'Cliente nao autorizado'});
+        db.get('SELECT id FROM servicos WHERE id=? AND usuario_id=? AND ativo=1',[sid,req.user.id],(err,s)=>{
+            if(err||!s) return res.status(403).json({erro:'Servico nao autorizado'});
+            db.run('INSERT INTO agendamentos (usuario_id,cliente_id,servico_id,colaborador_id,data_agendamento,hora_agendamento,observacoes) VALUES (?,?,?,?,?,?,?)',
+                [req.user.id,cid,sid,colid,data,hora,obs||null], function(err){
+                if(err) return res.status(500).json({erro:'Erro interno'});
+                audit(req.user.id,'AGEND_CRIADO:'+this.lastID,req);
+                res.status(201).json({mensagem:'Agendamento criado',id:this.lastID});
+            });
         });
     });
 });
-
-// ==================== ANIVERSARIANTES ====================
-app.get('/api/aniversariantes', (req, res) => {
-    const mes = req.query.mes ? parseInt(req.query.mes) : (new Date().getMonth() + 1);
-    if (mes < 1 || mes > 12) return res.status(400).json({ erro: 'Mês inválido' });
-    const mesStr = mes.toString().padStart(2, '0');
-
-    db.all(
-        `SELECT id, nome, email, telefone, data_nascimento FROM clientes
-         WHERE usuario_id = ? AND data_nascimento IS NOT NULL
-         AND strftime('%m', data_nascimento) = ?
-         ORDER BY strftime('%d', data_nascimento)`,
-        [req.usuarioId, mesStr],
-        (err, rows) => {
-            if (err) return res.status(500).json({ erro: 'Erro interno' });
-            res.json(rows || []);
-        }
-    );
+app.put('/api/agendamentos/:id',(req,res)=>{
+    const id=parseInt(req.params.id); if(!id||id<=0) return res.status(400).json({erro:'ID invalido'});
+    const STATUS=['pendente','confirmado','cancelado','concluido'];
+    const status=sanitize(req.body.status,20);
+    if(!STATUS.includes(status)) return res.status(400).json({erro:'Status invalido'});
+    db.run('UPDATE agendamentos SET status=? WHERE id=? AND usuario_id=?',[status,id,req.user.id],function(err){
+        if(err) return res.status(500).json({erro:'Erro interno'});
+        if(!this.changes) return res.status(404).json({erro:'Nao encontrado'});
+        res.json({mensagem:'Atualizado'});
+    });
 });
-
-// ==================== EMPRESA ====================
-app.get('/api/empresa', (req, res) => {
-    db.get('SELECT * FROM empresas WHERE usuario_id = ?', [req.usuarioId], (err, row) => {
-        if (err) return res.status(500).json({ erro: 'Erro interno' });
-        res.json(row || {});
+app.delete('/api/agendamentos/:id',(req,res)=>{
+    const id=parseInt(req.params.id); if(!id||id<=0) return res.status(400).json({erro:'ID invalido'});
+    db.run('DELETE FROM agendamentos WHERE id=? AND usuario_id=?',[id,req.user.id],function(err){
+        if(err) return res.status(500).json({erro:'Erro interno'});
+        if(!this.changes) return res.status(404).json({erro:'Nao encontrado'});
+        res.json({mensagem:'Removido'});
     });
 });
 
-app.put('/api/empresa', (req, res) => {
-    const campos = ['nome_empresa', 'cnpj', 'inscricao_estadual', 'atividade', 'endereco',
-        'cidade', 'estado', 'cep', 'telefone', 'email', 'site', 'descricao', 'cor_primaria', 'cor_secundaria'];
-    const values = campos.map(c => sanitizeString(req.body[c]));
+// DASHBOARD
+app.get('/api/dashboard',(req,res)=>{
+    const hoje=new Date().toISOString().split('T')[0];
+    const mes=(new Date().getMonth()+1).toString().padStart(2,'0');
+    const dia=new Date().getDate().toString().padStart(2,'0');
+    db.get(`SELECT
+        (SELECT COUNT(*) FROM clientes WHERE usuario_id=?) total_clientes,
+        (SELECT COUNT(*) FROM servicos WHERE usuario_id=? AND ativo=1) total_servicos,
+        (SELECT COUNT(*) FROM colaboradores WHERE usuario_id=? AND ativo=1) total_colaboradores,
+        (SELECT COUNT(*) FROM agendamentos WHERE usuario_id=? AND data_agendamento=?) agendamentos_hoje,
+        (SELECT COUNT(*) FROM agendamentos WHERE usuario_id=? AND status='pendente') agendamentos_pendentes,
+        (SELECT COUNT(*) FROM clientes WHERE usuario_id=? AND data_nascimento IS NOT NULL AND strftime('%m-%d',data_nascimento)=?) aniversariantes_hoje`,
+        [req.user.id,req.user.id,req.user.id,req.user.id,hoje,req.user.id,req.user.id,mes+'-'+dia],
+        (err,row)=>{if(err) return res.status(500).json({erro:'Erro interno'}); res.json(row||{});});
+});
 
-    db.get('SELECT id FROM empresas WHERE usuario_id = ?', [req.usuarioId], (err, row) => {
-        if (err) return res.status(500).json({ erro: 'Erro interno' });
+// ANIVERSARIANTES
+app.get('/api/aniversariantes',(req,res)=>{
+    const mes=Math.min(12,Math.max(1,parseInt(req.query.mes)||new Date().getMonth()+1));
+    const m=mes.toString().padStart(2,'0');
+    db.all(`SELECT id,nome,email,telefone,data_nascimento FROM clientes
+        WHERE usuario_id=? AND data_nascimento IS NOT NULL AND strftime('%m',data_nascimento)=?
+        ORDER BY strftime('%d',data_nascimento)`,
+        [req.user.id,m],(err,rows)=>{if(err) return res.status(500).json({erro:'Erro interno'}); res.json(rows||[]);});
+});
 
-        if (row) {
-            const sets = campos.map(c => `${c}=?`).join(', ');
-            db.run(`UPDATE empresas SET ${sets} WHERE usuario_id=?`, [...values, req.usuarioId], function (err) {
-                if (err) return res.status(500).json({ erro: 'Erro interno' });
-                res.json({ mensagem: '✅ Empresa atualizada!' });
-            });
-        } else {
-            const cols = campos.join(', ');
-            const placeholders = campos.map(() => '?').join(', ');
-            db.run(`INSERT INTO empresas (usuario_id, ${cols}) VALUES (?, ${placeholders})`, [req.usuarioId, ...values], function (err) {
-                if (err) return res.status(500).json({ erro: 'Erro interno' });
-                res.json({ mensagem: '✅ Empresa cadastrada!' });
-            });
-        }
+// EMPRESA
+app.get('/api/empresa',(req,res)=>{
+    db.get('SELECT * FROM empresas WHERE usuario_id=?',[req.user.id],(err,row)=>{
+        if(err) return res.status(500).json({erro:'Erro interno'}); res.json(row||{});
+    });
+});
+app.put('/api/empresa',(req,res)=>{
+    const C=['nome_empresa','cnpj','inscricao_estadual','atividade','endereco','cidade','estado','cep','telefone','email','site','descricao','cor_primaria','cor_secundaria'];
+    const v=C.map(c=>sanitize(req.body[c]));
+    db.get('SELECT id FROM empresas WHERE usuario_id=?',[req.user.id],(err,row)=>{
+        if(err) return res.status(500).json({erro:'Erro interno'});
+        const ok=e=>e?res.status(500).json({erro:'Erro interno'}):res.json({mensagem:'Empresa salva'});
+        if(row) db.run('UPDATE empresas SET '+C.map(c=>c+'=?').join(',')+'WHERE usuario_id=?',[...v,req.user.id],function(e){ok(e);});
+        else db.run('INSERT INTO empresas (usuario_id,'+C.join(',')+'VALUES (?,'+C.map(()=>'?').join(',')+')',[req.user.id,...v],function(e){ok(e);});
     });
 });
 
-// ==================== CONFIGURAÇÕES ====================
-app.get('/api/configuracoes', (req, res) => {
-    db.all('SELECT chave, valor FROM configuracoes_avancadas WHERE usuario_id = ?', [req.usuarioId], (err, rows) => {
-        if (err) return res.status(500).json({ erro: 'Erro interno' });
-        const config = {};
-        (rows || []).forEach(r => { config[r.chave] = r.valor; });
-        res.json(config);
+// CONFIGURACOES
+const CHAVES=['lembrete_horas','cancelamento_horas','notif_cliente','notif_empresa','permitir_recorrente','whatsapp'];
+app.get('/api/configuracoes',(req,res)=>{
+    db.all('SELECT chave,valor FROM configuracoes WHERE usuario_id=?',[req.user.id],(err,rows)=>{
+        if(err) return res.status(500).json({erro:'Erro interno'});
+        const cfg={}; (rows||[]).forEach(r=>{cfg[r.chave]=r.valor;}); res.json(cfg);
     });
 });
-
-app.put('/api/configuracoes', (req, res) => {
-    const chavesPermitidas = ['notificacao_lembrete_horas', 'cancelamento_sem_custo_horas',
-        'notificar_cliente_lembrete', 'notificar_empresa_cancelamento', 'permitir_recorrente', 'whatsapp_empresa'];
-
-    const updates = [];
-    chavesPermitidas.forEach(chave => {
-        if (req.body[chave] !== undefined) {
-            updates.push([sanitizeString(String(req.body[chave])), req.usuarioId, chave]);
-        }
-    });
-
-    if (updates.length === 0) return res.status(400).json({ erro: 'Nenhuma configuração válida enviada' });
-
-    let pendentes = updates.length;
-    let erroEnviado = false;
-
-    updates.forEach(([valor, uid, chave]) => {
-        db.run(
-            'INSERT INTO configuracoes_avancadas (usuario_id, chave, valor) VALUES (?, ?, ?) ON CONFLICT(usuario_id, chave) DO UPDATE SET valor=excluded.valor',
-            [uid, chave, valor],
-            function (err) {
-                if (err && !erroEnviado) {
-                    erroEnviado = true;
-                    return res.status(500).json({ erro: 'Erro interno' });
-                }
-                pendentes--;
-                if (pendentes === 0 && !erroEnviado) res.json({ mensagem: '✅ Configurações salvas!' });
-            }
-        );
-    });
+app.put('/api/configuracoes',(req,res)=>{
+    const ups=CHAVES.filter(c=>req.body[c]!==undefined).map(c=>[sanitize(String(req.body[c]),200),req.user.id,c]);
+    if(!ups.length) return res.status(400).json({erro:'Nenhuma configuracao valida'});
+    let p=ups.length, err=false;
+    ups.forEach(([v,uid,c])=>db.run('INSERT INTO configuracoes (usuario_id,chave,valor) VALUES (?,?,?) ON CONFLICT(usuario_id,chave) DO UPDATE SET valor=excluded.valor',
+        [uid,c,v],e=>{if(e&&!err){err=true;return res.status(500).json({erro:'Erro interno'});}if(!--p&&!err)res.json({mensagem:'Salvo'});}));
 });
 
-// ==================== ROTAS DE PÁGINAS PROTEGIDAS ====================
-app.get('/', verificarAutenticacao, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// PAGINAS PROTEGIDAS
+app.get('/', auth, (req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
+const PAGS={'/clientes':'pages/clientes.html','/agendamentos':'pages/agendamentos.html','/servicos':'pages/servicos.html',
+    '/colaboradores':'pages/colaboradores.html','/configuracoes':'configuracoes.html',
+    '/configuracoes-avancadas':'configuracoes_avancadas.html','/empresa':'empresa.html','/aniversariantes':'aniversariantes.html'};
+Object.entries(PAGS).forEach(([r,f])=>app.get(r,auth,(req,res)=>{
+    const fp=path.join(__dirname,'public',f);
+    if(!fs.existsSync(fp)) return res.status(404).send('Pagina nao encontrada');
+    res.sendFile(fp);
+}));
+
+// 404 API
+app.use('/api/',(req,res)=>res.status(404).json({erro:'Endpoint nao encontrado'}));
+
+// ERRO GLOBAL
+app.use((err,req,res,next)=>{
+    console.error('Erro:',err.message);
+    if(req.path.startsWith('/api/')) return res.status(500).json({erro:'Erro interno do servidor'});
+    res.status(500).send('Erro interno');
 });
 
-const paginasProtegidas = {
-    '/clientes': 'pages/clientes.html',
-    '/agendamentos': 'pages/agendamentos.html',
-    '/servicos': 'pages/servicos.html',
-    '/colaboradores': 'pages/colaboradores.html',
-    '/configuracoes': 'configuracoes.html',
-    '/configuracoes-avancadas': 'configuracoes_avancadas.html',
-    '/empresa': 'empresa.html',
-    '/aniversariantes': 'aniversariantes.html'
-};
+// SHUTDOWN
+const shutdown=()=>{db.close(()=>process.exit(0));setTimeout(()=>process.exit(1),5000);};
+process.on('SIGTERM',shutdown);
+process.on('SIGINT',shutdown);
 
-Object.entries(paginasProtegidas).forEach(([rota, arquivo]) => {
-    app.get(rota, verificarAutenticacao, (req, res) => {
-        const filePath = path.join(__dirname, 'public', arquivo);
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).send('Página não encontrada');
-        }
-        res.sendFile(filePath);
-    });
-});
-
-// ==================== 404 PARA ROTAS DE API ====================
-app.use('/api/', (req, res) => {
-    res.status(404).json({ erro: 'Endpoint não encontrado' });
-});
-
-// ==================== TRATAMENTO DE ERRO GLOBAL ====================
-app.use((err, req, res, next) => {
-    const mensagem = NODE_ENV === 'production' ? 'Erro interno do servidor' : err.message;
-    if (req.path.startsWith('/api/')) {
-        res.status(500).json({ erro: mensagem });
-    } else {
-        res.status(500).send('Erro interno do servidor');
-    }
-});
-
-// ==================== GRACEFUL SHUTDOWN ====================
-process.on('SIGTERM', () => {
-    db.close();
-    process.exit(0);
-});
-
-// ==================== INICIAR SERVIDOR ====================
-app.listen(PORT, () => {
-    console.log(`
-    ╔═══════════════════════════════════════════╗
-    ║      🏛️  SISTEMA DE AGENDAMENTO v5.0      ║
-    ║                                           ║
-    ║  🚀 Servidor: http://localhost:${PORT}      ║
-    ║  🔐 Login: http://localhost:${PORT}/login  ║
-    ║  ✅ Sistema completo com autenticação!    ║
-    ╚═══════════════════════════════════════════╝
-    `);
+app.listen(PORT,()=>{
+    console.log('AgendaPro porta '+PORT+' ['+NODE_ENV+']');
+    console.log('OAuth: '+BASE_URL+'/auth/google');
 });
