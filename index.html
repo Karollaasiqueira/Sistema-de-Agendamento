@@ -26,6 +26,9 @@
                 <a href="/configuracoes"><i class="fas fa-cog"></i> WhatsApp</a>
                 <a href="/configuracoes-avancadas"><i class="fas fa-sliders-h"></i> Avançado</a>
                 <a href="/empresa"><i class="fas fa-building"></i> Minha Empresa</a>
+                <a href="/cliente" style="background: #25d366; color: white;">
+                    <i class="fab fa-whatsapp"></i> Cliente WhatsApp
+                </a>
             </nav>
             <div class="sidebar-footer">
                 <p>© 2026 AgendaPro</p>
@@ -134,7 +137,6 @@
     </div>
 
     <script>
-        // ==================== DADOS DO USUÁRIO ====================
         async function carregarDadosUsuario() {
             try {
                 const response = await fetch('/api/auth/me');
@@ -149,7 +151,6 @@
             }
         }
 
-        // ==================== DASHBOARD ====================
         async function carregarDashboard() {
             try {
                 const response = await fetch('/api/dashboard');
@@ -166,16 +167,13 @@
             }
         }
 
-        // ==================== PRÓXIMOS AGENDAMENTOS ====================
         async function carregarAgendamentos() {
             try {
                 const response = await fetch('/api/agendamentos');
                 const agendamentos = await response.json();
                 
                 const hoje = new Date().toISOString().split('T')[0];
-                const proximos = agendamentos
-                    .filter(a => a.data_agendamento >= hoje && a.status !== 'cancelado')
-                    .slice(0, 5);
+                const proximos = agendamentos.filter(a => a.data_agendamento >= hoje).slice(0, 5);
                 
                 const tbody = document.getElementById('tabelaAgendamentos');
                 
@@ -211,18 +209,15 @@
             }
         }
 
-        // ==================== LOGOUT ====================
         async function logout() {
             await fetch('/api/auth/logout', { method: 'POST' });
             window.location.href = '/login.html';
         }
 
-        // ==================== INICIALIZAÇÃO ====================
         carregarDadosUsuario();
         carregarDashboard();
         carregarAgendamentos();
 
-        // Atualizar a cada 30 segundos
         setInterval(() => {
             carregarDashboard();
             carregarAgendamentos();
