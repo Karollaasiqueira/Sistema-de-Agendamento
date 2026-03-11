@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Agendamento Profissional</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Dashboard - AgendaPro</title>
+    <link rel="stylesheet" href="/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="dashboard">
-        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo">
                 <i class="fas fa-calendar-check"></i>
@@ -21,71 +20,60 @@
                 <a href="/clientes"><i class="fas fa-users"></i> Clientes</a>
                 <a href="/agendamentos"><i class="fas fa-calendar"></i> Agendamentos</a>
                 <a href="/servicos"><i class="fas fa-cut"></i> Serviços</a>
-                <a href="#" onclick="gerarRelatorio()"><i class="fas fa-chart-bar"></i> Relatórios</a>
-		<a href="/cliente" style="background: #25d366; color: white;">
- 		   <i class="fab fa-whatsapp"></i> Cliente WhatsApp
-		</a>
+                <a href="/colaboradores"><i class="fas fa-user-md"></i> Colaboradores</a>
+                <a href="/aniversariantes"><i class="fas fa-birthday-cake"></i> Aniversariantes</a>
+                <a href="/configuracoes"><i class="fas fa-cog"></i> WhatsApp</a>
+                <a href="/configuracoes-avancadas"><i class="fas fa-sliders-h"></i> Avançado</a>
+                <a href="/empresa"><i class="fas fa-building"></i> Minha Empresa</a>
+                <a href="/cliente" style="background: #25d366; color: white;">
+                    <i class="fab fa-whatsapp"></i> Cliente WhatsApp
+                </a>
             </nav>
             <div class="sidebar-footer">
                 <p>© 2026 AgendaPro</p>
-                <p class="versao">Versão 2.1</p>
+                <p class="versao">Versão 5.0</p>
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="main-content">
             <header class="header">
                 <h1>Dashboard</h1>
                 <div class="user-info">
-    		<span>Olá, <strong id="userName">Administrador</strong></span>
-   		 <i class="fas fa-user-circle"></i>
-   		 <button onclick="logout()" style="background:none; border:none; color:#dc3545; margin-left:10px; 			cursor:pointer;">
-     		   <i class="fas fa-sign-out-alt"></i>
-  		  </button>
-		</div>>
+                    <span id="userName">Carregando...</span>
+                    <i class="fas fa-user-circle"></i>
+                    <button onclick="logout()" style="background:none; border:none; color:#dc3545; margin-left:10px; cursor:pointer;" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
             </header>
 
-            <!-- Cards -->
             <div class="cards">
                 <div class="card" onclick="window.location.href='/clientes'">
-                    <div class="card-icon blue">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="card-info">
-                        <h3 id="totalClientes">-</h3>
-                        <p>Total de Clientes</p>
-                    </div>
+                    <div class="card-icon blue"><i class="fas fa-users"></i></div>
+                    <div class="card-info"><h3 id="totalClientes">-</h3><p>Total de Clientes</p></div>
                 </div>
                 <div class="card" onclick="window.location.href='/agendamentos'">
-                    <div class="card-icon green">
-                        <i class="fas fa-calendar-check"></i>
-                    </div>
-                    <div class="card-info">
-                        <h3 id="agendamentosHoje">-</h3>
-                        <p>Agendamentos Hoje</p>
-                    </div>
+                    <div class="card-icon green"><i class="fas fa-calendar-check"></i></div>
+                    <div class="card-info"><h3 id="agendamentosHoje">-</h3><p>Agendamentos Hoje</p></div>
                 </div>
                 <div class="card" onclick="window.location.href='/agendamentos'">
-                    <div class="card-icon orange">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="card-info">
-                        <h3 id="agendamentosPendentes">-</h3>
-                        <p>Pendentes</p>
-                    </div>
+                    <div class="card-icon orange"><i class="fas fa-clock"></i></div>
+                    <div class="card-info"><h3 id="agendamentosPendentes">-</h3><p>Pendentes</p></div>
                 </div>
                 <div class="card" onclick="window.location.href='/servicos'">
-                    <div class="card-icon purple">
-                        <i class="fas fa-tag"></i>
-                    </div>
-                    <div class="card-info">
-                        <h3 id="totalServicos">-</h3>
-                        <p>Serviços</p>
-                    </div>
+                    <div class="card-icon purple"><i class="fas fa-tag"></i></div>
+                    <div class="card-info"><h3 id="totalServicos">-</h3><p>Serviços</p></div>
+                </div>
+                <div class="card" onclick="window.location.href='/colaboradores'">
+                    <div class="card-icon purple"><i class="fas fa-user-md"></i></div>
+                    <div class="card-info"><h3 id="totalColaboradores">-</h3><p>Colaboradores</p></div>
+                </div>
+                <div class="card" onclick="window.location.href='/aniversariantes'">
+                    <div class="card-icon purple"><i class="fas fa-birthday-cake"></i></div>
+                    <div class="card-info"><h3 id="aniversariantesHoje">-</h3><p>Aniversariantes Hoje</p></div>
                 </div>
             </div>
 
-            <!-- Próximos Agendamentos -->
             <div class="section">
                 <div class="section-header">
                     <h2>Próximos Agendamentos</h2>
@@ -93,20 +81,8 @@
                 </div>
                 <div class="table-responsive">
                     <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Cliente</th>
-                                <th>Serviço</th>
-                                <th>Data</th>
-                                <th>Hora</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaAgendamentos">
-                            <tr>
-                                <td colspan="5" class="text-center">Carregando...</td>
-                            </tr>
-                        </tbody>
+                        <thead><tr><th>Cliente</th><th>Serviço</th><th>Colaborador</th><th>Data</th><th>Hora</th><th>Status</th></tr></thead>
+                        <tbody id="tabelaAgendamentos"><tr><td colspan="6" class="text-center">Carregando...</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -114,67 +90,53 @@
     </div>
 
     <script>
-        // Carregar dados do dashboard
+        async function carregarDadosUsuario() {
+            try {
+                const response = await fetch('/api/auth/me');
+                if (response.status === 401) { window.location.href = '/login.html'; return; }
+                const usuario = await response.json();
+                document.getElementById('userName').textContent = usuario.nome || 'Usuário';
+            } catch (error) { console.error('Erro:', error); }
+        }
+
         async function carregarDashboard() {
             try {
                 const response = await fetch('/api/dashboard');
                 const data = await response.json();
-                
-                document.getElementById('totalClientes').textContent = data.total_clientes;
-                document.getElementById('agendamentosHoje').textContent = data.agendamentos_hoje;
-                document.getElementById('agendamentosPendentes').textContent = data.agendamentos_pendentes;
-                document.getElementById('totalServicos').textContent = data.total_servicos;
-            } catch (error) {
-                console.error('Erro ao carregar dashboard:', error);
-            }
+                document.getElementById('totalClientes').textContent = data.total_clientes || 0;
+                document.getElementById('agendamentosHoje').textContent = data.agendamentos_hoje || 0;
+                document.getElementById('agendamentosPendentes').textContent = data.agendamentos_pendentes || 0;
+                document.getElementById('totalServicos').textContent = data.total_servicos || 0;
+                document.getElementById('totalColaboradores').textContent = data.total_colaboradores || 0;
+                document.getElementById('aniversariantesHoje').textContent = data.aniversariantes_hoje || 0;
+            } catch (error) { console.error('Erro:', error); }
         }
 
-        // Carregar próximos agendamentos
         async function carregarAgendamentos() {
             try {
                 const response = await fetch('/api/agendamentos');
                 const agendamentos = await response.json();
-                
                 const hoje = new Date().toISOString().split('T')[0];
                 const proximos = agendamentos.filter(a => a.data_agendamento >= hoje).slice(0, 5);
-                
                 const tbody = document.getElementById('tabelaAgendamentos');
-                
-                if (proximos.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center">Nenhum agendamento encontrado</td></tr>';
-                    return;
-                }
-                
-                tbody.innerHTML = proximos.map(a => `
-                    <tr>
-                        <td>${a.cliente_nome || '---'}</td>
-                        <td>${a.servico_nome || '---'}</td>
-                        <td>${new Date(a.data_agendamento).toLocaleDateString('pt-BR')}</td>
-                        <td>${a.hora_agendamento}</td>
-                        <td><span class="status status-${a.status}">${a.status}</span></td>
-                    </tr>
-                `).join('');
-            } catch (error) {
-                console.error('Erro ao carregar agendamentos:', error);
-                document.getElementById('tabelaAgendamentos').innerHTML = 
-                    '<tr><td colspan="5" class="text-center text-danger">Erro ao carregar dados</td></tr>';
-            }
+                if (proximos.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum agendamento</td></tr>'; return; }
+                tbody.innerHTML = proximos.map(a => {
+                    const data = new Date(a.data_agendamento + 'T12:00:00').toLocaleDateString('pt-BR');
+                    const statusClass = { 'pendente': 'status-pendente', 'confirmado': 'status-confirmado', 'cancelado': 'status-cancelado', 'concluido': 'status-concluido' }[a.status] || 'status-pendente';
+                    return `<tr><td>${a.cliente_nome || '---'}</td><td>${a.servico_nome || '---'}</td><td>${a.colaborador_nome || '---'}</td><td>${data}</td><td>${a.hora_agendamento}</td><td><span class="status ${statusClass}">${a.status}</span></td></tr>`;
+                }).join('');
+            } catch (error) { console.error('Erro:', error); }
         }
 
-        // Gerar relatório
-        function gerarRelatorio() {
-            alert('Funcionalidade de relatórios em desenvolvimento!');
+        async function logout() {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login.html';
         }
 
-        // Carregar tudo ao iniciar
+        carregarDadosUsuario();
         carregarDashboard();
         carregarAgendamentos();
-
-        // Atualizar a cada 30 segundos
-        setInterval(() => {
-            carregarDashboard();
-            carregarAgendamentos();
-        }, 30000);
+        setInterval(() => { carregarDashboard(); carregarAgendamentos(); }, 30000);
     </script>
 </body>
 </html>

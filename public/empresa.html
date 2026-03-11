@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Empresa - AgendaPro</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .form-empresa { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 700px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 6px; color: #555; font-weight: 500; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 14px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .btn-salvar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 15px; cursor: pointer; font-weight: 500; }
+        .btn-salvar:hover { opacity: 0.9; }
+        .alert { padding: 12px 18px; border-radius: 8px; margin-bottom: 16px; display: none; }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <aside class="sidebar">
+        <div class="logo"><i class="fas fa-calendar-check"></i><span>AgendaPro</span></div>
+        <nav class="nav-menu">
+            <a href="/"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="/clientes"><i class="fas fa-users"></i> Clientes</a>
+            <a href="/agendamentos"><i class="fas fa-calendar"></i> Agendamentos</a>
+            <a href="/servicos"><i class="fas fa-cut"></i> Serviços</a>
+            <a href="/colaboradores"><i class="fas fa-user-md"></i> Colaboradores</a>
+            <a href="/aniversariantes"><i class="fas fa-birthday-cake"></i> Aniversariantes</a>
+            <a href="/configuracoes"><i class="fas fa-cog"></i> WhatsApp</a>
+            <a href="/configuracoes-avancadas"><i class="fas fa-sliders-h"></i> Avançado</a>
+            <a href="/empresa" class="active"><i class="fas fa-building"></i> Minha Empresa</a>
+            <a href="/cliente" style="background:#25d366;color:white;"><i class="fab fa-whatsapp"></i> Cliente WhatsApp</a>
+        </nav>
+        <div class="sidebar-footer"><p>© 2026 AgendaPro</p></div>
+    </aside>
+    <main class="main-content">
+        <header class="header">
+            <h1>Minha Empresa</h1>
+            <div class="user-info">
+                <span>Olá, <strong id="userName">...</strong></span>
+                <button onclick="logout()" style="background:none;border:none;color:#dc3545;margin-left:10px;cursor:pointer;"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </header>
+        <div class="alert alert-success" id="alertSuccess">✅ Dados salvos com sucesso!</div>
+        <div class="alert alert-error" id="alertError"></div>
+        <div class="form-empresa">
+            <h3 style="margin-bottom:24px;color:#444;">Informações da Empresa</h3>
+            <div class="form-group">
+                <label>Nome da Empresa *</label>
+                <input type="text" id="nome_empresa" placeholder="Nome da sua empresa">
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>CNPJ</label><input type="text" id="cnpj" placeholder="00.000.000/0000-00"></div>
+                <div class="form-group"><label>Atividade</label><input type="text" id="atividade" placeholder="Ex: Salão de Beleza"></div>
+            </div>
+            <div class="form-group"><label>Endereço</label><input type="text" id="endereco" placeholder="Rua, número, bairro"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Cidade</label><input type="text" id="cidade"></div>
+                <div class="form-group"><label>Estado</label><input type="text" id="estado" maxlength="2" placeholder="SP"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Telefone</label><input type="text" id="telefone" placeholder="(11) 99999-9999"></div>
+                <div class="form-group"><label>Email</label><input type="email" id="email" placeholder="contato@empresa.com"></div>
+            </div>
+            <div class="form-group"><label>Site</label><input type="url" id="site" placeholder="https://www.empresa.com"></div>
+            <div class="form-group"><label>Descrição</label><textarea id="descricao" rows="3" placeholder="Breve descrição da empresa"></textarea></div>
+            <button class="btn-salvar" onclick="salvarEmpresa()"><i class="fas fa-save"></i> Salvar</button>
+        </div>
+    </main>
+</div>
+<script>
+async function init() {
+    try {
+        const r = await fetch('/api/auth/me');
+        if (r.status === 401) { window.location.href = '/login.html'; return; }
+        const u = await r.json();
+        document.getElementById('userName').textContent = u.nome;
+        const re = await fetch('/api/empresa');
+        if (re.ok) {
+            const e = await re.json();
+            ['nome_empresa','cnpj','atividade','endereco','cidade','estado','telefone','email','site','descricao'].forEach(k => {
+                const el = document.getElementById(k);
+                if (el && e[k]) el.value = e[k];
+            });
+        }
+    } catch(e) { window.location.href = '/login.html'; }
+}
+async function salvarEmpresa() {
+    const data = {};
+    ['nome_empresa','cnpj','atividade','endereco','cidade','estado','telefone','email','site','descricao'].forEach(k => {
+        data[k] = document.getElementById(k)?.value || '';
+    });
+    if (!data.nome_empresa) { showAlert('error', 'Nome da empresa obrigatório'); return; }
+    try {
+        const r = await fetch('/api/empresa', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+        const j = await r.json();
+        if (r.ok) showAlert('success'); else showAlert('error', j.erro);
+    } catch(e) { showAlert('error', 'Erro de conexão'); }
+}
+function showAlert(type, msg) {
+    if (type === 'success') {
+        const el = document.getElementById('alertSuccess');
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 3000);
+    } else {
+        const el = document.getElementById('alertError');
+        el.textContent = '❌ ' + (msg || 'Erro ao salvar');
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 4000);
+    }
+}
+async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/login.html';
+}
+init();
+</script>
+</body>
+</html>
