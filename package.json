@@ -1,11 +1,9 @@
 {
   "name": "agendamento",
   "version": "5.0.0",
-  "description": "AgendaPro - Sistema de Agendamento",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node server.js"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -28,5 +26,5 @@
 ```
 cd C:\Users\karol\Desktop\Sistema-de-Agendamento
 git add .
-git commit -m "fix: package.json atualizado para PostgreSQL"
+git commit -m "fix: package.json corrigido"
 git push origin main
