@@ -3,149 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Colaboradores - AgendaPro</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com; font-src fonts.gstatic.com cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self'">
+    <title>Colaboradores — AgendaPro</title>
     <link rel="stylesheet" href="/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOK5YQQ==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <style>
-        .btn-add {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: transform 0.3s;
-        }
-        .btn-add:hover { transform: scale(1.05); }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-        }
-        .modal-content {
-            background: white;
-            width: 500px;
-            margin: 50px auto;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .close {
-            font-size: 28px;
-            cursor: pointer;
-            color: #999;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #666;
-            font-weight: 500;
-        }
-        .form-group input, .form-group textarea, .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        .btn-submit {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .btn-edit {
-            background: #ffc107;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 5px;
-        }
-        .btn-delete {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn-toggle {
-            background: #17a2b8;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .search-box {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .search-box input {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-        }
-        .search-box button {
-            padding: 12px 25px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        .badge-ativo {
-            background: #d4edda;
-            color: #155724;
-        }
-        .badge-inativo {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .servicos-tag {
-            display: inline-block;
-            background: #e3f2fd;
-            color: #0d47a1;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            margin: 2px;
-        }
+        .btn-add{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;padding:12px 25px;border-radius:8px;cursor:pointer;font-weight:500;display:flex;align-items:center;gap:8px;}
+        .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;}
+        .modal-content{background:white;width:500px;margin:50px auto;padding:30px;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.2);}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+        .close{font-size:28px;cursor:pointer;color:#999;}
+        .form-group{margin-bottom:20px;}
+        .form-group label{display:block;margin-bottom:5px;color:#666;font-weight:500;}
+        .form-group input,.form-group textarea,.form-group select{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;}
+        .form-group input:focus,.form-group textarea:focus{outline:none;border-color:#667eea;}
+        .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;}
+        .btn-edit{background:#ffc107;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;margin-right:5px;}
+        .btn-toggle{background:#17a2b8;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;}
+        .search-box{display:flex;gap:15px;margin-bottom:20px;}
+        .search-box input{flex:1;padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;}
+        .search-box button{padding:12px 25px;background:#667eea;color:white;border:none;border-radius:8px;cursor:pointer;}
+        .badge{padding:5px 10px;border-radius:20px;font-size:12px;font-weight:500;}
+        .badge-ativo{background:#d4edda;color:#155724;}
+        .badge-inativo{background:#f8d7da;color:#721c24;}
     </style>
 </head>
 <body>
@@ -161,17 +42,19 @@
                 <a href="/agendamentos"><i class="fas fa-calendar"></i> Agendamentos</a>
                 <a href="/servicos"><i class="fas fa-cut"></i> Serviços</a>
                 <a href="/colaboradores" class="active"><i class="fas fa-user-md"></i> Colaboradores</a>
-                <a href="/configuracoes"><i class="fas fa-cog"></i> WhatsApp</a>
-                <a href="/configuracoes-avancadas"><i class="fas fa-sliders-h"></i> Avançado</a>
             </nav>
+            <div class="sidebar-footer"><p>© 2026 AgendaPro</p></div>
         </aside>
 
         <main class="main-content">
             <header class="header">
                 <h1>Gerenciar Colaboradores</h1>
                 <div class="user-info">
-                    <span>Olá, <strong>Administrador</strong></span>
+                    <span>Olá, <strong id="userName">...</strong></span>
                     <i class="fas fa-user-circle"></i>
+                    <button onclick="logout()" style="background:none;border:none;color:#dc3545;margin-left:10px;cursor:pointer;" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
                 </div>
             </header>
 
@@ -184,7 +67,7 @@
                 </div>
 
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Buscar por nome ou especialidade...">
+                    <input type="text" id="searchInput" placeholder="Buscar por nome ou especialidade..." oninput="buscarColaboradores()">
                     <button onclick="buscarColaboradores()"><i class="fas fa-search"></i> Buscar</button>
                 </div>
 
@@ -192,18 +75,12 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Nome</th>
-                                <th>Especialidade</th>
-                                <th>Telefone</th>
-                                <th>Email</th>
-                                <th>Serviços</th>
-                                <th>Status</th>
-                                <th>Ações</th>
+                                <th>ID</th><th>Nome</th><th>Especialidade</th>
+                                <th>Telefone</th><th>Email</th><th>Status</th><th>Ações</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaColaboradores">
-                            <tr><td colspan="8" class="text-center">Carregando...</td></tr>
+                            <tr><td colspan="7" class="text-center">Carregando...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -211,7 +88,6 @@
         </main>
     </div>
 
-    <!-- Modal de Colaborador -->
     <div id="modalColaborador" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -222,86 +98,79 @@
                 <input type="hidden" id="colaboradorId">
                 <div class="form-group">
                     <label>Nome *</label>
-                    <input type="text" id="nome" required>
+                    <input type="text" id="nome" required maxlength="200">
                 </div>
                 <div class="form-group">
                     <label>Especialidade</label>
-                    <input type="text" id="especialidade">
+                    <input type="text" id="especialidade" maxlength="200">
                 </div>
                 <div class="form-group">
                     <label>Telefone</label>
-                    <input type="text" id="telefone" placeholder="(11) 99999-9999">
+                    <input type="text" id="telefone" placeholder="(11) 99999-9999" maxlength="20">
                 </div>
                 <div class="form-group">
                     <label>Email</label>
-                    <input type="email" id="email">
+                    <input type="email" id="email" maxlength="200">
                 </div>
                 <div class="form-group">
                     <label>Descrição</label>
-                    <textarea id="descricao" rows="3" placeholder="Breve descrição do profissional..."></textarea>
+                    <textarea id="descricao" rows="3" maxlength="500"></textarea>
                 </div>
                 <button type="submit" class="btn-submit">Salvar Colaborador</button>
             </form>
         </div>
     </div>
 
-    <!-- Modal de Vínculo de Serviços -->
-    <div id="modalVinculo" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Vincular Serviços</h2>
-                <span class="close" onclick="fecharModalVinculo()">&times;</span>
-            </div>
-            <div id="vinculoContainer"></div>
-            <button onclick="salvarVinculos()" class="btn-submit" style="margin-top:20px;">Salvar Vínculos</button>
-        </div>
-    </div>
-
+    <script src="/js/security.js"></script>
     <script>
+        'use strict';
         let colaboradores = [];
-        let servicos = [];
-        let vinculosAtuais = [];
-        let colaboradorSelecionado = null;
+
+        // CORRIGI M-04: verificar autenticação
+        verificarAuth().then(user => { if (user) carregarColaboradores(); });
 
         async function carregarColaboradores() {
-            const r = await fetch('/api/colaboradores');
-            colaboradores = await r.json();
-            exibirColaboradores(colaboradores);
-        }
-
-        async function carregarServicos() {
-            const r = await fetch('/api/servicos');
-            servicos = await r.json();
+            try {
+                const r = await fetch('/api/colaboradores');
+                if (!r.ok) return;
+                colaboradores = await r.json();
+                exibirColaboradores(colaboradores);
+            } catch (e) {
+                document.getElementById('tabelaColaboradores').innerHTML =
+                    '<tr><td colspan="7" class="text-center">Erro ao carregar dados</td></tr>';
+            }
         }
 
         function exibirColaboradores(lista) {
             const tbody = document.getElementById('tabelaColaboradores');
             if (lista.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center">Nenhum colaborador encontrado</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum colaborador encontrado</td></tr>';
                 return;
             }
-            tbody.innerHTML = lista.map(c => `
-                <tr>
-                    <td>${c.id}</td>
-                    <td>${c.nome}</td>
-                    <td>${c.especialidade || '---'}</td>
-                    <td>${c.telefone || '---'}</td>
-                    <td>${c.email || '---'}</td>
-                    <td><button class="btn-edit" onclick="abrirVinculo(${c.id})">Vincular</button></td>
-                    <td><span class="badge ${c.ativo ? 'badge-ativo' : 'badge-inativo'}">${c.ativo ? 'Ativo' : 'Inativo'}</span></td>
-                    <td>
-                        <button class="btn-edit" onclick="editarColaborador(${c.id})"><i class="fas fa-edit"></i></button>
-                        <button class="btn-toggle" onclick="toggleStatus(${c.id})"><i class="fas ${c.ativo ? 'fa-times' : 'fa-check'}"></i></button>
-                    </td>
-                </tr>
-            `).join('');
+            // CORRIGI XSS: esc() em todos os campos dinâmicos
+            tbody.innerHTML = lista.map(c => `<tr>
+                <td>${esc(String(c.id))}</td>
+                <td>${esc(c.nome)}</td>
+                <td>${esc(c.especialidade)}</td>
+                <td>${esc(c.telefone)}</td>
+                <td>${esc(c.email)}</td>
+                <td><span class="badge ${c.ativo ? 'badge-ativo' : 'badge-inativo'}">${c.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                <td>
+                    <button class="btn-edit" onclick="editarColaborador(${Number(c.id)})"><i class="fas fa-edit"></i></button>
+                    <button class="btn-toggle" onclick="toggleStatus(${Number(c.id)})">
+                        <i class="fas ${c.ativo ? 'fa-times' : 'fa-check'}"></i>
+                    </button>
+                </td>
+            </tr>`).join('');
         }
 
         function buscarColaboradores() {
             const termo = document.getElementById('searchInput').value.toLowerCase();
-            if (!termo) return exibirColaboradores(colaboradores);
-            const filtrados = colaboradores.filter(c => c.nome.toLowerCase().includes(termo) || (c.especialidade || '').toLowerCase().includes(termo));
-            exibirColaboradores(filtrados);
+            if (!termo) { exibirColaboradores(colaboradores); return; }
+            exibirColaboradores(colaboradores.filter(c =>
+                (c.nome || '').toLowerCase().includes(termo) ||
+                (c.especialidade || '').toLowerCase().includes(termo)
+            ));
         }
 
         function abrirModalNovo() {
@@ -311,29 +180,32 @@
             document.getElementById('modalColaborador').style.display = 'block';
         }
 
-        function fecharModal() {
-            document.getElementById('modalColaborador').style.display = 'none';
-        }
+        function fecharModal() { document.getElementById('modalColaborador').style.display = 'none'; }
 
-        async function salvarColaborador(e) {
-            e.preventDefault();
+        async function salvarColaborador(event) {
+            event.preventDefault();
             const id = document.getElementById('colaboradorId').value;
             const payload = {
-                nome: document.getElementById('nome').value,
-                especialidade: document.getElementById('especialidade').value,
-                telefone: document.getElementById('telefone').value,
-                email: document.getElementById('email').value,
-                descricao: document.getElementById('descricao').value
+                nome: document.getElementById('nome').value.trim(),
+                especialidade: document.getElementById('especialidade').value.trim(),
+                telefone: document.getElementById('telefone').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                descricao: document.getElementById('descricao').value.trim()
             };
-            if (id) {
-                await fetch(`/api/colaboradores/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-                alert('✅ Colaborador atualizado');
-            } else {
-                await fetch('/api/colaboradores', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-                alert('✅ Colaborador cadastrado');
-            }
-            fecharModal();
-            carregarColaboradores();
+            try {
+                const url = id ? `/api/colaboradores/${encodeURIComponent(id)}` : '/api/colaboradores';
+                const method = id ? 'PUT' : 'POST';
+                const r = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await r.json();
+                if (!r.ok) { toast(data.erro || 'Erro ao salvar', 'erro'); return; }
+                toast(id ? 'Colaborador atualizado!' : 'Colaborador cadastrado!', 'sucesso');
+                fecharModal();
+                carregarColaboradores();
+            } catch (e) { toast('Erro de conexão', 'erro'); }
         }
 
         function editarColaborador(id) {
@@ -341,7 +213,7 @@
             if (!c) return;
             document.getElementById('modalTitulo').textContent = 'Editar Colaborador';
             document.getElementById('colaboradorId').value = c.id;
-            document.getElementById('nome').value = c.nome;
+            document.getElementById('nome').value = c.nome || '';
             document.getElementById('especialidade').value = c.especialidade || '';
             document.getElementById('telefone').value = c.telefone || '';
             document.getElementById('email').value = c.email || '';
@@ -350,50 +222,33 @@
         }
 
         async function toggleStatus(id) {
-            if (!confirm('Alterar status do colaborador?')) return;
-            await fetch(`/api/colaboradores/${id}/toggle`, { method: 'PUT' });
-            carregarColaboradores();
-        }
-
-        async function abrirVinculo(colaboradorId) {
-            colaboradorSelecionado = colaboradorId;
-            const r = await fetch(`/api/servico/0/colaboradores`); // todos serviços
-            const servicos = await r.json();
-            const r2 = await fetch(`/api/colaborador/${colaboradorId}/servicos`);
-            const vinculos = await r2.json();
-            const idsVinculados = vinculos.map(v => v.id);
-            let html = '<h3>Selecione os serviços deste profissional</h3>';
-            servicos.forEach(s => {
-                html += `<label style="display:block; margin:8px;"><input type="checkbox" class="vinculo-check" value="${s.id}" ${idsVinculados.includes(s.id) ? 'checked' : ''}> ${s.nome}</label>`;
-            });
-            document.getElementById('vinculoContainer').innerHTML = html;
-            document.getElementById('modalVinculo').style.display = 'block';
-        }
-
-        async function salvarVinculos() {
-            const checks = document.querySelectorAll('.vinculo-check:checked');
-            const servicosSelecionados = Array.from(checks).map(c => parseInt(c.value));
-            for (let servicoId of servicosSelecionados) {
-                await fetch('/api/colaborador-servico', {
-                    method: 'POST',
-                    headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({ colaborador_id: colaboradorSelecionado, servico_id: servicoId })
+            // CORRIGI: endpoint correto é PUT /api/colaboradores/:id com ativo no body
+            const c = colaboradores.find(c => c.id === id);
+            if (!c) return;
+            if (!confirm(`${c.ativo ? 'Desativar' : 'Ativar'} este colaborador?`)) return;
+            try {
+                const r = await fetch(`/api/colaboradores/${encodeURIComponent(id)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nome: c.nome,
+                        especialidade: c.especialidade,
+                        telefone: c.telefone,
+                        email: c.email,
+                        descricao: c.descricao,
+                        ativo: !c.ativo
+                    })
                 });
-            }
-            alert('✅ Vínculos atualizados');
-            fecharModalVinculo();
+                const data = await r.json();
+                if (!r.ok) { toast(data.erro || 'Erro', 'erro'); return; }
+                toast('Status atualizado!', 'sucesso');
+                carregarColaboradores();
+            } catch (e) { toast('Erro de conexão', 'erro'); }
         }
 
-        function fecharModalVinculo() {
-            document.getElementById('modalVinculo').style.display = 'none';
-        }
-
-        window.onclick = function(e) {
-            if (e.target.classList.contains('modal')) e.target.style.display = 'none';
-        };
-
-        carregarColaboradores();
-        carregarServicos();
+        window.addEventListener('click', e => {
+            if (e.target === document.getElementById('modalColaborador')) fecharModal();
+        });
     </script>
 </body>
 </html>

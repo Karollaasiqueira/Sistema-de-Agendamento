@@ -3,180 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Serviços - AgendaPro</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com; font-src fonts.gstatic.com cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self'">
+    <title>Serviços — AgendaPro</title>
     <link rel="stylesheet" href="/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOK5YQQ==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <style>
-        .btn-add {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: transform 0.3s;
-        }
-        
-        .btn-add:hover {
-            transform: scale(1.05);
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-        }
-        
-        .modal-content {
-            background: white;
-            width: 500px;
-            margin: 50px auto;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .modal-header h2 {
-            color: #333;
-        }
-        
-        .close {
-            font-size: 28px;
-            cursor: pointer;
-            color: #999;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #666;
-            font-weight: 500;
-        }
-        
-        .form-group input, .form-group textarea, .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-        
-        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .btn-submit {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.3s;
-        }
-        
-        .btn-submit:hover {
-            transform: scale(1.02);
-        }
-        
-        .btn-edit {
-            background: #ffc107;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 5px;
-        }
-        
-        .btn-delete {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        
-        .btn-toggle {
-            background: #17a2b8;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        
-        .search-box {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .search-box input {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        
-        .search-box button {
-            padding: 12px 25px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        
-        .preco {
-            font-weight: 600;
-            color: #28a745;
-        }
-        
-        .badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        
-        .badge-ativo {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .badge-inativo {
-            background: #f8d7da;
-            color: #721c24;
-        }
+        .btn-add{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;padding:12px 25px;border-radius:8px;cursor:pointer;font-weight:500;display:flex;align-items:center;gap:8px;}
+        .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;}
+        .modal-content{background:white;width:500px;margin:50px auto;padding:30px;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.2);}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+        .close{font-size:28px;cursor:pointer;color:#999;}
+        .form-group{margin-bottom:20px;}
+        .form-group label{display:block;margin-bottom:5px;color:#666;font-weight:500;}
+        .form-group input,.form-group textarea,.form-group select{width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;}
+        .form-group input:focus,.form-group textarea:focus{outline:none;border-color:#667eea;}
+        .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;}
+        .btn-edit{background:#ffc107;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;margin-right:5px;}
+        .btn-toggle{background:#17a2b8;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;}
+        .search-box{display:flex;gap:15px;margin-bottom:20px;}
+        .search-box input{flex:1;padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;}
+        .search-box button{padding:12px 25px;background:#667eea;color:white;border:none;border-radius:8px;cursor:pointer;}
+        .preco{font-weight:600;color:#28a745;}
+        .badge{padding:5px 10px;border-radius:20px;font-size:12px;font-weight:500;}
+        .badge-ativo{background:#d4edda;color:#155724;}
+        .badge-inativo{background:#f8d7da;color:#721c24;}
     </style>
 </head>
 <body>
@@ -191,19 +42,20 @@
                 <a href="/clientes"><i class="fas fa-users"></i> Clientes</a>
                 <a href="/agendamentos"><i class="fas fa-calendar"></i> Agendamentos</a>
                 <a href="/servicos" class="active"><i class="fas fa-cut"></i> Serviços</a>
+                <a href="/colaboradores"><i class="fas fa-user-md"></i> Colaboradores</a>
             </nav>
-            <div class="sidebar-footer">
-                <p>© 2026 AgendaPro</p>
-                <p class="versao">Versão 2.1</p>
-            </div>
+            <div class="sidebar-footer"><p>© 2026 AgendaPro</p></div>
         </aside>
 
         <main class="main-content">
             <header class="header">
                 <h1>Gerenciar Serviços</h1>
                 <div class="user-info">
-                    <span>Olá, <strong>Administrador</strong></span>
+                    <span>Olá, <strong id="userName">...</strong></span>
                     <i class="fas fa-user-circle"></i>
+                    <button onclick="logout()" style="background:none;border:none;color:#dc3545;margin-left:10px;cursor:pointer;" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
                 </div>
             </header>
 
@@ -216,7 +68,7 @@
                 </div>
 
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Buscar por nome do serviço...">
+                    <input type="text" id="searchInput" placeholder="Buscar por nome..." oninput="buscarServicos()">
                     <button onclick="buscarServicos()"><i class="fas fa-search"></i> Buscar</button>
                 </div>
 
@@ -224,19 +76,12 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Nome</th>
-                                <th>Descrição</th>
-                                <th>Preço</th>
-                                <th>Duração</th>
-                                <th>Status</th>
-                                <th>Ações</th>
+                                <th>ID</th><th>Nome</th><th>Descrição</th>
+                                <th>Preço</th><th>Duração</th><th>Status</th><th>Ações</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaServicos">
-                            <tr>
-                                <td colspan="7" class="text-center">Carregando...</td>
-                            </tr>
+                            <tr><td colspan="7" class="text-center">Carregando...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -244,7 +89,6 @@
         </main>
     </div>
 
-    <!-- Modal de Serviço -->
     <div id="modalServico" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -255,170 +99,157 @@
                 <input type="hidden" id="servicoId">
                 <div class="form-group">
                     <label>Nome do Serviço *</label>
-                    <input type="text" id="nome" required>
+                    <input type="text" id="nome" required maxlength="200">
                 </div>
                 <div class="form-group">
                     <label>Descrição</label>
-                    <textarea id="descricao" rows="3" placeholder="Descreva o serviço..."></textarea>
+                    <textarea id="descricao" rows="3" maxlength="500"></textarea>
                 </div>
                 <div class="form-group">
                     <label>Preço (R$) *</label>
-                    <input type="number" id="preco" step="0.01" min="0" required>
+                    <input type="number" id="preco" step="0.01" min="0" max="99999" required>
                 </div>
                 <div class="form-group">
                     <label>Duração (minutos) *</label>
-                    <input type="number" id="duracao" min="5" step="5" value="30" required>
+                    <input type="number" id="duracao" min="5" max="480" step="5" value="30" required>
                 </div>
                 <button type="submit" class="btn-submit">Salvar Serviço</button>
             </form>
         </div>
     </div>
 
+    <script src="/js/security.js"></script>
     <script>
+        'use strict';
         let servicos = [];
-        
+
+        // CORRIGI M-04: verificar autenticação
+        verificarAuth().then(user => { if (user) carregarServicos(); });
+
         async function carregarServicos() {
             try {
-                const response = await fetch('/api/servicos');
-                servicos = await response.json();
+                // Buscar todos os serviços (ativos e inativos) para gestão
+                const r = await fetch('/api/servicos');
+                if (!r.ok) return;
+                servicos = await r.json();
                 exibirServicos(servicos);
-            } catch (error) {
-                console.error('Erro ao carregar serviços:', error);
-                document.getElementById('tabelaServicos').innerHTML = 
-                    '<tr><td colspan="7" class="text-center text-danger">Erro ao carregar dados</td></tr>';
+            } catch (e) {
+                document.getElementById('tabelaServicos').innerHTML =
+                    '<tr><td colspan="7" class="text-center">Erro ao carregar dados</td></tr>';
             }
         }
-        
-        function exibirServicos(servicos) {
+
+        function exibirServicos(lista) {
             const tbody = document.getElementById('tabelaServicos');
-            
-            if (servicos.length === 0) {
+            if (lista.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum serviço encontrado</td></tr>';
                 return;
             }
-            
-            tbody.innerHTML = servicos.map(s => `
-                <tr>
-                    <td>${s.id}</td>
-                    <td>${s.nome}</td>
-                    <td>${s.descricao || '---'}</td>
-                    <td class="preco">R$ ${parseFloat(s.preco).toFixed(2)}</td>
-                    <td>${s.duracao} min</td>
-                    <td>
-                        <span class="badge ${s.ativo ? 'badge-ativo' : 'badge-inativo'}">
-                            ${s.ativo ? 'Ativo' : 'Inativo'}
-                        </span>
-                    </td>
-                    <td>
-                        <button class="btn-edit" onclick="editarServico(${s.id})"><i class="fas fa-edit"></i></button>
-                        <button class="btn-delete" onclick="toggleServico(${s.id})">
-                            <i class="fas ${s.ativo ? 'fa-times' : 'fa-check'}"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+            // CORRIGI A-03: esc() em todos os campos dinâmicos
+            tbody.innerHTML = lista.map(s => `<tr>
+                <td>${esc(String(s.id))}</td>
+                <td>${esc(s.nome)}</td>
+                <td>${esc(s.descricao)}</td>
+                <td class="preco">R$ ${parseFloat(s.preco || 0).toFixed(2)}</td>
+                <td>${esc(String(s.duracao || 0))} min</td>
+                <td>
+                    <span class="badge ${s.ativo ? 'badge-ativo' : 'badge-inativo'}">
+                        ${s.ativo ? 'Ativo' : 'Inativo'}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn-edit" onclick="editarServico(${Number(s.id)})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-toggle" onclick="toggleServico(${Number(s.id)})">
+                        <i class="fas ${s.ativo ? 'fa-times' : 'fa-check'}"></i>
+                        ${s.ativo ? 'Desativar' : 'Ativar'}
+                    </button>
+                </td>
+            </tr>`).join('');
         }
-        
+
         function buscarServicos() {
             const termo = document.getElementById('searchInput').value.toLowerCase();
-            if (!termo) {
-                exibirServicos(servicos);
-                return;
-            }
-            
-            const filtrados = servicos.filter(s => 
-                s.nome.toLowerCase().includes(termo)
-            );
-            exibirServicos(filtrados);
+            if (!termo) { exibirServicos(servicos); return; }
+            exibirServicos(servicos.filter(s => (s.nome || '').toLowerCase().includes(termo)));
         }
-        
+
         function abrirModalNovo() {
             document.getElementById('modalTitulo').textContent = 'Novo Serviço';
             document.getElementById('formServico').reset();
             document.getElementById('servicoId').value = '';
             document.getElementById('modalServico').style.display = 'block';
         }
-        
-        function fecharModal() {
-            document.getElementById('modalServico').style.display = 'none';
-        }
-        
+
+        function fecharModal() { document.getElementById('modalServico').style.display = 'none'; }
+
         async function salvarServico(event) {
             event.preventDefault();
-            
             const id = document.getElementById('servicoId').value;
             const servico = {
-                nome: document.getElementById('nome').value,
-                descricao: document.getElementById('descricao').value,
-                preco: document.getElementById('preco').value,
-                duracao: document.getElementById('duracao').value
+                nome: document.getElementById('nome').value.trim(),
+                descricao: document.getElementById('descricao').value.trim(),
+                preco: parseFloat(document.getElementById('preco').value) || 0,
+                duracao: parseInt(document.getElementById('duracao').value) || 30
             };
-            
             try {
-                if (id) {
-                    await fetch(`/api/servicos/${id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(servico)
-                    });
-                    alert('✅ Serviço atualizado com sucesso!');
-                } else {
-                    await fetch('/api/servicos', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(servico)
-                    });
-                    alert('✅ Serviço cadastrado com sucesso!');
-                }
-                
+                const url = id ? `/api/servicos/${encodeURIComponent(id)}` : '/api/servicos';
+                const method = id ? 'PUT' : 'POST';
+                const r = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(servico)
+                });
+                const data = await r.json();
+                if (!r.ok) { toast(data.erro || 'Erro ao salvar', 'erro'); return; }
+                toast(id ? 'Serviço atualizado!' : 'Serviço cadastrado!', 'sucesso');
                 fecharModal();
                 carregarServicos();
-            } catch (error) {
-                alert('Erro ao salvar serviço');
-            }
+            } catch (e) { toast('Erro de conexão', 'erro'); }
         }
-        
+
         function editarServico(id) {
-            const servico = servicos.find(s => s.id === id);
-            if (!servico) return;
-            
+            const s = servicos.find(s => s.id === id);
+            if (!s) return;
             document.getElementById('modalTitulo').textContent = 'Editar Serviço';
-            document.getElementById('servicoId').value = servico.id;
-            document.getElementById('nome').value = servico.nome;
-            document.getElementById('descricao').value = servico.descricao || '';
-            document.getElementById('preco').value = servico.preco;
-            document.getElementById('duracao').value = servico.duracao;
+            document.getElementById('servicoId').value = s.id;
+            document.getElementById('nome').value = s.nome || '';
+            document.getElementById('descricao').value = s.descricao || '';
+            document.getElementById('preco').value = s.preco || 0;
+            document.getElementById('duracao').value = s.duracao || 30;
             document.getElementById('modalServico').style.display = 'block';
         }
-        
+
         async function toggleServico(id) {
-            const servico = servicos.find(s => s.id === id);
-            if (!servico) return;
-            
-            const acao = servico.ativo ? 'desativar' : 'ativar';
+            // CORRIGI B-01: endpoint correto é PUT /api/servicos/:id com campo ativo no body
+            // (era: PUT /api/servicos/:id/toggle que não existe no backend)
+            const s = servicos.find(s => s.id === id);
+            if (!s) return;
+            const acao = s.ativo ? 'desativar' : 'ativar';
             if (!confirm(`Tem certeza que deseja ${acao} este serviço?`)) return;
-            
             try {
-                await fetch(`/api/servicos/${id}/toggle`, { 
-                    method: 'PUT' 
+                const r = await fetch(`/api/servicos/${encodeURIComponent(id)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nome: s.nome,
+                        descricao: s.descricao,
+                        preco: s.preco,
+                        duracao: s.duracao,
+                        ativo: !s.ativo  // inverte o status
+                    })
                 });
-                alert(`✅ Serviço ${acao}do com sucesso!`);
+                const data = await r.json();
+                if (!r.ok) { toast(data.erro || 'Erro', 'erro'); return; }
+                toast(`Serviço ${acao}do com sucesso!`, 'sucesso');
                 carregarServicos();
-            } catch (error) {
-                alert('Erro ao alterar status do serviço');
-            }
+            } catch (e) { toast('Erro de conexão', 'erro'); }
         }
-        
-        // Fechar modal ao clicar fora
-        window.onclick = function(event) {
-            const modal = document.getElementById('modalServico');
-            if (event.target === modal) {
-                fecharModal();
-            }
-        }
-        
-        // Carregar serviços ao iniciar
-        carregarServicos();
+
+        window.addEventListener('click', e => {
+            if (e.target === document.getElementById('modalServico')) fecharModal();
+        });
     </script>
 </body>
 </html>

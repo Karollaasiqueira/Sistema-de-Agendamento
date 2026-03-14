@@ -3,149 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clientes - AgendaPro</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com; font-src fonts.gstatic.com cdnjs.cloudflare.com; img-src 'self' data: lh3.googleusercontent.com; connect-src 'self'">
+    <title>Clientes — AgendaPro</title>
     <link rel="stylesheet" href="/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOK5YQQ==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <style>
-        .btn-add {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: transform 0.3s;
-        }
-        
-        .btn-add:hover {
-            transform: scale(1.05);
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-        }
-        
-        .modal-content {
-            background: white;
-            width: 500px;
-            margin: 50px auto;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .modal-header h2 {
-            color: #333;
-        }
-        
-        .close {
-            font-size: 28px;
-            cursor: pointer;
-            color: #999;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #666;
-            font-weight: 500;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-        
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .btn-submit {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.3s;
-        }
-        
-        .btn-submit:hover {
-            transform: scale(1.02);
-        }
-        
-        .btn-edit {
-            background: #ffc107;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 5px;
-        }
-        
-        .btn-delete {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        
-        .search-box {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .search-box input {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-        
-        .search-box button {
-            padding: 12px 25px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
+        .btn-add { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;padding:12px 25px;border-radius:8px;cursor:pointer;font-weight:500;display:flex;align-items:center;gap:8px;transition:transform .3s; }
+        .btn-add:hover { transform:scale(1.05); }
+        .modal { display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000; }
+        .modal-content { background:white;width:500px;margin:50px auto;padding:30px;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.2); }
+        .modal-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:20px; }
+        .modal-header h2 { color:#333; }
+        .close { font-size:28px;cursor:pointer;color:#999; }
+        .form-group { margin-bottom:20px; }
+        .form-group label { display:block;margin-bottom:5px;color:#666;font-weight:500; }
+        .form-group input { width:100%;padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;transition:border-color .3s; }
+        .form-group input:focus { outline:none;border-color:#667eea; }
+        .btn-submit { width:100%;padding:14px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer; }
+        .btn-edit { background:#ffc107;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;margin-right:5px; }
+        .btn-delete { background:#dc3545;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer; }
+        .search-box { display:flex;gap:15px;margin-bottom:20px; }
+        .search-box input { flex:1;padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px; }
+        .search-box button { padding:12px 25px;background:#667eea;color:white;border:none;border-radius:8px;cursor:pointer; }
     </style>
 </head>
 <body>
@@ -160,19 +40,20 @@
                 <a href="/clientes" class="active"><i class="fas fa-users"></i> Clientes</a>
                 <a href="/agendamentos"><i class="fas fa-calendar"></i> Agendamentos</a>
                 <a href="/servicos"><i class="fas fa-cut"></i> Serviços</a>
+                <a href="/colaboradores"><i class="fas fa-user-md"></i> Colaboradores</a>
             </nav>
-            <div class="sidebar-footer">
-                <p>© 2026 AgendaPro</p>
-                <p class="versao">Versão 2.1</p>
-            </div>
+            <div class="sidebar-footer"><p>© 2026 AgendaPro</p></div>
         </aside>
 
         <main class="main-content">
             <header class="header">
                 <h1>Gerenciar Clientes</h1>
                 <div class="user-info">
-                    <span>Olá, <strong>Administrador</strong></span>
+                    <span>Olá, <strong id="userName">...</strong></span>
                     <i class="fas fa-user-circle"></i>
+                    <button onclick="logout()" style="background:none;border:none;color:#dc3545;margin-left:10px;cursor:pointer;" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
                 </div>
             </header>
 
@@ -185,7 +66,7 @@
                 </div>
 
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Buscar por nome ou email...">
+                    <input type="text" id="searchInput" placeholder="Buscar por nome ou email..." oninput="buscarClientes()">
                     <button onclick="buscarClientes()"><i class="fas fa-search"></i> Buscar</button>
                 </div>
 
@@ -193,19 +74,12 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Nome</th>
-                                <th>Email</th>
-                                <th>Telefone</th>
-                                <th>Endereço</th>
-                                <th>Data Cadastro</th>
-                                <th>Ações</th>
+                                <th>ID</th><th>Nome</th><th>Email</th><th>Telefone</th>
+                                <th>Endereço</th><th>Data Nascimento</th><th>Cadastro</th><th>Ações</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaClientes">
-                            <tr>
-                                <td colspan="7" class="text-center">Carregando...</td>
-                            </tr>
+                            <tr><td colspan="8" class="text-center">Carregando...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -213,7 +87,6 @@
         </main>
     </div>
 
-    <!-- Modal de Cliente -->
     <div id="modalCliente" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -224,159 +97,149 @@
                 <input type="hidden" id="clienteId">
                 <div class="form-group">
                     <label>Nome *</label>
-                    <input type="text" id="nome" required>
+                    <input type="text" id="nome" required maxlength="200">
                 </div>
                 <div class="form-group">
                     <label>Email *</label>
-                    <input type="email" id="email" required>
+                    <input type="email" id="email" required maxlength="200">
                 </div>
                 <div class="form-group">
                     <label>Telefone</label>
-                    <input type="text" id="telefone" placeholder="(11) 99999-9999">
+                    <input type="text" id="telefone" placeholder="(11) 99999-9999" maxlength="20">
+                </div>
+                <div class="form-group">
+                    <label>Data de Nascimento</label>
+                    <input type="date" id="data_nascimento">
                 </div>
                 <div class="form-group">
                     <label>Endereço</label>
-                    <input type="text" id="endereco" placeholder="Rua, número, bairro">
+                    <input type="text" id="endereco" placeholder="Rua, número, bairro" maxlength="300">
                 </div>
                 <button type="submit" class="btn-submit">Salvar Cliente</button>
             </form>
         </div>
     </div>
 
+    <script src="/js/security.js"></script>
     <script>
+        'use strict';
         let clientes = [];
-        
+
+        // CORRIGI M-04: verificar autenticação
+        verificarAuth().then(user => { if (user) carregarClientes(); });
+
         async function carregarClientes() {
             try {
-                const response = await fetch('/api/clientes');
-                clientes = await response.json();
+                const r = await fetch('/api/clientes');
+                if (!r.ok) return;
+                clientes = await r.json();
                 exibirClientes(clientes);
-            } catch (error) {
-                console.error('Erro ao carregar clientes:', error);
-                document.getElementById('tabelaClientes').innerHTML = 
-                    '<tr><td colspan="7" class="text-center text-danger">Erro ao carregar dados</td></tr>';
+            } catch (e) {
+                document.getElementById('tabelaClientes').innerHTML =
+                    '<tr><td colspan="8" class="text-center">Erro ao carregar dados</td></tr>';
             }
         }
-        
-        function exibirClientes(clientes) {
+
+        function exibirClientes(lista) {
             const tbody = document.getElementById('tabelaClientes');
-            
-            if (clientes.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum cliente encontrado</td></tr>';
+            if (lista.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">Nenhum cliente encontrado</td></tr>';
                 return;
             }
-            
-            tbody.innerHTML = clientes.map(c => `
-                <tr>
-                    <td>${c.id}</td>
-                    <td>${c.nome}</td>
-                    <td>${c.email}</td>
-                    <td>${c.telefone || '---'}</td>
-                    <td>${c.endereco || '---'}</td>
-                    <td>${new Date(c.data_cadastro).toLocaleDateString('pt-BR')}</td>
-                    <td>
-                        <button class="btn-edit" onclick="editarCliente(${c.id})"><i class="fas fa-edit"></i></button>
-                        <button class="btn-delete" onclick="deletarCliente(${c.id})"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
+            // CORRIGI A-01: esc() em todos os campos dinâmicos
+            tbody.innerHTML = lista.map(c => `<tr>
+                <td>${esc(String(c.id))}</td>
+                <td>${esc(c.nome)}</td>
+                <td>${esc(c.email)}</td>
+                <td>${esc(c.telefone)}</td>
+                <td>${esc(c.endereco)}</td>
+                <td>${esc(c.data_nascimento ? new Date(c.data_nascimento).toLocaleDateString('pt-BR') : '---')}</td>
+                <td>${esc(formatarData(c.data_cadastro))}</td>
+                <td>
+                    <button class="btn-edit" onclick="editarCliente(${Number(c.id)})"><i class="fas fa-edit"></i></button>
+                    <button class="btn-delete" onclick="deletarCliente(${Number(c.id)})"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>`).join('');
         }
-        
+
         function buscarClientes() {
             const termo = document.getElementById('searchInput').value.toLowerCase();
-            if (!termo) {
-                exibirClientes(clientes);
-                return;
-            }
-            
-            const filtrados = clientes.filter(c => 
-                c.nome.toLowerCase().includes(termo) || 
-                c.email.toLowerCase().includes(termo)
-            );
-            exibirClientes(filtrados);
+            if (!termo) { exibirClientes(clientes); return; }
+            exibirClientes(clientes.filter(c =>
+                (c.nome || '').toLowerCase().includes(termo) ||
+                (c.email || '').toLowerCase().includes(termo)
+            ));
         }
-        
+
         function abrirModalNovo() {
             document.getElementById('modalTitulo').textContent = 'Novo Cliente';
             document.getElementById('formCliente').reset();
             document.getElementById('clienteId').value = '';
             document.getElementById('modalCliente').style.display = 'block';
         }
-        
+
         function fecharModal() {
             document.getElementById('modalCliente').style.display = 'none';
         }
-        
+
         async function salvarCliente(event) {
             event.preventDefault();
-            
             const id = document.getElementById('clienteId').value;
             const cliente = {
-                nome: document.getElementById('nome').value,
-                email: document.getElementById('email').value,
-                telefone: document.getElementById('telefone').value,
-                endereco: document.getElementById('endereco').value
+                nome: document.getElementById('nome').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                telefone: document.getElementById('telefone').value.trim(),
+                data_nascimento: document.getElementById('data_nascimento').value || null,
+                endereco: document.getElementById('endereco').value.trim()
             };
-            
+
             try {
-                if (id) {
-                    await fetch(`/api/clientes/${id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(cliente)
-                    });
-                    alert('✅ Cliente atualizado com sucesso!');
-                } else {
-                    await fetch('/api/clientes', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(cliente)
-                    });
-                    alert('✅ Cliente cadastrado com sucesso!');
-                }
-                
+                const url = id ? `/api/clientes/${encodeURIComponent(id)}` : '/api/clientes';
+                const method = id ? 'PUT' : 'POST';
+                const r = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cliente)
+                });
+                const data = await r.json();
+                if (!r.ok) { toast(data.erro || 'Erro ao salvar', 'erro'); return; }
+                toast(id ? 'Cliente atualizado!' : 'Cliente cadastrado!', 'sucesso');
                 fecharModal();
                 carregarClientes();
-            } catch (error) {
-                alert('Erro ao salvar cliente');
+            } catch (e) {
+                toast('Erro de conexão', 'erro');
             }
         }
-        
+
         function editarCliente(id) {
-            const cliente = clientes.find(c => c.id === id);
-            if (!cliente) return;
-            
+            const c = clientes.find(c => c.id === id);
+            if (!c) return;
             document.getElementById('modalTitulo').textContent = 'Editar Cliente';
-            document.getElementById('clienteId').value = cliente.id;
-            document.getElementById('nome').value = cliente.nome;
-            document.getElementById('email').value = cliente.email;
-            document.getElementById('telefone').value = cliente.telefone || '';
-            document.getElementById('endereco').value = cliente.endereco || '';
+            document.getElementById('clienteId').value = c.id;
+            document.getElementById('nome').value = c.nome || '';
+            document.getElementById('email').value = c.email || '';
+            document.getElementById('telefone').value = c.telefone || '';
+            document.getElementById('data_nascimento').value = c.data_nascimento ? c.data_nascimento.split('T')[0] : '';
+            document.getElementById('endereco').value = c.endereco || '';
             document.getElementById('modalCliente').style.display = 'block';
         }
-        
+
         async function deletarCliente(id) {
             if (!confirm('Tem certeza que deseja deletar este cliente?')) return;
-            
             try {
-                await fetch(`/api/clientes/${id}`, { method: 'DELETE' });
-                alert('✅ Cliente deletado com sucesso!');
+                const r = await fetch(`/api/clientes/${encodeURIComponent(id)}`, { method: 'DELETE' });
+                const data = await r.json();
+                if (!r.ok) { toast(data.erro || 'Erro ao deletar', 'erro'); return; }
+                toast('Cliente removido!', 'sucesso');
                 carregarClientes();
-            } catch (error) {
-                alert('Erro ao deletar cliente');
+            } catch (e) {
+                toast('Erro de conexão', 'erro');
             }
         }
-        
-        // Fechar modal ao clicar fora
-        window.onclick = function(event) {
-            const modal = document.getElementById('modalCliente');
-            if (event.target === modal) {
-                fecharModal();
-            }
-        }
-        
-        // Carregar clientes ao iniciar
-        carregarClientes();
+
+        window.addEventListener('click', e => {
+            if (e.target === document.getElementById('modalCliente')) fecharModal();
+        });
     </script>
 </body>
 </html>

@@ -2,62 +2,101 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Configurações - AgendaPro</title>
-    <link rel="stylesheet" href="css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com; font-src fonts.gstatic.com cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self'">
+    <title>Configurações — AgendaPro</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOK5YQQ==" crossorigin="anonymous" referrerpolicy="no-referrer">
 </head>
 <body>
     <div class="dashboard">
         <aside class="sidebar">
-            <div class="logo">AgendaPro</div>
+            <div class="logo">
+                <i class="fas fa-calendar-check"></i>
+                <span>AgendaPro</span>
+            </div>
             <nav class="nav-menu">
-                <a href="/">Dashboard</a>
-                <a href="/clientes">Clientes</a>
-                <a href="/agendamentos">Agendamentos</a>
-                <a href="/servicos">Serviços</a>
-                <a href="/configuracoes" class="active">Configurações</a>
+                <a href="/"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="/clientes"><i class="fas fa-users"></i> Clientes</a>
+                <a href="/agendamentos"><i class="fas fa-calendar"></i> Agendamentos</a>
+                <a href="/servicos"><i class="fas fa-cut"></i> Serviços</a>
+                <a href="/colaboradores"><i class="fas fa-user-md"></i> Colaboradores</a>
+                <a href="/configuracoes" class="active"><i class="fas fa-cog"></i> Configurações</a>
+                <a href="/configuracoes-avancadas"><i class="fas fa-sliders-h"></i> Avançado</a>
             </nav>
+            <div class="sidebar-footer"><p>© 2026 AgendaPro</p></div>
         </aside>
-        
+
         <main class="main-content">
-            <h1>Configurações do WhatsApp</h1>
-            
-            <div class="form-section">
-                <div class="form-group">
-                    <label>Número do WhatsApp da empresa:</label>
-                    <input type="text" id="whatsapp" placeholder="5548999999999">
-                    <small>Formato: 55 + DDD + número (ex: 5548999999999)</small>
+            <header class="header">
+                <h1>Configurações</h1>
+                <div class="user-info">
+                    <span>Olá, <strong id="userName">...</strong></span>
+                    <i class="fas fa-user-circle"></i>
+                    <button onclick="logout()" style="background:none;border:none;color:#dc3545;margin-left:10px;cursor:pointer;" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
                 </div>
-                
-                <button onclick="salvarWhatsApp()" class="btn-submit">
-                    Salvar Configuração
+            </header>
+
+            <div class="section">
+                <h2>WhatsApp da Empresa</h2>
+                <div class="form-group" style="margin-top:20px;">
+                    <label>Número do WhatsApp:</label>
+                    <input type="text" id="whatsapp" placeholder="5548999999999" maxlength="20"
+                        style="width:100%;max-width:400px;padding:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;display:block;margin-top:8px;">
+                    <small style="color:#666;margin-top:4px;display:block;">Formato: 55 + DDD + número (ex: 5548999999999)</small>
+                </div>
+                <button onclick="salvarWhatsApp()"
+                    style="margin-top:16px;padding:12px 24px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">
+                    <i class="fas fa-save"></i> Salvar
                 </button>
             </div>
         </main>
     </div>
 
+    <script src="/js/security.js"></script>
     <script>
+        'use strict';
+
+        // CORRIGI M-04: verificar autenticação
+        verificarAuth().then(user => { if (user) carregarWhatsApp(); });
+
         async function carregarWhatsApp() {
-            const response = await fetch('/api/configuracoes/whatsapp_empresa');
-            const data = await response.json();
-            document.getElementById('whatsapp').value = data.valor || '';
+            try {
+                // CORRIGI B-04: endpoint correto é GET /api/configuracoes (sem parâmetro na URL)
+                const r = await fetch('/api/configuracoes');
+                if (!r.ok) return;
+                const data = await r.json();
+                // O backend retorna objeto {chave: valor}
+                document.getElementById('whatsapp').value = data.whatsapp || '';
+            } catch (e) {
+                console.error('Erro ao carregar configurações');
+            }
         }
-        
+
         async function salvarWhatsApp() {
-            const valor = document.getElementById('whatsapp').value;
-            
-            await fetch('/api/configuracoes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chave: 'whatsapp_empresa',
-                    valor: valor
-                })
-            });
-            
-            alert('✅ Número salvo com sucesso!');
+            const valor = document.getElementById('whatsapp').value.trim();
+            // Validação básica: só números
+            if (valor && !/^\d{10,15}$/.test(valor)) {
+                toast('Número inválido. Use apenas dígitos (ex: 5548999999999)', 'erro');
+                return;
+            }
+            try {
+                // CORRIGI B-04: endpoint correto é PUT /api/configuracoes
+                const r = await fetch('/api/configuracoes', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ whatsapp: valor })
+                });
+                const data = await r.json();
+                if (!r.ok) { toast(data.erro || 'Erro ao salvar', 'erro'); return; }
+                toast('Número salvo com sucesso!', 'sucesso');
+            } catch (e) {
+                toast('Erro de conexão', 'erro');
+            }
         }
-        
-        carregarWhatsApp();
     </script>
 </body>
 </html>

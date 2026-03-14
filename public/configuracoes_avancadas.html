@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configurações Avançadas - AgendaPro</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com; font-src fonts.gstatic.com cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self'">
+    <title>Configurações Avançadas — AgendaPro</title>
     <link rel="stylesheet" href="/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOK5YQQ==" crossorigin="anonymous" referrerpolicy="no-referrer">
 </head>
 <body>
     <div class="dashboard">
@@ -24,14 +25,18 @@
                 <a href="/configuracoes"><i class="fas fa-cog"></i> WhatsApp</a>
                 <a href="/configuracoes-avancadas" class="active"><i class="fas fa-sliders-h"></i> Avançado</a>
             </nav>
+            <div class="sidebar-footer"><p>© 2026 AgendaPro</p></div>
         </aside>
 
         <main class="main-content">
             <header class="header">
-                <h1>⚙️ Configurações Avançadas</h1>
+                <h1>Configurações Avançadas</h1>
                 <div class="user-info">
-                    <span>Olá, <strong>Administrador</strong></span>
+                    <span>Olá, <strong id="userName">...</strong></span>
                     <i class="fas fa-user-circle"></i>
+                    <button onclick="logout()" style="background:none;border:none;color:#dc3545;margin-left:10px;cursor:pointer;" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
                 </div>
             </header>
 
@@ -40,11 +45,11 @@
                     <h3>Notificações</h3>
                     <div class="form-group">
                         <label>Enviar lembrete quantas horas antes?</label>
-                        <input type="number" id="notificacao_lembrete_horas" min="1" max="72" value="24">
+                        <input type="number" id="lembrete_horas" min="1" max="72" value="24">
                     </div>
                     <div class="form-group">
                         <label>
-                            <input type="checkbox" id="notificar_cliente_lembrete" checked>
+                            <input type="checkbox" id="notif_cliente" checked>
                             Notificar cliente por WhatsApp
                         </label>
                     </div>
@@ -54,11 +59,11 @@
                     <h3>Cancelamentos</h3>
                     <div class="form-group">
                         <label>Cancelamento sem custo até (horas antes):</label>
-                        <input type="number" id="cancelamento_sem_custo_horas" min="0" max="72" value="2">
+                        <input type="number" id="cancelamento_horas" min="0" max="72" value="2">
                     </div>
                     <div class="form-group">
                         <label>
-                            <input type="checkbox" id="notificar_empresa_cancelamento" checked>
+                            <input type="checkbox" id="notif_empresa" checked>
                             Notificar empresa quando cliente cancelar
                         </label>
                     </div>
@@ -76,54 +81,67 @@
                 </div>
             </div>
 
-            <button onclick="salvarConfiguracoes()" class="btn-submit" style="width:auto; margin-top:20px;">
-                Salvar todas as configurações
+            <button onclick="salvarConfiguracoes()"
+                style="width:auto;margin-top:20px;padding:12px 24px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">
+                <i class="fas fa-save"></i> Salvar todas as configurações
             </button>
         </main>
     </div>
 
+    <script src="/js/security.js"></script>
     <script>
+        'use strict';
+
+        // CORRIGI M-04: verificar autenticação
+        verificarAuth().then(user => { if (user) carregarConfiguracoes(); });
+
         async function carregarConfiguracoes() {
-            const chaves = [
-                'notificacao_lembrete_horas',
-                'cancelamento_sem_custo_horas',
-                'notificar_cliente_lembrete',
-                'notificar_empresa_cancelamento',
-                'permitir_recorrente'
-            ];
-            for (const chave of chaves) {
-                const response = await fetch(`/api/configuracoes/${chave}`);
-                const data = await response.json();
-                const el = document.getElementById(chave);
-                if (el) {
-                    if (el.type === 'checkbox') {
-                        el.checked = data.valor === 'sim';
-                    } else {
-                        el.value = data.valor || '';
-                    }
-                }
+            try {
+                // CORRIGI B-04: endpoint correto é GET /api/configuracoes (retorna objeto com todas as chaves)
+                const r = await fetch('/api/configuracoes');
+                if (!r.ok) return;
+                const cfg = await r.json();
+
+                // Os nomes das chaves no backend são: lembrete_horas, cancelamento_horas, notif_cliente, notif_empresa, permitir_recorrente
+                const lh = document.getElementById('lembrete_horas');
+                const ch = document.getElementById('cancelamento_horas');
+                const nc = document.getElementById('notif_cliente');
+                const ne = document.getElementById('notif_empresa');
+                const pr = document.getElementById('permitir_recorrente');
+
+                if (lh) lh.value = cfg.lembrete_horas || '24';
+                if (ch) ch.value = cfg.cancelamento_horas || '2';
+                if (nc) nc.checked = cfg.notif_cliente !== 'nao';
+                if (ne) ne.checked = cfg.notif_empresa !== 'nao';
+                if (pr) pr.value = cfg.permitir_recorrente || 'sim';
+            } catch (e) {
+                console.error('Erro ao carregar configurações');
             }
         }
 
         async function salvarConfiguracoes() {
-            const configuracoes = [
-                { chave: 'notificacao_lembrete_horas', valor: document.getElementById('notificacao_lembrete_horas').value },
-                { chave: 'cancelamento_sem_custo_horas', valor: document.getElementById('cancelamento_sem_custo_horas').value },
-                { chave: 'notificar_cliente_lembrete', valor: document.getElementById('notificar_cliente_lembrete').checked ? 'sim' : 'nao' },
-                { chave: 'notificar_empresa_cancelamento', valor: document.getElementById('notificar_empresa_cancelamento').checked ? 'sim' : 'nao' },
-                { chave: 'permitir_recorrente', valor: document.getElementById('permitir_recorrente').value }
-            ];
-            for (const config of configuracoes) {
-                await fetch('/api/configuracoes', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(config)
-                });
-            }
-            alert('✅ Configurações salvas com sucesso!');
-        }
+            const payload = {
+                lembrete_horas: document.getElementById('lembrete_horas').value,
+                cancelamento_horas: document.getElementById('cancelamento_horas').value,
+                notif_cliente: document.getElementById('notif_cliente').checked ? 'sim' : 'nao',
+                notif_empresa: document.getElementById('notif_empresa').checked ? 'sim' : 'nao',
+                permitir_recorrente: document.getElementById('permitir_recorrente').value
+            };
 
-        carregarConfiguracoes();
+            try {
+                // CORRIGI B-04: endpoint correto é PUT /api/configuracoes
+                const r = await fetch('/api/configuracoes', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await r.json();
+                if (!r.ok) { toast(data.erro || 'Erro ao salvar', 'erro'); return; }
+                toast('Configurações salvas com sucesso!', 'sucesso');
+            } catch (e) {
+                toast('Erro de conexão', 'erro');
+            }
+        }
     </script>
 </body>
 </html>
